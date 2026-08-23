@@ -1,0 +1,13 @@
+{
+  "name": "daisy-astro-monorepo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "3.0.1"
+  }
+}

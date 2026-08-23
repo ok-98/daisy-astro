@@ -1,0 +1,26 @@
+{
+  "name": "daisy-astro",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "peerDependencies": {
+    "astro": "^7.0.0"
+  },
+  "devDependencies": {
+    "@storybook/addon-docs": "10.5.10",
+    "@storybook/html-vite": "10.5.10",
+    "@types/node": "26.2.0",
+    "storybook": "10.5.10",
+    "typescript": "7.0.2",
+    "vite": "8.2.2"
+  }
+}
