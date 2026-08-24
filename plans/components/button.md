@@ -10,9 +10,10 @@
 - Props forward every native HTML attribute for the rendered element.
 - Class merging uses `class:list` (bundled `clsx`), never manual string concatenation.
 - Shared variant unions come from `packages/daisy-astro/src/lib/variants.ts` — import, don't redeclare.
-- One story file, `Playground` + one story per variant axis.
+- Stories run on `@storybook-astro/framework`: import the `.astro` file as `component`, pass slot content via `args.slots`.
+- One story file: `Playground`, one story per daisyUI doc-page example, plus any variant axis the examples miss.
 
-> **Status:** the code in sections 4 and 5 was prototyped and verified against the live render endpoint before this plan was written (see section 8 for the recorded output). It is not speculative — it renders correctly today.
+> **Status:** the component in §4 is **implemented** and the baseline stories in §5 are **verified** through a static Storybook build (output in §8a). Remaining work is the rest of the doc-example stories — see §6.
 
 ---
 
@@ -82,23 +83,75 @@ render: <a tabindex="-1" role="button" aria-disabled="true" href="/x" class="btn
 
 ## 4. Component implementation
 
-Uses `Polymorphic` from `astro/types` (built in, no new dependency) so `as` changes the rendered tag *and* the accepted attribute set — `href` type-checks when `as="a"`, not when `as="button"`.
+Three things here are load-bearing and each was found by a failing experiment, not by reading docs:
+
+1. **`type Props` is declared before any `const`.** With a `const` above it, Astro stops inferring `Props` entirely — the component accepts no props and every call site fails with "not assignable to `IntrinsicAttributes`", while props inside the body degrade to `any`. Silent: it still renders. (`plans/README.md` §5c)
+2. **`Astro.props as Props<HTMLTag>`** — inside a generic component `Astro.props` is otherwise untyped.
+3. **Variant classes come from literal maps, never `` `btn-${color}` ``** — an interpolated class name gets no CSS from daisyUI. (§1b)
+
+Uses `Polymorphic` from `astro/types` so `as` changes the rendered tag *and* the accepted attribute set.
 
 ```astro
 ---
 import type { HTMLTag, Polymorphic } from 'astro/types';
 import type { DaisyColor, DaisySize } from '../lib/variants';
 
-type Props<Tag extends HTMLTag = 'button'> = Polymorphic<{
-  as?: Tag;
+type ButtonVariant = 'outline' | 'dash' | 'soft' | 'ghost' | 'link';
+type ButtonShape = 'square' | 'circle';
+type ButtonWidth = 'wide' | 'block';
+
+// `Props` MUST be declared before any `const` in this frontmatter, or Astro
+// stops inferring it and the component silently accepts no props at all.
+type Props<Tag extends HTMLTag> = Polymorphic<{
+  as: Tag;
   color?: DaisyColor;
   size?: DaisySize;
-  variant?: 'outline' | 'dash' | 'soft' | 'ghost' | 'link';
-  shape?: 'square' | 'circle';
-  width?: 'wide' | 'block';
+  variant?: ButtonVariant;
+  shape?: ButtonShape;
+  width?: ButtonWidth;
   active?: boolean;
   disabled?: boolean;
 }>;
+
+// Full class names written out as literals — never `btn-${color}`. Tailwind
+// scans source text for candidates, so an interpolated class name is invisible
+// to it and daisyUI emits no CSS for it.
+const COLOR: Record<DaisyColor, string> = {
+  neutral: 'btn-neutral',
+  primary: 'btn-primary',
+  secondary: 'btn-secondary',
+  accent: 'btn-accent',
+  info: 'btn-info',
+  success: 'btn-success',
+  warning: 'btn-warning',
+  error: 'btn-error',
+};
+
+const SIZE: Record<DaisySize, string> = {
+  xs: 'btn-xs',
+  sm: 'btn-sm',
+  md: 'btn-md',
+  lg: 'btn-lg',
+  xl: 'btn-xl',
+};
+
+const VARIANT: Record<ButtonVariant, string> = {
+  outline: 'btn-outline',
+  dash: 'btn-dash',
+  soft: 'btn-soft',
+  ghost: 'btn-ghost',
+  link: 'btn-link',
+};
+
+const SHAPE: Record<ButtonShape, string> = {
+  square: 'btn-square',
+  circle: 'btn-circle',
+};
+
+const WIDTH: Record<ButtonWidth, string> = {
+  wide: 'btn-wide',
+  block: 'btn-block',
+};
 
 const {
   as: Tag = 'button',
@@ -111,25 +164,25 @@ const {
   disabled,
   class: className,
   ...rest
-} = Astro.props;
+} = Astro.props as Props<HTMLTag>;
 
 // button/input support the native disabled attribute; a/div need the
 // btn-disabled class plus explicit a11y attributes to be genuinely disabled.
 const isNativeDisableable = Tag === 'button' || Tag === 'input';
 const a11y =
   disabled && !isNativeDisableable
-    ? { tabindex: '-1', role: 'button', 'aria-disabled': 'true' }
-    : {};
+    ? ({ tabindex: '-1', role: 'button', 'aria-disabled': 'true' } as const)
+    : ({} as const);
 ---
 
 <Tag
   class:list={[
     'btn',
-    color && `btn-${color}`,
-    size && `btn-${size}`,
-    variant && `btn-${variant}`,
-    shape && `btn-${shape}`,
-    width && `btn-${width}`,
+    color && COLOR[color],
+    size && SIZE[size],
+    variant && VARIANT[variant],
+    shape && SHAPE[shape],
+    width && WIDTH[width],
     { 'btn-active': active, 'btn-disabled': disabled && !isNativeDisableable },
     className,
   ]}
@@ -140,6 +193,8 @@ const a11y =
   <slot />
 </Tag>
 ```
+
+Typing verified with a throwaway probe (`astro check`): `color="primary"`, `as="a" href="/ok"`, and arbitrary passthrough attributes all pass; `color="banana"` and a bare `href` without `as="a"` both error.
 
 ### Two things deliberately *not* done
 
@@ -154,6 +209,8 @@ const a11y =
 This is the one place where copying the doc example verbatim into the component would be wrong. The *story* still reproduces the example markup (see §5) — the difference is that the story is a demo and the component is a real API.
 
 ## 5. Storybook stories
+
+Uses `@storybook-astro/framework` (`plans/README.md` §4) — the `.astro` file is imported directly as `component`, slot content rides in `args.slots`.
 
 Stories reproduce the daisyUI doc page's examples (`plans/README.md` §8). The page has 18 example sections; the mapping below covers all of them, collapsing the ones that differ only by which style class is applied.
 
@@ -175,63 +232,30 @@ Stories reproduce the daisyUI doc page's examples (`plans/README.md` §8). The p
 | 14 | Square button and circle button | `Shapes` | |
 | 15 | Button with Icon | `WithIcon` | Icon markup goes in the default slot. |
 | 16 | Button block | `Block` | |
-| 17 | Button with loading spinner | `WithLoadingSpinner` | `<span class="loading loading-spinner">` in the slot. Once the Loading component exists, this story should compose it rather than hardcoding the class — leave a comment saying so. |
+| 17 | Button with loading spinner | `WithLoadingSpinner` | `<span class="loading loading-spinner">` in the slot. Once the Loading component exists, compose it rather than hardcoding the class. |
 | 18 | Login buttons | `LoginButtons` | See the note below before writing this one. |
 
-**On example 18 (`LoginButtons`).** The page shows 18+ provider buttons, each with an inline brand SVG and hardcoded brand colors. Reproducing it means pasting ~18 SVG blobs into the story file for content that exercises no Button prop the other stories miss — it is a composition showcase, not variant coverage. Recommendation: implement it with **three** representative providers (GitHub, Google, Apple) and a comment pointing at the doc page for the rest. If you want the full set, it is mechanical copying, just bulky. Decide before writing; don't half-do it.
+**On example 18 (`LoginButtons`).** The page shows 18+ provider buttons, each with an inline brand SVG and hardcoded brand colors. Reproducing it means pasting ~18 SVG blobs into the story file for content that exercises no Button prop the other stories miss — it is a composition showcase, not variant coverage. Recommendation: implement it with **three** representative providers (GitHub, Google, Apple) and a comment pointing at the doc page for the rest. Decide before writing; don't half-do it.
 
-**Slot convention.** Story args carry slot content under `slot:<name>` keys and everything else as props, split by a helper (`plans/README.md` §5, `plans/TEMPLATE.md` §5). The bridge signature is `renderAstroComponent(path, props, slots)`.
+**Two framework details that bite here.**
+
+*Slot sanitization.* Slot HTML is sanitized by default, and several of these stories (`Shapes`, `WithIcon`, `LoginButtons`, `WithLoadingSpinner`) put SVG or `<span>` markup in the default slot. If icons come out missing, that is sanitization, not a component bug — widen the allowlist per the framework's Sanitization guide.
+
+*Rendering one story with many variants.* The doc examples are mostly "all 8 colors in a row". The single-`component` story shape renders one instance per story, so a sweep needs either a decorator or a small wrapper. Check the framework's docs for the recommended composition before hand-rolling DOM helpers — the previous plan's `row()`/`renderInto()` helpers existed only because the old bridge had no `component` support, and should not be resurrected.
+
+### Baseline story file
+
+Start from this — the four stories below are **verified working** (prerendered output recorded in §8), then add the remaining doc examples from the table.
 
 ```ts
-import type { Meta, StoryObj } from '@storybook/html-vite';
-import { renderAstroComponent } from '../../.storybook/astro-story';
-
-const COMPONENT_PATH = '/src/components/Button.astro';
+import Button from './Button.astro';
 
 const COLORS = ['neutral', 'primary', 'secondary', 'accent', 'info', 'success', 'warning', 'error'] as const;
 const SIZES = ['xs', 'sm', 'md', 'lg', 'xl'] as const;
 
-function split(args: Record<string, unknown>) {
-  const props: Record<string, unknown> = {};
-  const slots: Record<string, string> = {};
-  for (const [key, value] of Object.entries(args)) {
-    if (key.startsWith('slot:')) slots[key.slice(5)] = String(value);
-    else props[key] = value;
-  }
-  return { props, slots };
-}
-
-function renderInto(args: Record<string, unknown>) {
-  const container = document.createElement('div');
-  container.style.display = 'contents';
-  const { props, slots } = split(args);
-  renderAstroComponent(COMPONENT_PATH, props, slots).then((html) => {
-    container.innerHTML = html;
-  });
-  return container;
-}
-
-function row(items: Record<string, unknown>[]) {
-  const wrapper = document.createElement('div');
-  wrapper.style.display = 'flex';
-  wrapper.style.flexWrap = 'wrap';
-  wrapper.style.gap = '0.5rem';
-  wrapper.style.alignItems = 'center';
-  for (const args of items) wrapper.appendChild(renderInto(args));
-  return wrapper;
-}
-
-/** default + all 8 colors, with one style axis pinned — the shape examples 5/6/7/9 share. */
-function colorSweep(extra: Record<string, unknown>, label: string) {
-  return row([
-    { ...extra, 'slot:default': label },
-    ...COLORS.map((color) => ({ ...extra, color, 'slot:default': color })),
-  ]);
-}
-
-const meta: Meta = {
+export default {
   title: 'Components/Button',
-  render: renderInto,
+  component: Button,
   argTypes: {
     as: { control: 'select', options: ['button', 'a', 'div'] },
     color: { control: 'select', options: [undefined, ...COLORS] },
@@ -244,177 +268,80 @@ const meta: Meta = {
   },
 };
 
-export default meta;
-type Story = StoryObj;
-
-export const Playground: Story = {
-  args: { 'slot:default': 'Button' },
-};
 
 // 1. Button
-export const Default: Story = {
-  args: { 'slot:default': 'Button' },
+export const Default = {
+  args: { slots: { default: 'Click me' } },
 };
 
-// 2. Button sizes
-export const Sizes: Story = {
-  render: () => row(SIZES.map((size) => ({ size, 'slot:default': `btn-${size}` }))),
+export const Variants = {
+  args: {
+    color: 'primary',
+    size: 'lg',
+    variant: 'outline',
+    slots: { default: 'Primary large outline' },
+  },
+};
+
+// 13. Disabled buttons — the <a> branch from §3b.
+export const DisabledLink = {
+  args: {
+    as: 'a',
+    href: '#',
+    disabled: true,
+    slots: { default: 'Disabled link' },
+  },
+};
+
+// Regression guard for §3a and the class-merge rule.
+export const Passthrough = {
+  args: {
+    id: 'go',
+    'data-test': 'yes',
+    style: 'letter-spacing:2px',
+    class: 'mine',
+    slots: { default: 'Passthrough' },
+  },
 };
 
 // 3. Responsive button — breakpoint prefixes ride the class passthrough, not a prop.
-export const Responsive: Story = {
+export const Responsive = {
   args: {
     size: 'xs',
     class: 'sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl',
-    'slot:default': 'Responsive',
-  },
-};
-
-// 4. Buttons colors
-export const Colors: Story = {
-  render: () => row(COLORS.map((color) => ({ color, 'slot:default': color }))),
-};
-
-// 5. Soft buttons
-export const Soft: Story = {
-  render: () => colorSweep({ variant: 'soft' }, 'Soft'),
-};
-
-// 6. Outline buttons (+ 8: neutral outline needs a light background)
-export const Outline: Story = {
-  render: () => colorSweep({ variant: 'outline' }, 'Outline'),
-};
-
-// 7. Dash buttons (+ 8: same neutral caveat)
-export const Dash: Story = {
-  render: () => colorSweep({ variant: 'dash' }, 'Dash'),
-};
-
-// 9. Active buttons
-export const Active: Story = {
-  render: () => colorSweep({ active: true }, 'Active'),
-};
-
-// 10. Buttons ghost and button link
-export const GhostAndLink: Story = {
-  render: () => row([
-    { variant: 'ghost', 'slot:default': 'Ghost' },
-    { variant: 'link', 'slot:default': 'Link' },
-  ]),
-};
-
-// 11. Wide button
-export const Wide: Story = {
-  args: { width: 'wide', 'slot:default': 'Wide' },
-};
-
-// 12. Buttons with any HTML tags
-export const AnyHtmlTag: Story = {
-  render: () => row([
-    { as: 'a', role: 'button', 'slot:default': 'Link' },
-    { as: 'button', type: 'submit', 'slot:default': 'Button' },
-    { as: 'input', type: 'button', value: 'Input' },
-    { as: 'input', type: 'submit', value: 'Submit' },
-    { as: 'input', type: 'radio', 'aria-label': 'Radio' },
-    { as: 'input', type: 'checkbox', 'aria-label': 'Checkbox' },
-    { as: 'input', type: 'reset', value: 'Reset' },
-  ]),
-};
-
-// 13. Disabled buttons — both forms daisyUI documents (see §3b).
-export const Disabled: Story = {
-  render: () => row([
-    { disabled: true, 'slot:default': 'Disabled using attribute' },
-    { as: 'a', href: '#', disabled: true, 'slot:default': 'Disabled using class name' },
-  ]),
-};
-
-// 14. Square button and circle button
-export const Shapes: Story = {
-  render: () => row([
-    { shape: 'square', 'slot:default': '<svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 2 L14 14 M14 2 L2 14" stroke="currentColor" stroke-width="2" fill="none"/></svg>' },
-    { shape: 'circle', 'slot:default': '<svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 2 L14 14 M14 2 L2 14" stroke="currentColor" stroke-width="2" fill="none"/></svg>' },
-  ]),
-};
-
-// 15. Button with Icon — icon before and after the label.
-export const WithIcon: Story = {
-  render: () => {
-    const icon = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="6"/></svg>';
-    return row([
-      { 'slot:default': `${icon} Icon first` },
-      { 'slot:default': `Icon last ${icon}` },
-    ]);
-  },
-};
-
-// 16. Button block
-export const Block: Story = {
-  args: { width: 'block', 'slot:default': 'Block' },
-};
-
-// 17. Button with loading spinner
-// TODO: once the Loading component exists, compose it here instead of hardcoding
-// the `loading loading-spinner` classes.
-export const WithLoadingSpinner: Story = {
-  render: () => row([
-    { shape: 'square', 'slot:default': '<span class="loading loading-spinner"></span>' },
-    { 'slot:default': '<span class="loading loading-spinner"></span> loading' },
-  ]),
-};
-
-// 18. Login buttons — 3 of the doc page's 18+ providers; see the note in the plan.
-// Full provider list and brand SVGs: https://daisyui.com/components/button/
-export const LoginButtons: Story = {
-  render: () => {
-    const providers = [
-      { label: 'Login with GitHub', color: 'neutral' as const },
-      { label: 'Login with Google', variant: 'outline' as const },
-      { label: 'Login with Apple', color: 'neutral' as const },
-    ];
-    const wrapper = document.createElement('div');
-    wrapper.style.display = 'flex';
-    wrapper.style.flexDirection = 'column';
-    wrapper.style.gap = '0.5rem';
-    wrapper.style.maxWidth = '20rem';
-    for (const { label, ...props } of providers) {
-      wrapper.appendChild(renderInto({ ...props, width: 'block', 'slot:default': label }));
-    }
-    return wrapper;
+    slots: { default: 'Responsive' },
   },
 };
 ```
+
 ## 6. Steps
 
-- [x] **Step 1: done — render bridge supports slots.** `.storybook/astro-story.ts` now takes `(path, props, slots)` and `.storybook/main.ts` parses a `slots` query param into `container.renderToString(mod.default, { props, slots })`. Verified: with no slots the component's fallback content renders and `Astro.slots.has()` wrappers are omitted; with slots supplied, named content lands in the right wrappers.
+- [x] **Step 1: done — Storybook runs on `@storybook-astro/framework`.** The hand-rolled Container-API bridge was removed (`.storybook/astro-story.ts` deleted, `.storybook/main.ts` reduced to framework config). Stories now import the `.astro` file directly and pass `args.slots`.
 
-- [ ] **Step 2:** Settle the `LoginButtons` scope question from section 5 (3 providers vs all 18) before writing stories, so the story doesn't get half-built.
+- [x] **Step 2: done — `Button.astro` implemented** per section 4.
 
-- [ ] **Step 3:** Replace `packages/daisy-astro/src/components/Button.astro` with the implementation in section 4, then walk the "Astro idioms gate" in `plans/TEMPLATE.md` §4 against it.
+- [x] **Step 3: done — baseline stories written** (`Default`, `Variants`, `DisabledLink`, `Passthrough`) and verified through a static build; recorded output in §8.
 
-- [ ] **Step 4:** Replace `packages/daisy-astro/src/components/Button.stories.ts` with the stories in section 5.
+- [ ] **Step 4:** Settle the `LoginButtons` scope question from section 5 (3 providers vs all 18) before writing the remaining stories, so it doesn't get half-built.
 
-- [ ] **Step 5:** Run `pnpm storybook` from `packages/daisy-astro/` and verify in the browser:
-  - `Playground` renders with a visible label, and every control changes the markup.
-  - All 18 doc-example stories render; compare each side by side with its section on https://daisyui.com/components/button/ and confirm the markup matches.
-  - **Blocker to expect:** daisyUI's CSS is not currently loaded in Storybook, so buttons will render with correct classes but no styling. Wiring Tailwind + daisyUI into `.storybook/preview.ts` is a prerequisite shared by all 68 components and belongs in its own plan, not this one. Until it lands, verify at the markup level (Step 6) rather than visually.
+- [ ] **Step 5:** Add the remaining doc-example stories from the §5 table: `Sizes`, `Colors`, `Soft`, `Outline`, `Dash`, `Active`, `GhostAndLink`, `Wide`, `AnyHtmlTag`, `Disabled` (attribute form alongside the existing link form), `Shapes`, `WithIcon`, `Block`, `WithLoadingSpinner`, `LoginButtons`, plus `Playground`.
 
-- [ ] **Step 6:** Verify class output and attribute passthrough directly against the render endpoint. With the dev server running:
+- [ ] **Step 6:** Run `pnpm storybook` and compare each story side by side with its section on https://daisyui.com/components/button/.
+  - **Blocker to expect:** daisyUI's CSS is not loaded in Storybook yet, so buttons render with correct classes but no styling. Wiring Tailwind + daisyUI into `.storybook/preview.ts` is shared by all 68 components and belongs in its own plan. Until it lands, verify at the markup level (Step 7).
+  - Watch for stripped SVG in `Shapes` / `WithIcon` / `LoginButtons` — that is slot sanitization, not a component bug (§5).
+
+- [ ] **Step 7:** Verify markup headlessly:
 
 ```bash
-P='%2Fsrc%2Fcomponents%2FButton.astro'
-q() { node -e "console.log(encodeURIComponent(process.argv[1]))" "$1"; }
-curl -s "http://localhost:6006/__astro-render?component=$P&props=$(q '{"color":"primary","size":"lg","variant":"outline"}')"
-curl -s "http://localhost:6006/__astro-render?component=$P&props=$(q '{"disabled":true}')"
-curl -s "http://localhost:6006/__astro-render?component=$P&props=$(q '{"as":"a","href":"/x","disabled":true}')"
-curl -s "http://localhost:6006/__astro-render?component=$P&props=$(q '{"style":"color:red","id":"go","data-test":"yes"}')"
+pnpm build-storybook
+grep -rhoE '<(button|a|input)[^>]*btn[^>]*>' storybook-static/astro-prerendered-stories.json
 ```
 
-Expected output is recorded in section 8. Note the pre-encoded `$P`: under Git Bash, an unencoded leading `/src/...` gets rewritten to `C:/Program Files/Git/src/...` by MSYS path conversion and the request fails.
+Compare against §8. Every doc-example story should appear with the classes its daisyUI counterpart uses.
 
-- [ ] **Step 7:** Update the Button row in `plans/README.md` from "Implemented (example)" to **Implemented**.
+- [ ] **Step 8:** Update the Button row in `plans/README.md` to **Implemented**.
 
-- [ ] **Step 8:** Commit.
+- [ ] **Step 9:** Commit.
 
 ## 7. Acceptance checklist
 
@@ -429,9 +356,24 @@ Expected output is recorded in section 8. Note the pre-encoded `$P`: under Git B
 - [ ] `Responsive` works through `class` passthrough — no responsive size prop was invented.
 - [ ] `as="a"` does **not** silently gain `role="button"` (see §4); the `AnyHtmlTag` story passes it explicitly, mirroring the doc example.
 
-## 8. Recorded prototype output
+## 8. Recorded output
 
-Verified against the live `__astro-render` endpoint on 2026-08-24 with the exact code in section 4:
+### 8a. Through `@storybook-astro/framework` (2026-08-24)
+
+`Button.astro` from §4 with the baseline stories from §5, extracted from `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook`:
+
+```
+Default      → <button class="btn">Click me</button>
+Variants     → <button class="btn btn-primary btn-lg btn-outline">Primary large outline</button>
+Passthrough  → <button id="go" data-test="yes" style="letter-spacing:2px" class="btn mine">Passthrough</button>
+DisabledLink → <a tabindex="-1" role="button" aria-disabled="true" href="#" class="btn btn-disabled">Disabled link</a>
+```
+
+Confirms end to end: slot content renders, variant classes compose, caller `class` merges (`btn mine`), native `style` survives (§3a), and the `<a>` disabled a11y branch fires (§3b).
+
+### 8b. Earlier prototype, via the since-removed bridge (2026-08-24)
+
+Kept because it covers prop combinations the baseline stories don't yet, including the `as="input"` path:
 
 ```
 {}                                                  → <button class="btn"></button>

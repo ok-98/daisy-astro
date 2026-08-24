@@ -20,8 +20,10 @@ already made).
 **Global Constraints** (from `plans/README.md`, apply as-is, do not restate differently):
 - Props extend `HTMLAttributes<'<FILL: root element>'>` from `astro/types`.
 - Class merging uses `class:list` (bundled `clsx`), never manual string concatenation.
+- Variant classes are full literals in a `Record` map — never interpolated (§1b).
 - Shared variant unions (`DaisyColor`, `DaisySize`, ...) come from `packages/daisy-astro/src/lib/variants.ts` — import, don't redeclare, when the component uses a standard axis.
 - One story file, `Playground` + one story per variant axis.
+- `astro check` is the type gate, not `tsc` (§5b).
 
 ---
 
@@ -71,18 +73,26 @@ interface Props extends HTMLAttributes<'<FILL: root element>'> {
 import type { HTMLAttributes } from 'astro/types';
 import type { <FILL> } from '../lib/variants';
 
+// Props first — a `const` above this breaks inference in generic components
+// (plans/README.md §5c). Harmless to keep the order everywhere.
 interface Props extends HTMLAttributes<'<FILL: root element>'> {
   <FILL: same as section 3>
 }
+
+// Full literal class names. NEVER `<FILL: prefix>-${value}` — an interpolated
+// class gets no CSS from daisyUI (plans/README.md §1b).
+const <FILL: AXIS>: Record<<FILL: Union>, string> = {
+  <FILL: value>: '<FILL: prefix>-<FILL: value>',
+};
 
 const { <FILL: destructure every prop from section 1>, class: className, ...rest } = Astro.props;
 ---
 <<FILL: root element>
   class:list={[
     '<FILL: base daisyUI class, e.g. badge>',
-    <FILL: color && `<FILL: class prefix>-${color}`>,
-    <FILL: size && `<FILL: class prefix>-${size}`>,
-    <FILL: { '<FILL: modifier class>': outline } for each boolean modifier>,
+    <FILL: color && COLOR[color]>,
+    <FILL: size && SIZE[size]>,
+    <FILL: { '<FILL: modifier class>': outline } for each boolean modifier — object keys are literals, so these are safe as-is>,
     className,
   ]}
   {...rest}
@@ -116,10 +126,14 @@ Check each before considering section 4 done (full rationale in `plans/README.md
 - [ ] `...rest` spread onto the root element (also what lets a parent's scoped styles reach this component).
 - [ ] If daisyUI documents the class on multiple elements, `as` is polymorphic via `Polymorphic<{ as: Tag }>`.
 - [ ] No variant prop name collides with a native attribute of the root element (`style`, `size`, `width`, `type`, `value`, `title`, `color` are the usual traps).
+- [ ] **Every variant class is a full literal in a `Record` map — no `` `prefix-${value}` `` anywhere.** Interpolated names get no CSS (`plans/README.md` §1b).
+- [ ] If the component is generic (`Props<Tag extends HTMLTag>`), `type Props` is declared **before any `const`** in the frontmatter, and the destructure is annotated `as Props<HTMLTag>` (§5c).
+- [ ] Prop typing verified with a throwaway probe using the component both correctly and incorrectly — not assumed (§5c).
+- [ ] `astro check` passes (`tsc` does not check `.astro` files at all — §5b).
 
 ## 5. Storybook stories
 
-Reuses the Container-API render bridge in `packages/daisy-astro/.storybook/astro-story.ts`, whose signature is `renderAstroComponent(path, props, slots)` — the third argument maps slot names to HTML strings.
+Uses `@storybook-astro/framework` (`plans/README.md` §4): import the `.astro` file directly as `component`, pass slot content via `args.slots`. No render helpers, no component path strings.
 
 **Stories mirror the daisyUI doc page examples** (`plans/README.md` §8). List them first, then write them:
 
@@ -130,76 +144,39 @@ Reuses the Container-API render bridge in `packages/daisy-astro/.storybook/astro
 Then add a `Playground` story with full `argTypes` controls, plus one story per variant axis from section 1 that the doc examples don't already cover.
 
 ```ts
-import type { Meta, StoryObj } from '@storybook/html-vite';
-import { renderAstroComponent } from '../../.storybook/astro-story';
+import <FILL: Name> from './<FILL: Name>.astro';
 
-const COMPONENT_PATH = '/src/components/<FILL: Name>.astro';
-
-// Story args carry slot content under `slot:<name>` keys; everything else is a
-// prop. Keeps one arg object per story while still feeding the two separate
-// arguments the bridge takes.
-function split(args: Record<string, unknown>) {
-  const props: Record<string, unknown> = {};
-  const slots: Record<string, string> = {};
-  for (const [key, value] of Object.entries(args)) {
-    if (key.startsWith('slot:')) slots[key.slice(5)] = String(value);
-    else props[key] = value;
-  }
-  return { props, slots };
-}
-
-function renderInto(args: Record<string, unknown>) {
-  const container = document.createElement('div');
-  const { props, slots } = split(args);
-  renderAstroComponent(COMPONENT_PATH, props, slots).then((html) => {
-    container.innerHTML = html;
-  });
-  return container;
-}
-
-const meta: Meta = {
+export default {
   title: 'Components/<FILL: Name>',
-  render: renderInto,
+  component: <FILL: Name>,
   argTypes: {
     <FILL: one argType entry per prop from section 1, e.g.>
-    <FILL: color: { control: 'select', options: ['primary', 'secondary', ...] },>
-    <FILL: size: { control: 'select', options: ['xs', 'sm', 'md', 'lg', 'xl'] },>
+    <FILL: color: { control: 'select', options: [undefined, 'primary', 'secondary'] },>
+    <FILL: size: { control: 'select', options: [undefined, 'xs', 'sm', 'md', 'lg', 'xl'] },>
     <FILL: outline: { control: 'boolean' },>
   },
 };
 
-export default meta;
-type Story = StoryObj;
 
-export const Playground: Story = {
+export const Playground = {
   args: {
-    'slot:default': '<FILL: default slot content>',
+    slots: { default: '<FILL: default slot content>' },
     <FILL: sensible default prop args>
   },
 };
 
 // One story per daisyUI doc-page example, markup copied from the page.
-export const <FILL: DocExampleName>: Story = {
+export const <FILL: DocExampleName> = {
   args: {
-    <FILL: props + slot:* args reproducing that example>
-  },
-};
-
-export const <FILL: AxisName e.g. Colors>: Story = {
-  render: () => {
-    const wrapper = document.createElement('div');
-    wrapper.style.display = 'flex';
-    wrapper.style.gap = '0.5rem';
-    <FILL: for each value of the axis, e.g.>
-    for (const color of [<FILL: 'primary', 'secondary', ...>] as const) {
-      wrapper.appendChild(renderInto({ color, 'slot:default': color }));
-    }
-    return wrapper;
+    <FILL: props reproducing that example>
+    slots: { <FILL: default: '…', and any named slots> },
   },
 };
 ```
 
-Repeat the last `Story` block for every other variant axis (`Sizes`, `States`, ...) found in section 1.
+For a variant-axis story showing every value at once, render the component repeatedly with a decorator or a wrapper story rather than hand-building DOM — check how the framework's docs recommend composing multiples before inventing a helper.
+
+**Watch for slot sanitization.** The framework sanitizes slot HTML by default. Inline SVG in a story (icons, mockup chrome) may be stripped. If expected markup is missing from the canvas, check the Sanitization guide before concluding the component is wrong.
 
 ## 6. Steps
 
@@ -210,7 +187,12 @@ Repeat the last `Story` block for every other variant axis (`Sizes`, `States`, .
 - [ ] **Step 5:** Run `pnpm storybook` (from `packages/daisy-astro/`), open `Components/<FILL: Name>`, verify:
   - `Playground` renders and every control actually changes the rendered markup.
   - Each variant-axis story shows all values of that axis, each visibly distinct (colors look different, sizes look different, etc.) — daisyUI's CSS must actually be loaded for this to be checkable; if it isn't wired up yet in `.storybook/preview.ts`, that's a separate prerequisite, not part of this component's plan.
-- [ ] **Step 6:** Confirm non-variant HTML attributes forward correctly: pass an `id` (and, if the root element supports it, another native attribute like `disabled` or `href`) as a story arg not covered by `argTypes`, verify it lands in the rendered HTML from the render endpoint (`curl` the `__astro-render` output, or check the story's rendered DOM).
+- [ ] **Step 6:** Confirm non-variant HTML attributes forward correctly: add a story passing an `id`, a `data-*` attribute, a `style`, a `class`, and (if the root element supports it) `href` or `disabled`. Verify all of them survive into the rendered element. Headless check without a browser:
+
+```bash
+pnpm build-storybook
+grep -rhoE '<[^>]*btn[^>]*>' storybook-static/astro-prerendered-stories.json | head
+```
 - [ ] **Step 7:** Update `plans/README.md`'s checklist row for this component to **Implemented**.
 - [ ] **Step 8:** Commit.
 

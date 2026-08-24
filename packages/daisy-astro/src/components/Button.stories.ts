@@ -1,25 +1,54 @@
-import type { Meta, StoryObj } from '@storybook/html-vite';
-import { renderAstroComponent } from '../../.storybook/astro-story';
+import Button from './Button.astro';
 
-const meta: Meta = {
+// No Meta/StoryObj annotations: Storybook 10 ships those types from framework
+// packages (@storybook/react etc.) and @storybook-astro doesn't provide an
+// equivalent, so stories are plain objects — the shape its own docs use.
+export default {
   title: 'Components/Button',
-  render: (args) => {
-    const container = document.createElement('div');
-    renderAstroComponent('/src/components/Button.astro', args).then((html) => {
-      container.innerHTML = html;
-    });
-    return container;
-  },
-  argTypes: {
-    label: { control: 'text' },
+  component: Button,
+};
+
+export const Default = {
+  args: {
+    slots: { default: 'Click me' },
   },
 };
 
-export default meta;
-type Story = StoryObj;
-
-export const Default: Story = {
+export const Variants = {
   args: {
-    label: 'Click me',
+    color: 'primary',
+    size: 'lg',
+    variant: 'outline',
+    slots: { default: 'Primary large outline' },
+  },
+};
+
+// The <a> branch of the disabled handling — see plans/components/button.md §3b.
+export const DisabledLink = {
+  args: {
+    as: 'a',
+    href: '#',
+    disabled: true,
+    slots: { default: 'Disabled link' },
+  },
+};
+
+// Regression guard: native `style` must survive, caller `class` must merge.
+export const Passthrough = {
+  args: {
+    id: 'go',
+    'data-test': 'yes',
+    style: 'letter-spacing:2px',
+    class: 'mine',
+    slots: { default: 'Passthrough' },
+  },
+};
+
+// Breakpoint prefixes ride the class passthrough, not a prop — see §4.
+export const Responsive = {
+  args: {
+    size: 'xs',
+    class: 'sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl',
+    slots: { default: 'Responsive' },
   },
 };

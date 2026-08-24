@@ -1,9 +1,101 @@
 ---
-interface Props {
-  label: string;
-}
+import type { HTMLTag, Polymorphic } from 'astro/types';
+import type { DaisyColor, DaisySize } from '../lib/variants';
 
-const { label } = Astro.props;
+type ButtonVariant = 'outline' | 'dash' | 'soft' | 'ghost' | 'link';
+type ButtonShape = 'square' | 'circle';
+type ButtonWidth = 'wide' | 'block';
+
+// `Props` MUST be declared before any `const` in this frontmatter, or Astro
+// stops inferring it and the component silently accepts no props at all.
+// See plans/README.md §10.
+type Props<Tag extends HTMLTag> = Polymorphic<{
+  as: Tag;
+  color?: DaisyColor;
+  size?: DaisySize;
+  variant?: ButtonVariant;
+  shape?: ButtonShape;
+  width?: ButtonWidth;
+  active?: boolean;
+  disabled?: boolean;
+}>;
+
+// Full class names written out as literals — never `btn-${color}`. Tailwind
+// scans source text for candidates, so an interpolated class name is invisible
+// to it and daisyUI emits no CSS for it. See plans/README.md §9.
+const COLOR: Record<DaisyColor, string> = {
+  neutral: 'btn-neutral',
+  primary: 'btn-primary',
+  secondary: 'btn-secondary',
+  accent: 'btn-accent',
+  info: 'btn-info',
+  success: 'btn-success',
+  warning: 'btn-warning',
+  error: 'btn-error',
+};
+
+const SIZE: Record<DaisySize, string> = {
+  xs: 'btn-xs',
+  sm: 'btn-sm',
+  md: 'btn-md',
+  lg: 'btn-lg',
+  xl: 'btn-xl',
+};
+
+const VARIANT: Record<ButtonVariant, string> = {
+  outline: 'btn-outline',
+  dash: 'btn-dash',
+  soft: 'btn-soft',
+  ghost: 'btn-ghost',
+  link: 'btn-link',
+};
+
+const SHAPE: Record<ButtonShape, string> = {
+  square: 'btn-square',
+  circle: 'btn-circle',
+};
+
+const WIDTH: Record<ButtonWidth, string> = {
+  wide: 'btn-wide',
+  block: 'btn-block',
+};
+
+const {
+  as: Tag = 'button',
+  color,
+  size,
+  variant,
+  shape,
+  width,
+  active,
+  disabled,
+  class: className,
+  ...rest
+} = Astro.props as Props<HTMLTag>;
+
+// button/input support the native disabled attribute; a/div need the
+// btn-disabled class plus explicit a11y attributes to be genuinely disabled.
+const isNativeDisableable = Tag === 'button' || Tag === 'input';
+const a11y =
+  disabled && !isNativeDisableable
+    ? ({ tabindex: '-1', role: 'button', 'aria-disabled': 'true' } as const)
+    : ({} as const);
 ---
 
-<button class="btn">{label}</button>
+<Tag
+  class:list={[
+    'btn',
+    color && COLOR[color],
+    size && SIZE[size],
+    variant && VARIANT[variant],
+    shape && SHAPE[shape],
+    width && WIDTH[width],
+    { 'btn-active': active, 'btn-disabled': disabled && !isNativeDisableable },
+    className,
+  ]}
+  disabled={isNativeDisableable && disabled ? true : undefined}
+  {...a11y}
+  {...rest}
+>
+  <slot />
+</Tag>

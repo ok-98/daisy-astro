@@ -17,6 +17,37 @@ Every component's `Props` type:
 - Adds one prop per daisyUI variant axis the component supports (color, size, style, behavior, placement — whichever apply; see each component's own doc page for its actual modifier list, don't assume every axis applies to every component).
 - Destructures the variant props out of `Astro.props`, leaves everything else in `...rest`, spreads `rest` onto the root element.
 
+### 1b. Variant classes MUST be static literals in a lookup map
+
+**Never build a class name by interpolation.** Tailwind scans source *text* for class-name candidates; daisyUI 5 tree-shakes and only emits CSS for classes it finds. `` `btn-${color}` `` produces a class that no CSS rule ever backs — the markup looks right and the component is invisibly unstyled.
+
+Measured with `tailwindcss` v4.3.3 + `daisyui` v5.7.22:
+
+```
+source: class:list={['btn', color && `btn-${color}`]}
+  → .btn        in output CSS: yes
+  → .btn-primary in output CSS: NO
+
+source: const COLOR = { primary: 'btn-primary', … }; class:list={['btn', color && COLOR[color]]}
+  → .btn-primary in output CSS: yes
+  → .btn-secondary, .btn-accent (named in map, unused at runtime): yes
+  → .btn-error (never named anywhere): no   ← tree-shaking still works
+```
+
+So every variant axis gets a `Record<Union, string>` map of full literal class names, as in `packages/daisy-astro/src/components/Button.astro`. Granularity stays per-component: importing Button pulls in all `btn-*` variants, but a component you never import contributes nothing.
+
+Booleans are already safe when written as object keys — `{ 'btn-active': active }` is a literal in source, so it is detected.
+
+### 1c. Consumers must point Tailwind at this package
+
+Tailwind 4 auto-detects sources but ignores `node_modules`, so an app that installs this library gets **no** daisyUI CSS for it by default. Verified: a consumer's own `p-4` is picked up, the library's `btn-primary` is not, until the app's CSS adds
+
+```css
+@source "../node_modules/daisy-astro/src";
+```
+
+This belongs in the published README's install steps — without it the library appears completely unstyled, which is the first thing a new user will hit.
+
 ### 2. Class merging: `class:list`, never manual string concatenation
 
 Astro does **not** auto-merge a caller-supplied `class` with a class you hardcode on the root element — `class` must be destructured (renamed, since `class` is a reserved word) and merged explicitly. Astro's `class:list` directive is powered by `clsx` (bundled with Astro, no new dependency) and handles this:
@@ -34,17 +65,50 @@ interface Props extends HTMLAttributes<'button'> {
   outline?: boolean;
 }
 
+const COLOR: Record<Color, string> = {
+  primary: 'btn-primary', secondary: 'btn-secondary', accent: 'btn-accent',
+  neutral: 'btn-neutral', info: 'btn-info', success: 'btn-success',
+  warning: 'btn-warning', error: 'btn-error',
+};
+const SIZE: Record<Size, string> = {
+  xs: 'btn-xs', sm: 'btn-sm', md: 'btn-md', lg: 'btn-lg', xl: 'btn-xl',
+};
+
 const { color, size, outline, class: className, ...rest } = Astro.props;
 ---
 <button
-  class:list={['btn', color && `btn-${color}`, size && `btn-${size}`, { 'btn-outline': outline }, className]}
+  class:list={['btn', color && COLOR[color], size && SIZE[size], { 'btn-outline': outline }, className]}
   {...rest}
 >
   <slot />
 </button>
 ```
 
-This is the pattern every component plan implements. `class:list` skips `false`/`null`/`undefined` entries, so `color && ...` and `{ 'btn-outline': outline }` compose cleanly without manual filtering.
+This is the pattern every component plan implements. `class:list` skips `false`/`null`/`undefined` entries, so `color && ...` and `{ 'btn-outline': outline }` compose cleanly without manual filtering. The map lookups are not decoration — see §1b for why an interpolated class name silently produces no CSS.
+
+### 2b. Dependencies: daisyUI and Tailwind are peers, not runtime deps
+
+This package ships `.astro` files that emit class names; it ships no CSS. The consumer's own Tailwind build is what turns those classes into styles, and the consumer owns theme configuration. So:
+
+```jsonc
+"peerDependencies": {
+  "astro": "^7.0.0",
+  "daisyui": "^5.0.0",
+  "tailwindcss": "^4.0.0"
+}
+```
+
+with the same packages in `devDependencies` so Storybook renders styled locally. A runtime `dependency` would be wrong — it risks a second, conflicting daisyUI in the consumer's build and takes theme control away from them.
+
+daisyUI 5 requires Tailwind 4 and is CSS-first: no `tailwind.config.js`. Storybook gets its styles from `.storybook/preview.css`:
+
+```css
+@import "tailwindcss";
+@plugin "daisyui";
+@source "../src";
+```
+
+The `@source` line is required for the same reason as §1c — Storybook renders components with no app to scan. Tailwind's Vite plugin is registered in `astro.config.mjs`, which `@storybook-astro/framework` picks up automatically. Verified: the built Storybook CSS contains real rules for `btn-primary`, `btn-outline`, `btn-lg`, `btn-circle`, `btn-error`, `btn-disabled`.
 
 ### 3. Shared variant types live in one place
 
@@ -52,11 +116,39 @@ This is the pattern every component plan implements. `class:list` skips `false`/
 
 This file is a **prerequisite**, created once, before or during the first component's implementation — not part of any single component's plan.
 
-### 4. Storybook: one story file per component, one story per variant axis + a Playground
+### 4. Storybook runs on `@storybook-astro/framework`
 
-Following the pattern already proven in `packages/daisy-astro/.storybook/` (Container-API render bridge, see `plans/TEMPLATE.md` for the exact story shape):
+The community Astro framework for Storybook (`storybook-astro.org`, MIT, ~24k downloads/week, Astro 5–7 + Storybook 10). Stories import the `.astro` file directly and pass slot content through `args.slots`:
+
+```ts
+import Button from './Button.astro';
+
+export default { title: 'Components/Button', component: Button };
+
+export const Default = {
+  args: { color: 'primary', slots: { default: 'Click me' } },
+};
+```
+
+Named slots use matching keys (`slots: { header: '…', default: '…' }`). Slot content can be an HTML string, another Astro component, or an array mixing them.
+
+**This replaced a hand-rolled Container-API bridge.** The earlier setup wired the Container API into a Vite middleware manually because Astro is absent from Storybook's own framework list — the adapter lives outside Storybook's repo and was missed. The framework does the same thing properly and additionally handles scoped styles, client script execution, static-build prerendering, framework components, and Vitest portable stories. Do not reintroduce a custom bridge.
+
+Story conventions:
 - `Playground` story: full `argTypes` controls for every prop, default args.
-- One additional story per meaningful variant axis (e.g. `Colors`, `Sizes`, `States`) rendering all values of that axis side by side, so a reviewer can see every option at a glance without clicking through controls one at a time.
+- One story per daisyUI doc-page example (§8).
+- One story per variant axis (e.g. `Colors`, `Sizes`) rendering all values side by side, for axes the doc examples don't already cover.
+
+**Story files are plain objects, not `Meta`/`StoryObj`.** Storybook 10 ships those generics from framework packages (`@storybook/react`, `@storybook/vue3`, …) and `@storybook-astro` has no equivalent; `storybook/internal/types` doesn't export them either. Untyped story objects are what the framework's own docs use. Don't burn time re-deriving this — it was checked.
+
+To make `import Button from './Button.astro'` resolve under `tsc`, `src/env.d.ts` carries:
+
+```ts
+/// <reference types="astro/client" />
+/// <reference types="@storybook-astro/framework/shim" />
+```
+
+**Slot sanitization is on by default** — the framework sanitizes slot HTML with conservative defaults. Stories containing inline SVG (icons, mockups) may have markup stripped. If an SVG vanishes from a story, that is the cause; see the framework's Sanitization guide to widen the allowlist rather than assuming the component is broken.
 
 ### 5. Slots
 
@@ -77,7 +169,7 @@ const hasFigure = Astro.slots.has('figure');
 )}
 ```
 
-Verified behaviour (probe rendered through the Storybook bridge, 2026-08-24):
+Verified behaviour (probe rendered server-side, 2026-08-24):
 
 ```
 slots {}                                        → <div class="card"><div class="card-body">FALLBACK_BODY</div></div>
@@ -92,6 +184,36 @@ slots {"default":"BODY","figure":"<img …>",
 
 `Astro.slots.render('name')` returns slot content as an HTML string. Reach for it only when markup must be inspected or injected via `set:html` — `Astro.slots.has()` plus a plain `<slot />` covers the ordinary case.
 
+### 5b. Type-checking: `astro check`, not `tsc`
+
+`tsc` does not parse `.astro` files at all — it silently checks nothing in them. Real type errors in a component only surface under `astro check`. Run it as the gate; `tsc` alone will happily report success on a broken component.
+
+Two constraints that come with it:
+
+- **TypeScript must be 6.x.** `astro check` uses the language server's programmatic API, which TypeScript 7's native compiler does not yet expose (it errors out and refuses to run). Pinned to `typescript@6.0.3`.
+- **Scope `tsconfig.json`.** Without an explicit `exclude`, `astro check` walks `storybook-static/` and reports thousands of errors from minified build output.
+
+### 5c. Declaration order breaks generic `Props` inference
+
+In a component using a generic `Props<Tag extends HTMLTag>`, **`Props` must be declared before any `const` in the frontmatter.** With a `const` above it, Astro stops inferring `Props` and the component accepts no props at all — every call site fails with "not assignable to type `IntrinsicAttributes`", while the component body's props silently degrade to `any`.
+
+This is a silent, confusing failure: the component still renders correctly, so only a type probe catches it. Bisected against Astro 7.2.4.
+
+Also annotate the destructure, since `Astro.props` is untyped inside a generic component:
+
+```astro
+const { as: Tag = 'button', color, ...rest } = Astro.props as Props<HTMLTag>;
+```
+
+**Verify prop typing with a throwaway probe** rather than assuming it works — a component that accepts nothing and one that accepts everything both pass `astro check` on their own. Write a scratch `.astro` that uses the component correctly *and* incorrectly, confirm only the incorrect lines error, then delete it:
+
+```astro
+<Button color="primary">ok</Button>
+<Button as="a" href="/ok">ok</Button>
+<Button color="banana">must error</Button>
+<Button href="/nope">must error — href needs as="a"</Button>
+```
+
 ### 6. Other Astro idioms this library depends on
 
 - **Polymorphic `as`.** Where daisyUI documents a class on several elements (Button on `button`/`a`/`input`/`div`, Link on `a`/`button`), use `Polymorphic<{ as: Tag }>` from `astro/types` rather than a hand-rolled generic, so the accepted attribute set follows the tag — `href` type-checks on `as="a"` and is rejected on `as="button"`. Worked example in `plans/components/button.md` §4.
@@ -100,23 +222,13 @@ slots {"default":"BODY","figure":"<img …>",
 - **Scoped styles and `...rest`.** Astro scopes component styles by adding a `data-astro-cid-*` attribute. Because these components spread `...rest` onto the root element, a parent's scoped styles reach the component correctly — one more reason the spread is mandatory and not optional polish.
 - **Prefer CSS and native elements over script.** Native `<dialog>` for Modal, `<details>` for Collapse/Accordion, the checkbox hack for Drawer/Swap — daisyUI is built around these. Match the element daisyUI's own example uses rather than substituting a div plus JavaScript.
 
-### 7. Known limitation: interactive components in Storybook
+### 7. Interactive components in Storybook
 
-The stories inject rendered HTML with `container.innerHTML = html`. Scripts inserted this way are **not executed** by the browser — that is standard DOM behaviour for `innerHTML`, independent of Astro or Storybook. The `<script>` tag itself is emitted by the Container API and its `src` is served correctly by Vite (verified 2026-08-24), so the failure is inert markup, not a broken URL.
+Handled by the framework: its renderer applies scoped styles and executes client scripts after injecting the SSR'd HTML, so script-backed components (Theme Controller, Swap, Text Rotate) behave in the canvas.
 
-Consequence: components whose behaviour is CSS-only (the large majority) preview accurately, while any component relying on a client script previews as static markup with dead interactivity. The standard remedy is to re-create script elements after injection:
+This was a real limitation of the previous hand-rolled bridge, which injected HTML with `container.innerHTML` — scripts inserted that way are never executed by the browser, so those components previewed as dead markup. Adopting the framework removed the problem rather than working around it. Noted here so the constraint isn't reintroduced from memory.
 
-```ts
-container.innerHTML = html;
-for (const old of container.querySelectorAll('script')) {
-  const s = document.createElement('script');
-  for (const { name, value } of old.attributes) s.setAttribute(name, value);
-  s.textContent = old.textContent;
-  old.replaceWith(s);
-}
-```
-
-This remedy is **documented but not yet verified in this repo** — no component needs it today. Whoever builds the first script-backed component (Theme Controller is the likely first) should verify it there and promote it into `.storybook/astro-story.ts` if it works.
+Static builds also prerender Astro stories, so `pnpm build-storybook` produces real component HTML — verified by grepping the build output for rendered `btn` markup. The old bridge produced none, since its middleware only existed in dev.
 
 ### 8. Stories mirror the daisyUI docs examples
 
@@ -232,7 +344,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 
 1. Copy `plans/TEMPLATE.md` to `plans/components/<slug>.md`.
 2. Fill it in against the real daisyUI doc page for that component (`daisyui.com/components/<slug>/`) — read the actual modifier class list, don't guess from memory or from another component's axes. Capture the page's examples too; they become the stories (§8).
-3. Prototype the component and render it through the bridge before finalising the plan. Button's plan found two defects this way (a variant prop name that silently ate a native attribute, and a disabled state that was inaccessible on `<a>`) — neither was visible from reading the docs.
+3. Prototype the component and render it in Storybook before finalising the plan. Button's plan found two defects this way (a variant prop name that silently ate a native attribute, and a disabled state that was inaccessible on `<a>`) — neither was visible from reading the docs. `pnpm build-storybook` then grepping `storybook-static/` for the rendered markup is a quick headless check when a browser isn't handy.
 4. Update this file's table row to **Planned**.
 5. Implement per the plan (component + stories).
 6. Update the table row to **Implemented**.

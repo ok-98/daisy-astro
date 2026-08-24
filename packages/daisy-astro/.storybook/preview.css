@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* Storybook renders components directly, with no app to scan, so point
+   Tailwind at the component sources explicitly. */
+@source "../src";
