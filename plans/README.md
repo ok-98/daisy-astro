@@ -73,7 +73,7 @@ If the component wraps multiple content areas (e.g. Card's figure/body/actions, 
 ### Actions
 | Component | Slug | Status |
 |---|---|---|
-| Button | `button` | Implemented (example) |
+| Button | `button` | Planned — [`plans/components/button.md`](components/button.md) (current code is a 2-prop scaffold, plan replaces it) |
 | Dropdown | `dropdown` | Not started |
 | FAB / Speed Dial | `fab` | Not started |
 | Modal | `modal` | Not started |
