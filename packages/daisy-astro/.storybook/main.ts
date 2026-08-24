@@ -14,11 +14,12 @@ function astroRenderMiddleware(): Plugin {
           const url = new URL(req.url ?? '', 'http://localhost');
           const component = url.searchParams.get('component');
           const props = JSON.parse(url.searchParams.get('props') ?? '{}');
+          const slots = JSON.parse(url.searchParams.get('slots') ?? '{}');
           if (!component) throw new Error('Missing "component" query param');
 
           const mod = await server.ssrLoadModule(component);
           const container = await AstroContainer.create();
-          const html = await container.renderToString(mod.default, { props });
+          const html = await container.renderToString(mod.default, { props, slots });
 
           res.setHeader('Content-Type', 'text/html');
           res.end(html);

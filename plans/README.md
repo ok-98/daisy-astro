@@ -60,7 +60,69 @@ Following the pattern already proven in `packages/daisy-astro/.storybook/` (Cont
 
 ### 5. Slots
 
+Content always comes in through slots, never through content props — no `label="Save"` where `<slot />` will do. A component that renders caller markup takes a slot.
+
 If the component wraps multiple content areas (e.g. Card's figure/body/actions, Modal's header/body/actions), use named slots (`<slot name="..." />`) — document them explicitly in the component's plan, don't infer from memory.
+
+**Gate optional wrappers with `Astro.slots.has()`.** daisyUI styles its wrapper elements (`figure`, `card-actions`, ...) with padding, gaps and borders, so unconditionally rendering a wrapper around an unused slot produces a visible empty box. Check before rendering:
+
+```astro
+---
+const hasFigure = Astro.slots.has('figure');
+---
+{hasFigure && (
+  <figure>
+    <slot name="figure" />
+  </figure>
+)}
+```
+
+Verified behaviour (probe rendered through the Storybook bridge, 2026-08-24):
+
+```
+slots {}                                        → <div class="card"><div class="card-body">FALLBACK_BODY</div></div>
+slots {"default":"BODY"}                        → <div class="card"><div class="card-body">BODY</div></div>
+slots {"default":"BODY","figure":"<img …>",
+       "actions":"<button>OK</button>"}         → <div class="card"><figure><img …></figure><div class="card-body">BODY</div><div class="card-actions"><button>OK</button></div></div>
+```
+
+**Fallback content** goes inside the slot tag — `<slot>default text</slot>` renders only when the caller passes nothing (confirmed in the first line above). Use it where daisyUI's own example has placeholder content; don't invent fallbacks the library doesn't imply.
+
+**Forwarding slots to a nested component** uses both attributes on one tag: `<slot name="head" slot="head" />`. Relevant for compound components (Card wrapping a Card body, Drawer wrapping its content area).
+
+`Astro.slots.render('name')` returns slot content as an HTML string. Reach for it only when markup must be inspected or injected via `set:html` — `Astro.slots.has()` plus a plain `<slot />` covers the ordinary case.
+
+### 6. Other Astro idioms this library depends on
+
+- **Polymorphic `as`.** Where daisyUI documents a class on several elements (Button on `button`/`a`/`input`/`div`, Link on `a`/`button`), use `Polymorphic<{ as: Tag }>` from `astro/types` rather than a hand-rolled generic, so the accepted attribute set follows the tag — `href` type-checks on `as="a"` and is rejected on `as="button"`. Worked example in `plans/components/button.md` §4.
+- **Zero JS by default.** Astro components ship no client JavaScript unless a `<script>` or `client:*` directive is added. Most daisyUI components are pure CSS (many use the checkbox/details hack deliberately to avoid JS) — do not add a script to reimplement behaviour daisyUI already gets from CSS.
+- **`<script>` runs once per page, not once per instance.** Astro bundles component scripts, so a script inside a component executes a single time no matter how many instances are on the page. Any script must therefore use `document.querySelectorAll(...)` and wire up every instance — `querySelector` will silently bind only the first. Use `is:inline` only when a script genuinely must be duplicated per instance, knowing it then skips bundling, TypeScript and import resolution. `define:vars` implies `is:inline`.
+- **Scoped styles and `...rest`.** Astro scopes component styles by adding a `data-astro-cid-*` attribute. Because these components spread `...rest` onto the root element, a parent's scoped styles reach the component correctly — one more reason the spread is mandatory and not optional polish.
+- **Prefer CSS and native elements over script.** Native `<dialog>` for Modal, `<details>` for Collapse/Accordion, the checkbox hack for Drawer/Swap — daisyUI is built around these. Match the element daisyUI's own example uses rather than substituting a div plus JavaScript.
+
+### 7. Known limitation: interactive components in Storybook
+
+The stories inject rendered HTML with `container.innerHTML = html`. Scripts inserted this way are **not executed** by the browser — that is standard DOM behaviour for `innerHTML`, independent of Astro or Storybook. The `<script>` tag itself is emitted by the Container API and its `src` is served correctly by Vite (verified 2026-08-24), so the failure is inert markup, not a broken URL.
+
+Consequence: components whose behaviour is CSS-only (the large majority) preview accurately, while any component relying on a client script previews as static markup with dead interactivity. The standard remedy is to re-create script elements after injection:
+
+```ts
+container.innerHTML = html;
+for (const old of container.querySelectorAll('script')) {
+  const s = document.createElement('script');
+  for (const { name, value } of old.attributes) s.setAttribute(name, value);
+  s.textContent = old.textContent;
+  old.replaceWith(s);
+}
+```
+
+This remedy is **documented but not yet verified in this repo** — no component needs it today. Whoever builds the first script-backed component (Theme Controller is the likely first) should verify it there and promote it into `.storybook/astro-story.ts` if it works.
+
+### 8. Stories mirror the daisyUI docs examples
+
+Every story reproduces the corresponding example from that component's daisyUI doc page — same markup structure, same slot content, same wording, same order as the page presents them. Two reasons: the examples are the library's own definition of correct usage, and matching them makes a wrong wrapper or a missing element obvious on sight when comparing the story against the doc page.
+
+Copy the example markup from the doc page into the story rather than inventing demo content. Where the daisyUI example shows raw HTML classes (`<button class="btn btn-primary">`), the story passes the equivalent props instead (`{ color: 'primary' }`) — the rendered output should match the doc example's HTML, which is exactly what makes it a useful check. Add extra stories beyond the doc examples only for variant axes the page shows only as a class table.
 
 ## Status legend
 
@@ -169,7 +231,8 @@ If the component wraps multiple content areas (e.g. Card's figure/body/actions, 
 ## Workflow for a new component
 
 1. Copy `plans/TEMPLATE.md` to `plans/components/<slug>.md`.
-2. Fill it in against the real daisyUI doc page for that component (`daisyui.com/components/<slug>/`) — read the actual modifier class list, don't guess from memory or from another component's axes.
-3. Update this file's table row to **Planned**.
-4. Implement per the plan (component + stories).
-5. Update the table row to **Implemented**.
+2. Fill it in against the real daisyUI doc page for that component (`daisyui.com/components/<slug>/`) — read the actual modifier class list, don't guess from memory or from another component's axes. Capture the page's examples too; they become the stories (§8).
+3. Prototype the component and render it through the bridge before finalising the plan. Button's plan found two defects this way (a variant prop name that silently ate a native attribute, and a disabled state that was inaccessible on `<a>`) — neither was visible from reading the docs.
+4. Update this file's table row to **Planned**.
+5. Implement per the plan (component + stories).
+6. Update the table row to **Implemented**.

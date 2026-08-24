@@ -37,7 +37,16 @@ Read `<FILL: doc URL>` and list every modifier class daisyUI documents for this 
 
 ## 2. Slots
 
-<FILL: "Single default slot." OR list named slots this component needs, e.g. Card: `default` (body), `figure`, `actions`.>
+Content comes in through slots, not content props. Derive the slot list from the daisyUI doc page's example markup — every distinct content area in the example is a slot.
+
+| Slot | Wrapper element | Optional? | Source in daisyUI example |
+|---|---|---|---|
+| `default` | <FILL: e.g. `div.card-body`, or "none — root"> | <FILL: no> | <FILL: what the doc example puts here> |
+| <FILL: e.g. `figure`> | <FILL: e.g. `figure`> | <FILL: yes → gate with Astro.slots.has()> | <FILL> |
+
+- Every **optional** slot whose wrapper carries daisyUI styling must be gated with `Astro.slots.has()`, or an unused slot leaves a visibly empty padded box. See `plans/README.md` §5.
+- Note any **fallback content** (`<slot>…</slot>`) only where the daisyUI example itself shows placeholder content.
+- <FILL: "Single default slot, no gating needed." if that's the whole story — delete the table above in that case.>
 
 ## 3. Props interface
 
@@ -82,11 +91,43 @@ const { <FILL: destructure every prop from section 1>, class: className, ...rest
 </<FILL: root element>>
 ```
 
-If the component has named slots (section 2), render each with `<slot name="..." />` in the appropriate place instead of a single default `<slot />`.
+If the component has named slots (section 2), render each with `<slot name="..." />` in the appropriate place instead of a single default `<slot />`, and gate the optional ones:
+
+```astro
+---
+const has<FILL: SlotName> = Astro.slots.has('<FILL: slotname>');
+---
+{has<FILL: SlotName> && (
+  <<FILL: wrapper element>>
+    <slot name="<FILL: slotname>" />
+  </<FILL: wrapper element>>
+)}
+```
+
+### Astro idioms gate
+
+Check each before considering section 4 done (full rationale in `plans/README.md` §6):
+
+- [ ] Content arrives via slots, not content props.
+- [ ] Optional styled wrappers gated with `Astro.slots.has()`.
+- [ ] Root element matches the one daisyUI's example uses (native `<dialog>`, `<details>`, checkbox hack — not a div plus JS substitute).
+- [ ] No `<script>` added for behaviour daisyUI already achieves in CSS.
+- [ ] If a script *is* required: it uses `querySelectorAll` and wires every instance, because a bundled component script runs once per page.
+- [ ] `...rest` spread onto the root element (also what lets a parent's scoped styles reach this component).
+- [ ] If daisyUI documents the class on multiple elements, `as` is polymorphic via `Polymorphic<{ as: Tag }>`.
+- [ ] No variant prop name collides with a native attribute of the root element (`style`, `size`, `width`, `type`, `value`, `title`, `color` are the usual traps).
 
 ## 5. Storybook stories
 
-Reuses the Container-API render bridge already built in `packages/daisy-astro/.storybook/astro-story.ts` (see `plans/README.md` §4 and the working `Button.stories.ts` example). One `Playground` story with full controls, plus one story per variant axis from section 1.
+Reuses the Container-API render bridge in `packages/daisy-astro/.storybook/astro-story.ts`, whose signature is `renderAstroComponent(path, props, slots)` — the third argument maps slot names to HTML strings.
+
+**Stories mirror the daisyUI doc page examples** (`plans/README.md` §8). List them first, then write them:
+
+| Doc-page example | Story name | Slots / props it needs |
+|---|---|---|
+| <FILL: example heading from the doc page> | <FILL: PascalCase story name> | <FILL> |
+
+Then add a `Playground` story with full `argTypes` controls, plus one story per variant axis from section 1 that the doc examples don't already cover.
 
 ```ts
 import type { Meta, StoryObj } from '@storybook/html-vite';
@@ -94,9 +135,23 @@ import { renderAstroComponent } from '../../.storybook/astro-story';
 
 const COMPONENT_PATH = '/src/components/<FILL: Name>.astro';
 
-function renderInto(props: Record<string, unknown>) {
+// Story args carry slot content under `slot:<name>` keys; everything else is a
+// prop. Keeps one arg object per story while still feeding the two separate
+// arguments the bridge takes.
+function split(args: Record<string, unknown>) {
+  const props: Record<string, unknown> = {};
+  const slots: Record<string, string> = {};
+  for (const [key, value] of Object.entries(args)) {
+    if (key.startsWith('slot:')) slots[key.slice(5)] = String(value);
+    else props[key] = value;
+  }
+  return { props, slots };
+}
+
+function renderInto(args: Record<string, unknown>) {
   const container = document.createElement('div');
-  renderAstroComponent(COMPONENT_PATH, props).then((html) => {
+  const { props, slots } = split(args);
+  renderAstroComponent(COMPONENT_PATH, props, slots).then((html) => {
     container.innerHTML = html;
   });
   return container;
@@ -118,7 +173,15 @@ type Story = StoryObj;
 
 export const Playground: Story = {
   args: {
-    <FILL: sensible default args>
+    'slot:default': '<FILL: default slot content>',
+    <FILL: sensible default prop args>
+  },
+};
+
+// One story per daisyUI doc-page example, markup copied from the page.
+export const <FILL: DocExampleName>: Story = {
+  args: {
+    <FILL: props + slot:* args reproducing that example>
   },
 };
 
@@ -129,7 +192,7 @@ export const <FILL: AxisName e.g. Colors>: Story = {
     wrapper.style.gap = '0.5rem';
     <FILL: for each value of the axis, e.g.>
     for (const color of [<FILL: 'primary', 'secondary', ...>] as const) {
-      wrapper.appendChild(renderInto({ <FILL: color, and any other required default props> }));
+      wrapper.appendChild(renderInto({ color, 'slot:default': color }));
     }
     return wrapper;
   },
@@ -140,9 +203,9 @@ Repeat the last `Story` block for every other variant axis (`Sizes`, `States`, .
 
 ## 6. Steps
 
-- [ ] **Step 1:** Read `<FILL: doc URL>`, fill in section 1's variant audit table.
+- [ ] **Step 1:** Read `<FILL: doc URL>`. Fill in section 1's variant audit table **and** section 2's slot table, and copy the page's examples into section 5's example table.
 - [ ] **Step 2:** If any prop needs a union type not already in `packages/daisy-astro/src/lib/variants.ts`, add it there (shared, reusable) rather than declaring it locally — unless it's genuinely specific to this one component, in which case declare it in this component's own file.
-- [ ] **Step 3:** Create `packages/daisy-astro/src/components/<FILL: Name>.astro` per section 4.
+- [ ] **Step 3:** Create `packages/daisy-astro/src/components/<FILL: Name>.astro` per section 4, then walk the Astro idioms gate in that section.
 - [ ] **Step 4:** Create `packages/daisy-astro/src/components/<FILL: Name>.stories.ts` per section 5.
 - [ ] **Step 5:** Run `pnpm storybook` (from `packages/daisy-astro/`), open `Components/<FILL: Name>`, verify:
   - `Playground` renders and every control actually changes the rendered markup.
@@ -158,4 +221,7 @@ Repeat the last `Story` block for every other variant axis (`Sizes`, `States`, .
 - [ ] `class` prop from a caller merges correctly (destructured, passed through `class:list`) — doesn't get silently dropped.
 - [ ] `Playground` story exposes every prop as a control.
 - [ ] One story per variant axis exists and renders all values of that axis.
-- [ ] Slots (if any) documented and implemented as named slots, not crammed into the default slot.
+- [ ] One story per daisyUI doc-page example, reproducing that example's markup and content.
+- [ ] Slots documented and implemented as named slots, not crammed into the default slot or replaced by content props.
+- [ ] Optional styled wrappers gated with `Astro.slots.has()` — verified by rendering with the slot omitted and confirming the wrapper is absent from the HTML.
+- [ ] Every box in section 4's Astro idioms gate ticked.
