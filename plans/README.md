@@ -362,7 +362,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 ### Mockup
 | Component | Slug | Status |
 |---|---|---|
-| Browser | `browser-mockup` | Not started |
+| Browser | `browser-mockup` | Planned — [`plans/components/browser-mockup.md`](components/browser-mockup.md) (current code is a dummy scaffold) |
 | Code | `code-mockup` | Not started |
 | Phone | `phone-mockup` | Not started |
 | Window | `window-mockup` | Not started |
