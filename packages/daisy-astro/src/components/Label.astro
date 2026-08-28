@@ -1,0 +1,14 @@
+---
+// Dummy scaffold. Variant props (color/size/style axes), slots and any
+// wrapper markup are still TODO — fill in from the doc page per the workflow
+// in plans/README.md: https://daisyui.com/components/label/
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends HTMLAttributes<'label'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<label class:list={['label', className]} {...rest}>
+  <slot />
+</label>

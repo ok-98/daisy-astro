@@ -1,0 +1,14 @@
+---
+// Dummy scaffold. Variant props (color/size/style axes), slots and any
+// wrapper markup are still TODO — fill in from the doc page per the workflow
+// in plans/README.md: https://daisyui.com/components/stat/
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['stats', className]} {...rest}>
+  <slot />
+</div>
