@@ -257,7 +257,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 ### Data Display
 | Component | Slug | Status |
 |---|---|---|
-| Accordion | `accordion` | Not started |
+| Accordion | `accordion` | Planned — [`plans/components/accordion.md`](components/accordion.md) (wrapper + `AccordionItem`; current code is a dummy scaffold) |
 | Avatar | `avatar` | Not started |
 | Aura | `aura` | Not started |
 | Badge | `badge` | Not started |
