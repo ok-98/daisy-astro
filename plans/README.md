@@ -320,7 +320,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 ### Feedback
 | Component | Slug | Status |
 |---|---|---|
-| Alert | `alert` | Not started |
+| Alert | `alert` | Planned — [`plans/components/alert.md`](components/alert.md) (current code is a dummy scaffold) |
 | Loading | `loading` | Not started |
 | Progress | `progress` | Not started |
 | Radial progress | `radial-progress` | Not started |
