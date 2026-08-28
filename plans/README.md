@@ -350,7 +350,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 ### Layout
 | Component | Slug | Status |
 |---|---|---|
-| Divider | `divider` | Not started |
+| Divider | `divider` | Planned — [`plans/components/divider.md`](components/divider.md) (slot whitespace breaks the empty-divider `:empty` rule) |
 | Drawer sidebar | `drawer` | Not started |
 | Footer | `footer` | Not started |
 | Hero | `hero` | Not started |
