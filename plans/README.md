@@ -293,7 +293,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Chat bubble | `chat-bubble` | Planned — [`plans/components/chat-bubble.md`](components/chat-bubble.md) (`Chat`/`ChatBubble`/`ChatHeader`/`ChatFooter`; `chat-image` served by `Avatar`) |
 | Collapse | `collapse` | Planned — [`plans/components/collapse.md`](components/collapse.md) (single impl of the 7 `collapse-*` classes; supersedes `AccordionItem`) |
 | Countdown | `countdown` | Planned — [`plans/components/countdown.md`](components/countdown.md) (wrapper + `CountdownValue`; transition effect, not a timer) |
-| Diff | `diff` | Not started |
+| Diff | `diff` | Planned — [`plans/components/diff.md`](components/diff.md) (native CSS `resize`, no JS; narrowest browser support — no drag on iOS Safari) |
 | Hover 3D card | `hover-3d-card` | Not started |
 | Hover Gallery | `hover-gallery` | Not started |
 | Kbd | `kbd` | Not started |
