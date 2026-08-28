@@ -308,7 +308,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Component | Slug | Status |
 |---|---|---|
 | Breadcrumbs | `breadcrumbs` | Planned — [`plans/components/breadcrumbs.md`](components/breadcrumbs.md) (current code is a dummy scaffold) |
-| Dock | `dock` | Not started |
+| Dock | `dock` | Planned — [`plans/components/dock.md`](components/dock.md) (`Dock`/`DockItem`/`DockLabel`; position:fixed is built in) |
 | Link | `link` | Not started |
 | Megamenu | `megamenu` | Not started |
 | Menu | `menu` | Not started |
