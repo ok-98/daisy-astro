@@ -291,7 +291,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Card | `card` | Planned — [`plans/components/card.md`](components/card.md) (wrapper + `CardBody`/`CardTitle`/`CardActions`; current code is a dummy scaffold) |
 | Carousel | `carousel` | Planned — [`plans/components/carousel.md`](components/carousel.md) (wrapper + `CarouselItem`; current code is a dummy scaffold) |
 | Chat bubble | `chat-bubble` | Planned — [`plans/components/chat-bubble.md`](components/chat-bubble.md) (`Chat`/`ChatBubble`/`ChatHeader`/`ChatFooter`; `chat-image` served by `Avatar`) |
-| Collapse | `collapse` | Not started |
+| Collapse | `collapse` | Planned — [`plans/components/collapse.md`](components/collapse.md) (single impl of the 7 `collapse-*` classes; supersedes `AccordionItem`) |
 | Countdown | `countdown` | Not started |
 | Diff | `diff` | Not started |
 | Hover 3D card | `hover-3d-card` | Not started |
