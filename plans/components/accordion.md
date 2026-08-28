@@ -3,8 +3,8 @@
 **daisyUI category:** Data Display
 **daisyUI doc page:** https://daisyui.com/components/accordion/
 **Root element:** `div` (wrapper `Accordion`); `div` or `details` per `trigger` (item `AccordionItem`)
-**Target files:** `packages/daisy-astro/src/components/Accordion.astro`, `packages/daisy-astro/src/components/AccordionItem.astro` (both currently dummy scaffolds — `AccordionItem.astro` does not exist yet)
-**Story files:** `packages/daisy-astro/src/components/Accordion.stories.ts`, `packages/daisy-astro/src/components/AccordionItem.stories.ts`
+**Target files:** `packages/daisy-astro/src/components/Accordion/Accordion.astro`, `packages/daisy-astro/src/components/Accordion/AccordionItem.astro` (`Accordion.astro` is currently a dummy scaffold; `AccordionItem.astro` does not exist yet)
+**Story files:** `packages/daisy-astro/src/components/Accordion/Accordion.stories.ts`, `packages/daisy-astro/src/components/Accordion/AccordionItem.stories.ts`
 
 **Global Constraints** (from `plans/README.md`, apply as-is):
 - Props extend `HTMLAttributes<'div'>` / `HTMLAttributes<'details'>` from `astro/types`.
@@ -23,6 +23,8 @@
 daisyUI has **no `accordion` class**. Grep of `daisyui@5.7.22/components/collapse.css` returns exactly 7 class names — `collapse`, `collapse-title`, `collapse-content`, `collapse-arrow`, `collapse-plus`, `collapse-open`, `collapse-close` — and nothing else **[verified]**. "Accordion" is the doc page for *N `.collapse` items sharing a `name`*, where the shared name is what makes opening one close the others. The grouping is emergent, not a class.
 
 That leaves the group with only one piece of real markup to own — the `join join-vertical` wrapper from the doc page's last example — so:
+
+Both files live in `src/components/Accordion/` — one directory per daisyUI component, sub-components included (`plans/README.md` §3b).
 
 | File | Renders | Owns |
 |---|---|---|
@@ -350,7 +352,7 @@ const item = (title: string, body: string, name: string, extra = '', checked = f
 
 - [ ] **Step 1:** Resolve the three unknowns in §3d — slot-content-with-props, sanitizer behaviour on `<input type="radio">`, and `[&>*]:join-item` emission. Each one changes §5 or §3c; none changes §1 or §2.
 - [ ] **Step 2:** No new shared unions — `variants.ts` is untouched (§1: no color or size axis). Skip.
-- [ ] **Step 3:** Replace the `Accordion.astro` dummy scaffold and create `AccordionItem.astro` per §4, then walk the Astro idioms gate.
+- [ ] **Step 3:** In `src/components/Accordion/`, replace the `Accordion.astro` dummy scaffold and create `AccordionItem.astro` per §4, then walk the Astro idioms gate.
 - [ ] **Step 4:** Write both story files per §5, replacing the dummy `Accordion.stories.ts`.
 - [ ] **Step 5:** Run `pnpm storybook` from `packages/daisy-astro/`, open `Components/Accordion` and `Components/AccordionItem`, and verify:
   - `Playground` renders and every control changes the markup.

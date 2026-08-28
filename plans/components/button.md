@@ -3,8 +3,8 @@
 **daisyUI category:** Actions
 **daisyUI doc page:** https://daisyui.com/components/button/
 **Root element:** `button` by default, polymorphic via `as` (`a`, `input`, `div` also documented by daisyUI)
-**Target file:** `packages/daisy-astro/src/components/Button.astro` (replaces the current 2-prop scaffold example)
-**Story file:** `packages/daisy-astro/src/components/Button.stories.ts` (replaces the current example)
+**Target file:** `packages/daisy-astro/src/components/Button/Button.astro` (replaces the current 2-prop scaffold example)
+**Story file:** `packages/daisy-astro/src/components/Button/Button.stories.ts` (replaces the current example)
 
 **Global Constraints** (from `plans/README.md`, apply as-is):
 - Props forward every native HTML attribute for the rendered element.
@@ -94,7 +94,7 @@ Uses `Polymorphic` from `astro/types` so `as` changes the rendered tag *and* the
 ```astro
 ---
 import type { HTMLTag, Polymorphic } from 'astro/types';
-import type { DaisyColor, DaisySize } from '../lib/variants';
+import type { DaisyColor, DaisySize } from '../../lib/variants';
 
 type ButtonVariant = 'outline' | 'dash' | 'soft' | 'ghost' | 'link';
 type ButtonShape = 'square' | 'circle';

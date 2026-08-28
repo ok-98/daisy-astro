@@ -14,14 +14,14 @@ already made).
 **daisyUI category:** <FILL: e.g. Data Display>
 **daisyUI doc page:** <FILL: https://daisyui.com/components/SLUG/>
 **Root element:** <FILL: e.g. 'button', 'div', 'a'>
-**Target file:** `packages/daisy-astro/src/components/<FILL: Name>.astro`
-**Story file:** `packages/daisy-astro/src/components/<FILL: Name>.stories.ts`
+**Target file:** `packages/daisy-astro/src/components/<FILL: Name>/<FILL: Name>.astro`
+**Story file:** `packages/daisy-astro/src/components/<FILL: Name>/<FILL: Name>.stories.ts`
 
 **Global Constraints** (from `plans/README.md`, apply as-is, do not restate differently):
 - Props extend `HTMLAttributes<'<FILL: root element>'>` from `astro/types`.
 - Class merging uses `class:list` (bundled `clsx`), never manual string concatenation.
 - Variant classes are full literals in a `Record` map — never interpolated (§1b).
-- Shared variant unions (`DaisyColor`, `DaisySize`, ...) come from `packages/daisy-astro/src/lib/variants.ts` — import, don't redeclare, when the component uses a standard axis.
+- Shared variant unions (`DaisyColor`, `DaisySize`, ...) come from `packages/daisy-astro/src/lib/variants.ts` — import as `../../lib/variants` (components sit one directory deeper), don't redeclare, when the component uses a standard axis.
 - One story file, `Playground` + one story per variant axis.
 - `astro check` is the type gate, not `tsc` (§5b).
 
@@ -55,7 +55,7 @@ Content comes in through slots, not content props. Derive the slot list from the
 ```astro
 ---
 import type { HTMLAttributes } from 'astro/types';
-import type { <FILL: e.g. DaisyColor, DaisySize> } from '../lib/variants';
+import type { <FILL: e.g. DaisyColor, DaisySize> } from '../../lib/variants';
 
 interface Props extends HTMLAttributes<'<FILL: root element>'> {
   <FILL: prop declarations from the table in section 1, one per row>
@@ -71,7 +71,7 @@ interface Props extends HTMLAttributes<'<FILL: root element>'> {
 ```astro
 ---
 import type { HTMLAttributes } from 'astro/types';
-import type { <FILL> } from '../lib/variants';
+import type { <FILL> } from '../../lib/variants';
 
 // Props first — a `const` above this breaks inference in generic components
 // (plans/README.md §5c). Harmless to keep the order everywhere.
@@ -182,8 +182,8 @@ For a variant-axis story showing every value at once, render the component repea
 
 - [ ] **Step 1:** Read `<FILL: doc URL>`. Fill in section 1's variant audit table **and** section 2's slot table, and copy the page's examples into section 5's example table.
 - [ ] **Step 2:** If any prop needs a union type not already in `packages/daisy-astro/src/lib/variants.ts`, add it there (shared, reusable) rather than declaring it locally — unless it's genuinely specific to this one component, in which case declare it in this component's own file.
-- [ ] **Step 3:** Create `packages/daisy-astro/src/components/<FILL: Name>.astro` per section 4, then walk the Astro idioms gate in that section.
-- [ ] **Step 4:** Create `packages/daisy-astro/src/components/<FILL: Name>.stories.ts` per section 5.
+- [ ] **Step 3:** Create `packages/daisy-astro/src/components/<FILL: Name>/<FILL: Name>.astro` per section 4, then walk the Astro idioms gate in that section.
+- [ ] **Step 4:** Create `packages/daisy-astro/src/components/<FILL: Name>/<FILL: Name>.stories.ts` per section 5.
 - [ ] **Step 5:** Run `pnpm storybook` (from `packages/daisy-astro/`), open `Components/<FILL: Name>`, verify:
   - `Playground` renders and every control actually changes the rendered markup.
   - Each variant-axis story shows all values of that axis, each visibly distinct (colors look different, sizes look different, etc.) — daisyUI's CSS must actually be loaded for this to be checkable; if it isn't wired up yet in `.storybook/preview.ts`, that's a separate prerequisite, not part of this component's plan.

@@ -1,6 +1,6 @@
 # daisy-astro Component Plan — Overview
 
-**Goal:** wrap every daisyUI component as an Astro component (`packages/daisy-astro/src/components/<Name>.astro`), where every daisyUI variant/modifier class is a typed prop, every native HTML attribute for the underlying element is forwarded, and every component (with its variants) has Storybook coverage.
+**Goal:** wrap every daisyUI component as an Astro component (`packages/daisy-astro/src/components/<Name>/<Name>.astro`), where every daisyUI variant/modifier class is a typed prop, every native HTML attribute for the underlying element is forwarded, and every component (with its variants) has Storybook coverage.
 
 This document is the index and ruleset. Each component gets its own plan under `plans/components/<slug>.md`, written from `plans/TEMPLATE.md` when work on that component starts. This file does not implement anything — it defines the shared conventions so per-component plans don't each reinvent them, and tracks which components have a plan yet.
 
@@ -34,7 +34,7 @@ source: const COLOR = { primary: 'btn-primary', … }; class:list={['btn', color
   → .btn-error (never named anywhere): no   ← tree-shaking still works
 ```
 
-So every variant axis gets a `Record<Union, string>` map of full literal class names, as in `packages/daisy-astro/src/components/Button.astro`. Granularity stays per-component: importing Button pulls in all `btn-*` variants, but a component you never import contributes nothing.
+So every variant axis gets a `Record<Union, string>` map of full literal class names, as in `packages/daisy-astro/src/components/Button/Button.astro`. Granularity stays per-component: importing Button pulls in all `btn-*` variants, but a component you never import contributes nothing.
 
 Booleans are already safe when written as object keys — `{ 'btn-active': active }` is a literal in source, so it is detected.
 
@@ -115,6 +115,33 @@ The `@source` line is required for the same reason as §1c — Storybook renders
 `packages/daisy-astro/src/lib/variants.ts` exports the reusable union types (`DaisyColor`, `DaisySize`, etc.) that most components share, so 68 files don't each redeclare `'primary' | 'secondary' | ...`. A component only imports the axes it actually supports — don't force a component into an axis its daisyUI classes don't have (e.g. not every component has all 5 sizes; check the real doc page).
 
 This file is a **prerequisite**, created once, before or during the first component's implementation — not part of any single component's plan.
+
+### 3b. One directory per component
+
+Each component owns a directory named after it, holding the component and its stories:
+
+```
+src/
+  lib/variants.ts
+  components/
+    Button/
+      Button.astro
+      Button.stories.ts
+    Accordion/
+      Accordion.astro          ← the group wrapper
+      Accordion.stories.ts
+      AccordionItem.astro      ← sub-component, same daisyUI doc page
+      AccordionItem.stories.ts
+```
+
+**Sub-components live with their parent, not in their own directory.** A component that only exists to be nested inside another (an `Accordion`'s items, a `Card`'s body) belongs to the same daisyUI doc page and the same plan file, so it belongs in the same directory. The directory is one *daisyUI component*, not one `.astro` file. A component that has its own row in the checklist below gets its own directory.
+
+Two consequences:
+
+- **Shared unions import as `'../../lib/variants'`**, one level deeper than the flat layout. Getting this wrong is caught by `astro check`, not silently.
+- **Storybook needs no config change** — `.storybook/main.ts` already globs `../src/**/*.stories.@(js|ts)`, which is recursive.
+
+`title` in a story stays flat (`'Components/Button'`); the directory is a filesystem concern and does not dictate the sidebar hierarchy.
 
 ### 4. Storybook runs on `@storybook-astro/framework`
 
@@ -240,7 +267,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 
 - **Not started** — no plan file yet.
 - **Planned** — `plans/components/<slug>.md` exists.
-- **Implemented** — component + stories exist in `packages/daisy-astro/src/components/`.
+- **Implemented** — component + stories exist in `packages/daisy-astro/src/components/<Name>/`.
 
 ## Component checklist (68)
 
