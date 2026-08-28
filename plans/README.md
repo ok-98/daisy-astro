@@ -289,7 +289,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Aura | `aura` | Planned — [`plans/components/aura.md`](components/aura.md) (current code is a dummy scaffold) |
 | Badge | `badge` | Planned — [`plans/components/badge.md`](components/badge.md) (current code is a dummy scaffold) |
 | Card | `card` | Planned — [`plans/components/card.md`](components/card.md) (wrapper + `CardBody`/`CardTitle`/`CardActions`; current code is a dummy scaffold) |
-| Carousel | `carousel` | Not started |
+| Carousel | `carousel` | Planned — [`plans/components/carousel.md`](components/carousel.md) (wrapper + `CarouselItem`; current code is a dummy scaffold) |
 | Chat bubble | `chat-bubble` | Not started |
 | Collapse | `collapse` | Not started |
 | Countdown | `countdown` | Not started |
