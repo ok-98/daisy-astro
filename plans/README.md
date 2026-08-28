@@ -331,7 +331,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 ### Data Input
 | Component | Slug | Status |
 |---|---|---|
-| Calendar | `calendar` | Not started |
+| Calendar | `calendar` | Planned — [`plans/components/calendar.md`](components/calendar.md) (daisyUI Calendar is theme CSS for 3rd-party calendars, not a component; plan scopes to Cally only) |
 | Checkbox | `checkbox` | Not started |
 | Fieldset | `fieldset` | Not started |
 | File Input | `file-input` | Not started |
