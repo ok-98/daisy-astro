@@ -288,7 +288,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Avatar | `avatar` | Planned — [`plans/components/avatar.md`](components/avatar.md) (wrapper + `AvatarGroup`; current code is a dummy scaffold) |
 | Aura | `aura` | Planned — [`plans/components/aura.md`](components/aura.md) (current code is a dummy scaffold) |
 | Badge | `badge` | Planned — [`plans/components/badge.md`](components/badge.md) (current code is a dummy scaffold) |
-| Card | `card` | Not started |
+| Card | `card` | Planned — [`plans/components/card.md`](components/card.md) (wrapper + `CardBody`/`CardTitle`/`CardActions`; current code is a dummy scaffold) |
 | Carousel | `carousel` | Not started |
 | Chat bubble | `chat-bubble` | Not started |
 | Collapse | `collapse` | Not started |
