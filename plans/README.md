@@ -290,7 +290,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Badge | `badge` | Planned — [`plans/components/badge.md`](components/badge.md) (current code is a dummy scaffold) |
 | Card | `card` | Planned — [`plans/components/card.md`](components/card.md) (wrapper + `CardBody`/`CardTitle`/`CardActions`; current code is a dummy scaffold) |
 | Carousel | `carousel` | Planned — [`plans/components/carousel.md`](components/carousel.md) (wrapper + `CarouselItem`; current code is a dummy scaffold) |
-| Chat bubble | `chat-bubble` | Not started |
+| Chat bubble | `chat-bubble` | Planned — [`plans/components/chat-bubble.md`](components/chat-bubble.md) (`Chat`/`ChatBubble`/`ChatHeader`/`ChatFooter`; `chat-image` served by `Avatar`) |
 | Collapse | `collapse` | Not started |
 | Countdown | `countdown` | Not started |
 | Diff | `diff` | Not started |
