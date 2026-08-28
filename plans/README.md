@@ -351,7 +351,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Component | Slug | Status |
 |---|---|---|
 | Divider | `divider` | Planned — [`plans/components/divider.md`](components/divider.md) (slot whitespace breaks the empty-divider `:empty` rule) |
-| Drawer sidebar | `drawer` | Not started |
+| Drawer sidebar | `drawer` | Planned — [`plans/components/drawer.md`](components/drawer.md) (`Drawer`+`DrawerButton`; sibling-order-dependent skeleton, required `toggleId`) |
 | Footer | `footer` | Not started |
 | Hero | `hero` | Not started |
 | Indicator | `indicator` | Not started |
