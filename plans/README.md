@@ -307,7 +307,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 ### Navigation
 | Component | Slug | Status |
 |---|---|---|
-| Breadcrumbs | `breadcrumbs` | Not started |
+| Breadcrumbs | `breadcrumbs` | Planned — [`plans/components/breadcrumbs.md`](components/breadcrumbs.md) (current code is a dummy scaffold) |
 | Dock | `dock` | Not started |
 | Link | `link` | Not started |
 | Megamenu | `megamenu` | Not started |
