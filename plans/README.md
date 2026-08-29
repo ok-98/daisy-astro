@@ -299,7 +299,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Kbd | `kbd` | Planned — [`plans/components/kbd.md`](components/kbd.md) (one class + 5 sizes; simplest in the library) |
 | List | `list` | Planned — [`plans/components/list.md`](components/list.md) (`List`+`ListRow`; second child grows by default) |
 | Stat | `stat` | Not started |
-| Status | `status` | Not started |
+| Status | `status` | Planned — [`plans/components/status.md`](components/status.md) (empty dot; uneven size steps; animation is a class) |
 | Table | `table` | Not started |
 | Text Rotate | `text-rotate` | Not started |
 | Timeline | `timeline` | Not started |
