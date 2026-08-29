@@ -355,7 +355,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Footer | `footer` | Planned — [`plans/components/footer.md`](components/footer.md) (`Footer`+`FooterTitle`; grid of grids, center changes the flow axis) |
 | Hero | `hero` | Planned — [`plans/components/hero.md`](components/hero.md) (`Hero`+`HeroContent`+`HeroOverlay`; one-cell grid) |
 | Indicator | `indicator` | Planned — [`plans/components/indicator.md`](components/indicator.md) (`Indicator`+`IndicatorItem`; placement is two axes, on the item) |
-| Join (group items) | `join` | Not started |
+| Join (group items) | `join` | Planned — [`plans/components/join.md`](components/join.md) (a *utility*, not a component; items may be nested) |
 | Mask | `mask` | Not started |
 | Stack | `stack` | Not started |
 
