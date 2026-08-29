@@ -297,7 +297,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Hover 3D card | `hover-3d-card` | Planned — [`plans/components/hover-3d-card.md`](components/hover-3d-card.md) (component generates the 8 hover zones; doc examples pending) |
 | Hover Gallery | `hover-gallery` | Planned — [`plans/components/hover-gallery.md`](components/hover-gallery.md) (first child is a resting frame; caps at 10) |
 | Kbd | `kbd` | Planned — [`plans/components/kbd.md`](components/kbd.md) (one class + 5 sizes; simplest in the library) |
-| List | `list` | Not started |
+| List | `list` | Planned — [`plans/components/list.md`](components/list.md) (`List`+`ListRow`; second child grows by default) |
 | Stat | `stat` | Not started |
 | Status | `status` | Not started |
 | Table | `table` | Not started |
