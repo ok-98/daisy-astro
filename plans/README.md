@@ -343,7 +343,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Select | `select` | Planned — [`plans/components/select.md`](components/select.md) (first component where the `size` collision has a real cost) |
 | Text Input | `text-input` | Planned — [`plans/components/text-input.md`](components/text-input.md) (dual root: input or label wrapper; type narrowed to daisyUI documented twelve) |
 | Textarea | `textarea` | Planned — [`plans/components/textarea.md`](components/textarea.md) (scaffold whitespace kills placeholder; sizes change font only) |
-| Toggle | `toggle` | Not started |
+| Toggle | `toggle` | Planned — [`plans/components/toggle.md`](components/toggle.md) (size classes select [type=checkbox]; colors only render while checked) |
 | Validator | `validator` | Not started |
 | OTP | `otp` | Planned — [`plans/components/otp.md`](components/otp.md) (scaffold root must be `label`, not `div`) |
 
