@@ -1,14 +1,57 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/avatar/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type AvatarPresence = 'online' | 'offline';
 
-const { class: className, ...rest } = Astro.props;
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * Shows a coloured presence dot. Decoration only: it renders as a `:before`
+   * pseudo-element with no text and no ARIA, and green-vs-grey is the only
+   * difference between the two states — so pass your own `aria-label` when
+   * the state carries meaning (plan §3c).
+   */
+  presence?: AvatarPresence;
+  /** Centres the inner content, for letter avatars (`<span>AI</span>`). */
+  placeholder?: boolean;
+  /**
+   * Classes for the **inner** div — where daisyUI's own examples put the
+   * size, rounding, mask and ring (`"w-24 rounded-full"`). `class` goes to
+   * the root instead, alongside every other native attribute (plan §3a).
+   *
+   * daisyUI supplies no width and no border-radius of its own — `.avatar > div`
+   * is `aspect-ratio:1` with `width:auto` — so always pass a width here; every
+   * doc example does. A bare `w-24` is a **square**: `rounded-full` is the
+   * caller's to add (plan §3b), and this component will not default it.
+   */
+  innerClass?: string;
+}
+
+// Full literal class names. NEVER `avatar-${presence}` — an interpolated
+// class gets no CSS from daisyUI (plans/README.md §1b).
+const PRESENCE: Record<AvatarPresence, string> = {
+  online: 'avatar-online',
+  offline: 'avatar-offline',
+};
+
+const { presence, placeholder = false, innerClass, class: className, ...rest } = Astro.props;
+
+// The inner div below is required by `.avatar > div` and
+// `.avatar-placeholder > div` (plan §0) — it is where daisyUI's own examples
+// put the size, rounding, mask and ring. Kept as a frontmatter comment: an
+// HTML comment in the template would ship into every rendered avatar.
 ---
 
-<div class:list={['avatar', className]} {...rest}>
-  <slot />
+<div
+  class:list={[
+    'avatar',
+    presence && PRESENCE[presence],
+    { 'avatar-placeholder': placeholder },
+    className,
+  ]}
+  {...rest}
+>
+  <div class:list={[innerClass]}>
+    <slot />
+  </div>
 </div>

@@ -14,7 +14,7 @@
 - Stories run on `@storybook-astro/framework`: import the `.astro` file as `component`, pass slot content via `args.slots`.
 - `astro check` is the type gate, not `tsc` (§5b).
 
-> **Status:** Planned. Nothing in §4 is implemented. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/avatar.css`), the doc page source (`packages/docs/src/routes/(routes)/components/avatar/+page.md` in `saadeghi/daisyui`), and `astro@7.2.4`'s `astro-jsx.d.ts`. §3e lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Avatar.astro` and `AvatarGroup.astro` are in the repo per §4, with 11 + 2 stories per §5; markup and type gate verified (§8). §3e.1 (what a widthless avatar renders) is a layout question and stays open until the visual pass — see §3e. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/avatar.css`), the doc page source (`packages/docs/src/routes/(routes)/components/avatar/+page.md` in `saadeghi/daisyui`), and `astro@7.2.4`'s `astro-jsx.d.ts`.
 
 ---
 
@@ -116,11 +116,11 @@ Not defaulted into the component: it is caller styling daisyUI keeps outside the
 
 ### 3e. Unverified assumptions
 
-1. **What an `<Avatar>` with no width class actually renders.** `.avatar` is `inline-flex` (shrink-to-fit) and `.avatar > div` is `display:block` with `aspect-ratio:1` and `width:auto`, while `.avatar img` is `width:100%; height:100%` **[all verified]** — the resolved size is a genuine question, not something to reason out from the cascade. Render it in Step 3 and decide from the result:
+1. **What an `<Avatar>` with no width class actually renders. STILL OPEN — needs a browser.** `.avatar` is `inline-flex` (shrink-to-fit) and `.avatar > div` is `display:block` with `aspect-ratio:1` and `width:auto`, while `.avatar img` is `width:100%; height:100%` **[all verified]**. This is a *computed layout* question, so the headless markup check that settled everything else here cannot answer it — it needs the story rendered in a browser (Step 5). `innerClass` therefore ships **optional**, which is the reversible choice: tightening it to required later is a one-word type change, while shipping it required on a guess would reject callers that work. Every story passes a width, and the JSDoc says to. Decide at the visual pass:
    - collapses to zero / invisible → make `innerClass` **required** (`innerClass: string`), since an invisible component with no error is exactly the failure these plans exist to prevent;
    - falls back to the image's intrinsic size → keep it optional and document.
-   This is the only decision in this plan left open on purpose.
-2. **Slot sanitization vs `<img>`.** Every non-placeholder example is an `<img>` with a remote `src`; the framework sanitizes slot HTML with conservative defaults (`plans/README.md` §4). A stripped `<img>` leaves an empty sized box, which reads as a broken image rather than a stripped element. Also confirm the doc page's `img.daisyui.com` URLs load in the Storybook sandbox at all — if they don't, use a local placeholder and say why in a comment.
+2. ~~**Slot sanitization vs `<img>`.**~~ **Answered 2026-08-30: `<img>` survives** — sanitization is off library-wide (`plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3), and `img` was in the default allowlist regardless. Whether `img.daisyui.com` actually *loads* in the Storybook sandbox is a network question the static build cannot answer; the stories use the doc page's own URLs, and a blank box at the visual pass means swap in a local placeholder.
+3. **No component in this library can reject `color="…"`.** Found while running §4's type probe: `<Avatar color="primary">` was expected to error and does not. Astro's base `HTMLAttributes` declares `color?: string` in its non-standard/obsolete attribute list (`astro-jsx.d.ts:563`) **[verified]**, so it is a valid native attribute on every element and forwards through `...rest` — `<div class="avatar" color="primary">`. It emits no class and does nothing. Two consequences: drop "must error — no colour axis" from any plan's type probe, since it is unachievable; and a caller reaching for `color` on a component with no colour axis gets silence rather than a type error. Components that *do* have a colour axis (Button) declare `color` themselves and narrow it, so they are unaffected. Same shape as `button.md` §3a's `style` trap, one level up: check variant prop names against `HTMLAttributes`, not only against the element's own attributes.
 
 **Not a risk here, unlike its neighbours:** an extra wrapper element around the slot content would be harmless. `.avatar img` and `.avatar-group .avatar` are **descendant** selectors **[verified]**, and the two child selectors (`.avatar > div`, `.avatar-placeholder > div`) target the div this component renders itself. So the blocking unknown in `plans/components/aura.md` §3e.1 and `plans/components/alert.md` §3d.2 does not apply to Avatar — do not copy that language into this component's checks.
 
@@ -299,11 +299,11 @@ Stories rendering several avatars at once (`CustomSizes`, `Rounded`, `WithMask`,
 
 ## 6. Steps
 
-- [ ] **Step 1:** Nothing to re-read — §1 and §2 are filled from the doc page and the shipped CSS. Confirm the doc page's `img.daisyui.com` URLs load in the Storybook sandbox (§3e.2); if not, pick a local placeholder image now, since every story uses one.
-- [ ] **Step 2:** No new shared unions — `AvatarPresence` stays local, no colour or size axis (§1). `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Avatar.astro` dummy scaffold and create `AvatarGroup.astro` per §4, then walk the Astro idioms gate. **Resolve §3e.1 here** — render an `<Avatar>` with no `innerClass` and decide required-vs-optional from what it does; record the answer in this plan.
-- [ ] **Step 4:** Replace `Avatar.stories.ts` and create `AvatarGroup.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Avatar` and `Components/AvatarGroup`, verify:
+- [x] **Step 1: done.** §1 and §2 were already filled from the doc page and the shipped CSS. The doc page's `img.daisyui.com` URLs are used as-is; whether they load in the sandbox is a browser question (§3e.2), and a blank box at Step 5 means swap in a local placeholder.
+- [x] **Step 2: skipped as planned.** `AvatarPresence` stays local, no colour or size axis (§1). `variants.ts` untouched.
+- [x] **Step 3: done.** `Avatar.astro` replaces the dummy scaffold and `AvatarGroup.astro` is new, both per §4; the Astro idioms gate is ticked there. §3e.1 could **not** be resolved here — it is a computed-layout question and this session has no browser — so `innerClass` ships optional and the decision moves to Step 5. Two things the gate walk turned up: `color` cannot be rejected by any component (§3e.3), and an HTML comment in the template ships into every rendered avatar, so §0's note lives in the frontmatter instead.
+- [x] **Step 4: done.** `Avatar.stories.ts` (11 stories) and `AvatarGroup.stories.ts` (2) per §5. Group members are **real `<Avatar>` components**, not raw markup — §5's hedge is obsolete now that component-in-slot nesting is settled (`plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3).
+- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Avatar` and `Components/AvatarGroup`. **Still open — needs human eyes.** The checks below are unchanged, plus **resolve §3e.1**: render an `<Avatar>` with no `innerClass` and see whether it collapses or falls back to the image's intrinsic size.
   - `Playground` renders and every control changes the markup, `innerClass` included.
   - `Default` is a **square with small rounding** — not a circle (§3b). If it comes out circular, something is defaulting rounding that shouldn't.
   - `CustomSizes` shows four distinct sizes, driven entirely by `innerClass`.
@@ -312,24 +312,51 @@ Stories rendering several avatars at once (`CustomSizes`, `Rounded`, `WithMask`,
   - `Placeholder`: letters are centred (that is the only thing `avatar-placeholder` does), and the `w-16` one also shows the online dot — the two modifiers combine.
   - `AvatarGroup/Default`: members overlap and each has a 4px base-100 border.
   - `AvatarGroup` forces circles: temporarily set a member's `innerClass` to `rounded-none` and confirm it stays round (§3b).
-- [ ] **Step 6:** Confirm forwarding via `Passthrough` — `id`, `data-*`, `style` and `class` land on `div.avatar`, and `inner-marker` lands on the inner div, **not** the other way round. Headless check:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="avatar[^"]*"[^>]*><div[^>]*>' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Avatar` row in `plans/README.md` to **Implemented**, noting `AvatarGroup` as part of it rather than a separate row (same convention as Accordion/AccordionItem).
+  - The `img.daisyui.com` images actually load (§3e.2).
+- [x] **Step 6: done — forwarding confirmed in the right direction.** `Passthrough` renders `<div class="avatar mine" id="avatar-1" data-test="yes" style="letter-spacing:2px"><div class="w-24 rounded-full inner-marker">…` — native attributes and caller `class` on the root, `innerClass` on the inner div. Full output in §8.
+- [x] **Step 7: done — the `Avatar` row in `plans/README.md` says Implemented**, covering `AvatarGroup` in the same row.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 5 daisyUI classes from §1 are reachable: `avatar` always, `avatar-online`/`avatar-offline` via `presence`, `avatar-placeholder` via `placeholder`, `avatar-group` via `AvatarGroup`.
-- [ ] No invented axis — no `size`, no `color`, no `shape`, no default rounding (§3b).
-- [ ] `Props` extends `HTMLAttributes<'div'>` in both files; non-variant native attributes work without explicit declaration.
-- [ ] `class` merges onto the root and `innerClass` onto the inner div — verified in rendered HTML, in that direction (§3a).
-- [ ] The inner div is always rendered, so `.avatar > div` and `.avatar-placeholder > div` match.
-- [ ] §3e.1 resolved, and `innerClass` is required or optional as that result dictates — with the reason recorded here.
-- [ ] `presence`'s JSDoc names the missing accessible name, and `PresenceAccessibleName` demonstrates the remedy (§3c).
-- [ ] `AvatarGroup`'s JSDoc names `-space-x-6` (§3d) and the forced-circle behaviour (§3b).
-- [ ] `Playground` exposes every prop as a control.
-- [ ] One story per doc-page example, reproducing that example's markup and copy.
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] All 5 daisyUI classes from §1 are reachable: `avatar` always, `avatar-online`/`avatar-offline` via `presence`, `avatar-placeholder` via `placeholder`, `avatar-group` via `AvatarGroup`.
+- [x] No invented axis — no `size`, no `color`, no `shape`, no default rounding (§3b). (`color` is still *accepted*, as a native attribute nothing can reject — §3e.3.)
+- [x] `Props` extends `HTMLAttributes<'div'>` in both files; non-variant native attributes work without explicit declaration.
+- [x] `class` merges onto the root and `innerClass` onto the inner div — verified in rendered HTML, in that direction (§3a).
+- [x] The inner div is always rendered, so `.avatar > div` and `.avatar-placeholder > div` match.
+- [ ] §3e.1 resolved, and `innerClass` is required or optional as that result dictates — with the reason recorded here. **Open:** needs a browser; ships optional in the meantime (§3e.1).
+- [x] `presence`'s JSDoc names the missing accessible name, and `PresenceAccessibleName` demonstrates the remedy (§3c).
+- [x] `AvatarGroup`'s JSDoc names `-space-x-6` (§3d) and the forced-circle behaviour (§3b).
+- [x] `Playground` exposes every prop as a control.
+- [x] One story per doc-page example, reproducing that example's markup and copy.
+- [x] Every box in §4's Astro idioms gate ticked.
+
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 144 files, 0 errors. Sweeps abridged; the `flex flex-wrap items-center gap-2` row is the story file's, not the component's.
+
+```
+Default        → <div class="avatar"><div class="w-24 rounded"><img src="…batperson@192.webp" alt="Tailwind-CSS-Avatar-component" /></div></div>
+CustomSizes    → …<div class="w-32 rounded">…<div class="w-20 rounded">…<div class="w-16 rounded">…<div class="w-8 rounded">…
+Rounded        → …<div class="w-24 rounded-xl">…<div class="w-24 rounded-full">…
+WithMask       → …<div class="w-24 mask mask-heart">… mask-squircle … mask-hexagon-2 …
+WithRing       → <div class="avatar"><div class="w-24 rounded-full ring-2 ring-primary ring-offset-base-100 ring-offset-2">…
+Presence…      → <div class="avatar avatar-online">…<div class="avatar avatar-offline">…
+Presence…Name  → <div class="avatar avatar-online">…<div class="avatar avatar-online" aria-label="Gordon, online">…
+Placeholder    → <div class="avatar avatar-placeholder"><div class="bg-neutral text-neutral-content w-24 rounded-full"><span>D</span></div></div>
+                 <div class="avatar avatar-online avatar-placeholder">…<span>AI</span>…   ← both modifiers on one element
+Passthrough    → <div class="avatar mine" id="avatar-1" data-test="yes" style="letter-spacing:2px"><div class="w-24 rounded-full inner-marker">…
+Group/Default  → <div class="avatar-group -space-x-6"><div class="avatar"><div class="w-12"><img …/></div></div> ×4
+Group/Counter  → …<div class="avatar avatar-placeholder"><div class="bg-neutral text-neutral-content w-12"><span>+99</span></div></div></div>
+```
+
+What this settles:
+
+- The §3a split works in the stated direction: `class`, `id`, `data-*` and `style` on `div.avatar`; `innerClass` on the inner div. Not the other way round.
+- The inner div is always present, so `.avatar > div` and `.avatar-placeholder > div` both match.
+- `presence` and `placeholder` compose on one element (`avatar avatar-online avatar-placeholder`), as the doc page shows.
+- Nothing defaults a border-radius: `Default` is `rounded`, and the group members carry no rounding of their own (`.avatar-group .avatar` supplies it).
+- Every class the stories emit has a rule in the built stylesheet — `avatar`, `avatar-online`, `avatar-offline`, `avatar-placeholder`, `avatar-group`, the three masks, `ring-primary`, `-space-x-6`.
+
+Not settled here, by nature: whether the presence dot is *positioned* right, whether the group overlaps, and §3e.1. All three are Step 5.

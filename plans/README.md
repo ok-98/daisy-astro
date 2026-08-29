@@ -247,6 +247,10 @@ const { as: Tag = 'button', color, ...rest } = Astro.props as Props<HTMLTag>;
 <Button href="/nope">must error — href needs as="a"</Button>
 ```
 
+**A probe line that will never error, so don't write it: `color` on a component with no colour axis.** Astro's base `HTMLAttributes` declares `color?: string` in its non-standard/obsolete attribute list (`astro-jsx.d.ts:563`, verified 2026-08-30 while building Avatar), so `<Avatar color="primary">` type-checks on every component in this library and forwards through `...rest` as a plain attribute — `<div class="avatar" color="primary">`. It emits no class and does nothing. Components that *do* have a colour axis declare `color` themselves and narrow it, so they are unaffected; components that don't cannot reject it, and a caller reaching for it gets silence rather than an error. Found in `plans/components/avatar.md` §3e.3.
+
+The general rule, which is `plans/components/button.md` §3a one level up: check a variant prop name against base `HTMLAttributes`, not only against the element's own attributes. `color`, `style`, `title`, `role` and `translate` are all on the base interface.
+
 ### 6. Other Astro idioms this library depends on
 
 - **Polymorphic `as`.** Where daisyUI documents a class on several elements (Button on `button`/`a`/`input`/`div`, Link on `a`/`button`), use `Polymorphic<{ as: Tag }>` from `astro/types` rather than a hand-rolled generic, so the accepted attribute set follows the tag — `href` type-checks on `as="a"` and is rejected on `as="button"`. Worked example in `plans/components/button.md` §4.
@@ -299,7 +303,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Component | Slug | Status |
 |---|---|---|
 | Accordion | `accordion` | Planned — [`plans/components/accordion.md`](components/accordion.md) (wrapper + `AccordionItem`; current code is a dummy scaffold) |
-| Avatar | `avatar` | Planned — [`plans/components/avatar.md`](components/avatar.md) (wrapper + `AvatarGroup`; current code is a dummy scaffold) |
+| Avatar | `avatar` | **Implemented** — [`plans/components/avatar.md`](components/avatar.md) (`Avatar` + `AvatarGroup`, one row for both; §3e.1 open until the visual pass) |
 | Aura | `aura` | Planned — [`plans/components/aura.md`](components/aura.md) (current code is a dummy scaffold) |
 | Badge | `badge` | Planned — [`plans/components/badge.md`](components/badge.md) (current code is a dummy scaffold) |
 | Card | `card` | Planned — [`plans/components/card.md`](components/card.md) (wrapper + `CardBody`/`CardTitle`/`CardActions`; current code is a dummy scaffold) |

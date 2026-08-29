@@ -1,0 +1,24 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * Row of overlapping avatars.
+ *
+ * Two things daisyUI leaves outside the class, both worth knowing:
+ *
+ * - **The overlap is `-space-x-6`, not `avatar-group`.** The class itself is
+ *   only `display:flex; overflow:hidden`; every doc example adds the negative
+ *   spacing utility on the same element. Without it you get a plain,
+ *   non-overlapping row of bordered circles (plan §3d).
+ * - **Members are forced to circles.** `.avatar-group .avatar` sets a 4px
+ *   base-100 border and an effectively infinite radius, so a member's own
+ *   `innerClass="rounded-xl"` silently does nothing in here (plan §3b).
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['avatar-group', className]} {...rest}>
+  <slot />
+</div>
