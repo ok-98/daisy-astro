@@ -356,7 +356,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Hero | `hero` | Planned — [`plans/components/hero.md`](components/hero.md) (`Hero`+`HeroContent`+`HeroOverlay`; one-cell grid) |
 | Indicator | `indicator` | Planned — [`plans/components/indicator.md`](components/indicator.md) (`Indicator`+`IndicatorItem`; placement is two axes, on the item) |
 | Join (group items) | `join` | Planned — [`plans/components/join.md`](components/join.md) (a *utility*, not a component; items may be nested) |
-| Mask | `mask` | Not started |
+| Mask | `mask` | Planned — [`plans/components/mask.md`](components/mask.md) (15 shapes; `shape` is required — the base class masks nothing) |
 | Stack | `stack` | Not started |
 
 ### Mockup
