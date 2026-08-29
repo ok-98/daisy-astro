@@ -295,7 +295,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Countdown | `countdown` | Planned — [`plans/components/countdown.md`](components/countdown.md) (wrapper + `CountdownValue`; transition effect, not a timer) |
 | Diff | `diff` | Planned — [`plans/components/diff.md`](components/diff.md) (native CSS `resize`, no JS; narrowest browser support — no drag on iOS Safari) |
 | Hover 3D card | `hover-3d-card` | Planned — [`plans/components/hover-3d-card.md`](components/hover-3d-card.md) (component generates the 8 hover zones; doc examples pending) |
-| Hover Gallery | `hover-gallery` | Not started |
+| Hover Gallery | `hover-gallery` | Planned — [`plans/components/hover-gallery.md`](components/hover-gallery.md) (first child is a resting frame; caps at 10) |
 | Kbd | `kbd` | Not started |
 | List | `list` | Not started |
 | Stat | `stat` | Not started |
