@@ -345,7 +345,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Textarea | `textarea` | Not started |
 | Toggle | `toggle` | Not started |
 | Validator | `validator` | Not started |
-| OTP | `otp` | Not started |
+| OTP | `otp` | Planned — [`plans/components/otp.md`](components/otp.md) (scaffold root must be `label`, not `div`) |
 
 ### Layout
 | Component | Slug | Status |
