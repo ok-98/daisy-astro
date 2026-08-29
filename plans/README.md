@@ -326,7 +326,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Radial progress | `radial-progress` | Planned — [`plans/components/radial-progress.md`](components/radial-progress.md) (API is 3 custom properties; `value` required) |
 | Skeleton | `skeleton` | Planned — [`plans/components/skeleton.md`](components/skeleton.md) (no size of its own; `text` mode shimmers glyphs) |
 | Toast | `toast` | Planned — [`plans/components/toast.md`](components/toast.md) (position:fixed escapes the Storybook canvas; align/position naming shared with Indicator) |
-| Tooltip | `tooltip` | Not started |
+| Tooltip | `tooltip` | Planned — [`plans/components/tooltip.md`](components/tooltip.md) (seven colors, not eight — neutral is the base; align swaps axis on left/right) |
 
 ### Data Input
 | Component | Slug | Status |
