@@ -310,7 +310,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Breadcrumbs | `breadcrumbs` | Planned — [`plans/components/breadcrumbs.md`](components/breadcrumbs.md) (current code is a dummy scaffold) |
 | Dock | `dock` | Planned — [`plans/components/dock.md`](components/dock.md) (`Dock`/`DockItem`/`DockLabel`; position:fixed is built in) |
 | Link | `link` | Planned — [`plans/components/link.md`](components/link.md) (`link-hover` removes the underline rather than adding an effect) |
-| Megamenu | `megamenu` | Not started |
+| Megamenu | `megamenu` | Planned — [`plans/components/megamenu.md`](components/megamenu.md) (Popover API + anchor positioning; max 10 items) |
 | Menu | `menu` | Not started |
 | Navbar | `navbar` | Not started |
 | Pagination | `pagination` | Not started |
