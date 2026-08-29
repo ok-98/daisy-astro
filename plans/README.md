@@ -278,7 +278,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Dropdown | `dropdown` | Planned — [`plans/components/dropdown.md`](components/dropdown.md) (3 methods; component covers 2, popover is composition) |
 | FAB / Speed Dial | `fab` | Planned — [`plans/components/fab.md`](components/fab.md) (focus-driven, :nth-child-ordered, flower caps at 4 actions) |
 | Modal | `modal` | Planned — [`plans/components/modal.md`](components/modal.md) (4 methods, one component; `open` is not the same as modal) |
-| Swap | `swap` | Not started |
+| Swap | `swap` | Planned — [`plans/components/swap.md`](components/swap.md) (`Swap`+on/off/indeterminate; two drivers, don`t combine) |
 | Theme Controller | `theme-controller` | Not started |
 
 ### Data Display
