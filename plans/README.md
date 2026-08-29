@@ -335,7 +335,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Checkbox | `checkbox` | Planned — [`plans/components/checkbox.md`](components/checkbox.md) (scaffold is missing `type="checkbox"` — renders a text input) |
 | Fieldset | `fieldset` | Planned — [`plans/components/fieldset.md`](components/fieldset.md) (`Fieldset`+`FieldsetLegend`; children are grid rows, keep them flat) |
 | File Input | `file-input` | Planned — [`plans/components/file-input.md`](components/file-input.md) (scaffold missing `type="file"`, same bug as Checkbox) |
-| Filter | `filter` | Not started |
+| Filter | `filter` | Planned — [`plans/components/filter.md`](components/filter.md) (options are `Button as="input"`; label comes from `aria-label`) |
 | Label | `label` | Not started |
 | Radio | `radio` | Not started |
 | Range | `range` | Not started |
