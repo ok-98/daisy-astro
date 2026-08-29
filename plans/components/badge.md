@@ -14,7 +14,7 @@
 - Stories run on `@storybook-astro/framework`: import the `.astro` file as `component`, pass slot content via `args.slots`.
 - `astro check` is the type gate, not `tsc` (§5b).
 
-> **Status:** Planned. Nothing in §4 is implemented. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/badge.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/badge/+page.md` in `saadeghi/daisyui`). §3e lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Badge.astro` and 16 stories are in the repo per §4/§5; markup, type probe and CSS coverage verified (§8). §3b's *mechanism* was corrected against the built stylesheet; its conclusion stands. Step 5 (visual pass) is open, and with it §3d's uncoloured-outline question. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/badge.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/badge/+page.md` in `saadeghi/daisyui`). §3e lists what is **unverified**.
 
 ---
 
@@ -79,7 +79,15 @@ The style classes split into two mechanisms **[verified]**:
 
 `outline`, `dash` and `soft` read `--badge-color`, so they compose with the colour prop — which is exactly what the doc page's soft/outline/dash tables show, seven colours each. `ghost` sets literal base colours and never touches `--badge-color`, so **`<Badge variant="ghost" color="primary">` renders identically to `<Badge variant="ghost">`** and the colour is silently dropped.
 
-Class order in the markup doesn't rescue it either: `.badge-ghost` is declared *after* the colour classes in the same `@layer daisyui.l1.l2` **[verified — file order is outline, dash, soft, the eight colours, then ghost]**, so ghost wins on source order regardless of how the classes are written.
+**Why it is dropped — corrected 2026-08-30, verified in the built stylesheet.** This plan previously said ghost wins on *source order*, being declared after the colour classes. That reasoning is wrong, and in the actual build the order is the other way round (`.badge-ghost` at byte 26845, `.badge-primary` at 34939). Order is irrelevant here because the two rules never compete for a declaration:
+
+```css
+.badge         { background-color: var(--badge-bg); --badge-bg: var(--badge-color, var(--color-base-100)); color: var(--badge-fg) }
+.badge-primary { --badge-color: var(--color-primary); --badge-fg: var(--color-primary-content) }   /* variables only */
+.badge-ghost   { background-color: var(--color-base-200); color: var(--color-base-content); border-color: var(--color-base-200) }
+```
+
+A colour class sets **only two custom properties**; it never declares `background-color` or `color` itself. `.badge-ghost` declares both **literally**, so it overrides the base rule's `var()`-driven values no matter where either sits, and the `--badge-color` the colour class set goes unread. The consequence is the same, but the mechanism matters: it means no reordering, no `@layer` change and no class-order trick can make ghost honour a colour — which is worth knowing before someone tries.
 
 Not modelled in the type system — making `ghost` exclude `color` would need a discriminated union that complicates every ordinary call for one combination. Instead it goes in `variant`'s JSDoc and gets a story, the same treatment as `plans/components/aura.md` §3a's fixed-palette variants.
 
@@ -103,8 +111,8 @@ Related, and straight from the doc page: the "neutral badge with outline or dash
 
 ### 3e. Unverified assumptions
 
-1. **Slot sanitization vs inline `<svg>`.** The "Badge with icon" example is four inline SVGs; the framework sanitizes slot HTML with conservative defaults (`plans/README.md` §4). A stripped icon leaves a text-only badge that looks fine — so verify the SVG is in the rendered HTML rather than judging by eye. Same issue as `plans/components/alert.md` §3d.1; whichever is built first should record the answer in both plans.
-2. **Generic prop inference.** §3a makes this a `Polymorphic` component, so the `type Props`-before-`const` failure from `plans/README.md` §5c applies. It is silent — the component renders correctly while accepting no props — so the throwaway probe in §4 is mandatory, not optional.
+1. ~~**Slot sanitization vs inline `<svg>`.**~~ **Answered: SVG survives**, verified in `WithIcon`'s rendered HTML rather than by eye. Sanitization is off library-wide (`plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3); the framework's default allowlist had no `svg` at all.
+2. ~~**Generic prop inference.**~~ **Checked with the §4 probe:** props are genuinely accepted and narrowed — `color="banana"`, `variant="link"` and a bare `href` each errored, the four valid lines did not. The `type Props`-before-`const` failure is not present.
 
 ## 4. Component implementation
 
@@ -278,39 +286,61 @@ The axis stories render many badges at once; compose multiples the way the frame
 
 ## 6. Steps
 
-- [ ] **Step 1:** Nothing to re-read — §1 and §2 are filled from the doc page and the shipped CSS. Check §3e.1 (SVG survival) if Alert hasn't already answered it.
-- [ ] **Step 2:** No new shared unions — `color` and `size` reuse `DaisyColor`/`DaisySize` unchanged, `BadgeVariant` stays local (§1). `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Badge.astro` dummy scaffold per §4, then walk the Astro idioms gate. **Run the probe** — the generic-inference failure is silent (§3e.2).
-- [ ] **Step 4:** Replace `Badge.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Badge`, verify:
-  - `Playground` renders and every control changes the markup.
-  - `Sizes` shows five distinct heights *and* five distinct font sizes (both come from the size class).
-  - `Colors` shows eight distinct fills with readable foreground text.
-  - `SoftStyle` / `OutlineStyle` / `DashStyle` each track the colour prop — dash is dashed-bordered, outline is transparent-filled.
-  - `GhostIgnoresColor`: the two badges are **identical** (§3b). If the coloured one differs, the CSS order assumption in §3b is wrong — re-check before changing the component.
-  - `Empty` renders four visible pills of different sizes, not nothing (§3c).
-  - `NeutralOutlineAndDash` is legible on its white wrapper, and note whether it is legible on the surrounding theme background (§3d).
-  - **An `outline` badge with no `color`** — add it temporarily to `Playground` — is legible and takes the surrounding text colour (§3d). Record what it actually does.
-  - `InText`: the badge sits inline within the paragraph and does not split it (§3a).
-  - `WithIcon`: the SVGs are present (§3e.1).
-- [ ] **Step 6:** Confirm forwarding via `Passthrough` — `id`, `data-*`, `style`, `class` all survive, and the rendered tag is `div`. Headless check:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<(span|div)[^>]*class="[^"]*badge[^"]*"[^>]*>' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Badge` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done.** §1 and §2 were already filled from the doc page and the shipped CSS. §3e.1 (SVG survival) is answered — see §3e.
+- [x] **Step 2: skipped as planned.** `color` and `size` reuse `DaisyColor`/`DaisySize` unchanged, `BadgeVariant` stays local. `variants.ts` untouched.
+- [x] **Step 3: done.** `Badge.astro` replaces the dummy scaffold per §4; the Astro idioms gate is ticked there and the probe ran (§3e.2). One deviation from §4's listing: §3c's note about the bare `<slot />` lives in the frontmatter, because an HTML comment in the template ships into every rendered badge (found while building Avatar).
+- [x] **Step 4: done.** `Badge.stories.ts`, 16 stories per §5. `InButton` composes the **real `<Button>`** rather than raw `btn` markup — Button is Implemented, so §5.2's fallback does not apply.
+- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Badge`. **Still open — needs human eyes.** Checks unchanged, and two of them are the point:
+  - `GhostIgnoresColor`: the two badges must be **identical** (§3b). If the coloured one differs, re-read §3b's corrected mechanism before touching the component.
+  - **An `outline` badge with no `color`** — add it temporarily to `Playground` — and record what it actually does (§3d). The CSS says it inherits the surrounding text colour; nothing here has confirmed that.
+  - `Sizes` shows five distinct heights *and* font sizes; `Colors` shows eight readable fills; `Empty` renders four visible pills; `NeutralOutlineAndDash` is legible on its white wrapper and noted for the theme background; `InText` keeps the badge inline without splitting the paragraph.
+- [x] **Step 6: done — forwarding confirmed.** `Passthrough` renders `<div id="badge-1" data-test="yes" style="letter-spacing:2px" class="badge mine">Passthrough</div>`: `as` changed the tag, native attributes survived, caller `class` merged. Full output in §8.
+- [x] **Step 7: done — the `Badge` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 18 daisyUI classes from §1 are reachable: `badge` always, 8 colours via `color`, 4 styles via `variant`, 5 sizes via `size`.
-- [ ] `color` uses `DaisyColor` and `size` uses `DaisySize`, both imported, neither redeclared.
-- [ ] Default root is `span`; `as` renders other tags and narrows the accepted attributes with it (`href` needs `as="a"`).
-- [ ] `type Props` precedes every `const`, destructure annotated `as Props<HTMLTag>`, and the probe confirms props are actually accepted (§3e.2).
-- [ ] `class` from a caller merges through `class:list`.
-- [ ] An empty badge renders (§3c) — no fallback slot content, no emptiness guard.
-- [ ] `variant`'s JSDoc states that `ghost` ignores `color` (§3b), and `GhostIgnoresColor` demonstrates it.
-- [ ] §3d's uncoloured-outline behaviour observed and recorded in the JSDoc.
-- [ ] `Playground` exposes every prop as a control.
-- [ ] One story per doc-page example, reproducing that example's markup, copy and — for the neutral outline/dash case — its light-background wrapper and warning.
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] All 18 daisyUI classes from §1 are reachable: `badge` always, 8 colours via `color`, 4 styles via `variant`, 5 sizes via `size`.
+- [x] `color` uses `DaisyColor` and `size` uses `DaisySize`, both imported, neither redeclared.
+- [x] Default root is `span`; `as` renders other tags and narrows the accepted attributes with it (`href` needs `as="a"`).
+- [x] `type Props` precedes every `const`, destructure annotated `as Props<HTMLTag>`, and the probe confirms props are actually accepted (§3e.2).
+- [x] `class` from a caller merges through `class:list`.
+- [x] An empty badge renders (§3c) — no fallback slot content, no emptiness guard.
+- [x] `variant`'s JSDoc states that `ghost` ignores `color` (§3b), and `GhostIgnoresColor` demonstrates it.
+- [ ] §3d's uncoloured-outline behaviour observed and recorded in the JSDoc. **Open:** the JSDoc states what the CSS implies (inherits the surrounding text colour) and says daisyUI never demonstrates it; the observation itself needs the visual pass.
+- [x] `Playground` exposes every prop as a control.
+- [x] One story per doc-page example, reproducing that example's markup, copy and — for the neutral outline/dash case — its light-background wrapper and warning.
+- [x] Every box in §4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 144 files, 0 errors. Sweeps abridged.
+
+```
+Default        → <span class="badge">Badge</span>
+Sizes          → …<span class="badge badge-xs">Xsmall</span>…<span class="badge badge-xl">Xlarge</span>
+Colors         → …<span class="badge badge-primary">Primary</span>… ×8
+SoftStyle      → …<span class="badge badge-primary badge-soft">Primary</span>… ×7 (no neutral, as the page has it)
+OutlineStyle   → …<span class="badge badge-primary badge-outline">Primary</span>… ×7
+DashStyle      → …<span class="badge badge-primary badge-dash">Primary</span>… ×7
+Neutral…Dash   → <div class="bg-white p-6 …"><span class="badge badge-neutral badge-outline">Outline</span><span class="badge badge-neutral badge-dash">Dash</span></div>
+Ghost          → <span class="badge badge-ghost">ghost</span>
+GhostIgnores…  → <span class="badge badge-ghost">ghost</span><span class="badge badge-primary badge-ghost">ghost + color="primary"</span>
+Empty          → <span class="badge badge-primary badge-lg"></span> ×4 sizes, no content
+Empty…Name     → <span class="badge badge-primary badge-lg"></span><span aria-label="3 unread" class="badge badge-primary badge-lg"></span>
+WithIcon       → <span class="badge badge-info"><svg class="size-[1em]" …>…</svg>Info</span> ×4
+InText         → <h1 class="text-xl font-semibold">Heading 1 <span class="badge badge-xl">Badge</span></h1> …
+                 <p class="text-xs">Paragraph <span class="badge badge-xs">Badge</span></p>
+InButton       → <button class="btn">Inbox <div class="badge badge-sm">+99</div></button> ×2
+Passthrough    → <div id="badge-1" data-test="yes" style="letter-spacing:2px" class="badge mine">Passthrough</div>
+```
+
+What this settles:
+
+- The `span` default holds all the way into `<p>`: `InText`'s paragraph keeps the badge inline, which is the whole reason for §3a.
+- An empty badge really does render as an element with no content — no fallback text crept in (§3c).
+- Inline SVG reaches the DOM (§3e.1), so the icon example is a real icon example.
+- Class order in the markup differs harmlessly from the doc page (`badge badge-primary badge-soft` vs `badge badge-soft badge-primary`) — the class list is built axis by axis, and CSS resolves by stylesheet order, not attribute order.
+- Every class the stories emit has a rule in the built stylesheet.
+
+Not settled here: everything visual — §3b's "identical" claim, §3d's uncoloured outline, and legibility of the neutral pair. All are Step 5.

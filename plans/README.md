@@ -305,7 +305,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Accordion | `accordion` | Planned — [`plans/components/accordion.md`](components/accordion.md) (wrapper + `AccordionItem`; current code is a dummy scaffold) |
 | Avatar | `avatar` | **Implemented** — [`plans/components/avatar.md`](components/avatar.md) (`Avatar` + `AvatarGroup`, one row for both; §3e.1 open until the visual pass) |
 | Aura | `aura` | Planned — [`plans/components/aura.md`](components/aura.md) (current code is a dummy scaffold) |
-| Badge | `badge` | Planned — [`plans/components/badge.md`](components/badge.md) (current code is a dummy scaffold) |
+| Badge | `badge` | **Implemented** — [`plans/components/badge.md`](components/badge.md) (16 stories; §3b mechanism corrected; visual pass open) |
 | Card | `card` | Planned — [`plans/components/card.md`](components/card.md) (wrapper + `CardBody`/`CardTitle`/`CardActions`; current code is a dummy scaffold) |
 | Carousel | `carousel` | Planned — [`plans/components/carousel.md`](components/carousel.md) (wrapper + `CarouselItem`; current code is a dummy scaffold) |
 | Chat bubble | `chat-bubble` | Planned — [`plans/components/chat-bubble.md`](components/chat-bubble.md) (`Chat`/`ChatBubble`/`ChatHeader`/`ChatFooter`; `chat-image` served by `Avatar`) |

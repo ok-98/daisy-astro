@@ -1,14 +1,94 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/badge/
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
+import type { DaisyColor, DaisySize } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'span'> {}
+type BadgeVariant = 'outline' | 'dash' | 'soft' | 'ghost';
 
-const { class: className, ...rest } = Astro.props;
+// `Props` MUST be declared before any `const` in this frontmatter, or Astro
+// stops inferring it and the component silently accepts no props at all
+// (plans/README.md §5c).
+type Props<Tag extends HTMLTag> = Polymorphic<{
+  /**
+   * Defaults to `span`. Both `span` and `div` render identically — `.badge` is
+   * `inline-flex` — but a `div` badge is invalid inside `<p>`: the parser
+   * closes the paragraph before it, splitting the text and dropping the badge
+   * out of the flow (plan §3a).
+   */
+  as: Tag;
+  color?: DaisyColor;
+  /**
+   * Named `variant`, never `style` — `style` is a native attribute
+   * (plans/components/button.md §3a).
+   *
+   * `outline`, `dash` and `soft` read `--badge-color`, so they combine with
+   * `color`. **`ghost` does not**: a colour class sets only the `--badge-color`
+   * / `--badge-fg` variables, while `badge-ghost` declares `background-color`
+   * and `color` literally and never reads them. So `<Badge variant="ghost"
+   * color="primary">` renders identically to `<Badge variant="ghost">`, and no
+   * class ordering changes that (plan §3b).
+   *
+   * `outline` and `dash` set `color: var(--badge-color)` with no fallback, so
+   * without a `color` they inherit the surrounding text colour rather than
+   * having one of their own (plan §3d). daisyUI never demonstrates that
+   * combination — pair them with a colour.
+   */
+  variant?: BadgeVariant;
+  size?: DaisySize;
+}>;
+
+// Full literal class names. NEVER `badge-${color}` — an interpolated class
+// gets no CSS from daisyUI (plans/README.md §1b).
+const COLOR: Record<DaisyColor, string> = {
+  primary: 'badge-primary',
+  secondary: 'badge-secondary',
+  accent: 'badge-accent',
+  neutral: 'badge-neutral',
+  info: 'badge-info',
+  success: 'badge-success',
+  warning: 'badge-warning',
+  error: 'badge-error',
+};
+
+const VARIANT: Record<BadgeVariant, string> = {
+  outline: 'badge-outline',
+  dash: 'badge-dash',
+  soft: 'badge-soft',
+  ghost: 'badge-ghost',
+};
+
+const SIZE: Record<DaisySize, string> = {
+  xs: 'badge-xs',
+  sm: 'badge-sm',
+  md: 'badge-md',
+  lg: 'badge-lg',
+  xl: 'badge-xl',
+};
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const {
+  as: Tag = 'span',
+  color,
+  variant,
+  size,
+  class: className,
+  ...rest
+} = Astro.props as Props<HTMLTag>;
+
+// The `<slot />` below is bare on purpose — no fallback content, because an
+// empty badge is a documented use (a coloured dot as a status marker, plan
+// §3c). Kept out of the template: an HTML comment there ships into every
+// rendered badge.
 ---
 
-<span class:list={['badge', className]} {...rest}>
+<Tag
+  class:list={[
+    'badge',
+    color && COLOR[color],
+    variant && VARIANT[variant],
+    size && SIZE[size],
+    className,
+  ]}
+  {...rest}
+>
   <slot />
-</span>
+</Tag>
