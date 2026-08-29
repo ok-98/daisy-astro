@@ -279,7 +279,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | FAB / Speed Dial | `fab` | Planned — [`plans/components/fab.md`](components/fab.md) (focus-driven, :nth-child-ordered, flower caps at 4 actions) |
 | Modal | `modal` | Planned — [`plans/components/modal.md`](components/modal.md) (4 methods, one component; `open` is not the same as modal) |
 | Swap | `swap` | Planned — [`plans/components/swap.md`](components/swap.md) (`Swap`+on/off/indeterminate; two drivers, don`t combine) |
-| Theme Controller | `theme-controller` | Not started |
+| Theme Controller | `theme-controller` | Planned — [`plans/components/theme-controller.md`](components/theme-controller.md) (no .theme-controller rule exists; class is a selector hook inside all 35 theme files) |
 
 ### Data Display
 | Component | Slug | Status |
