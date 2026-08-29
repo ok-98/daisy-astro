@@ -24,6 +24,33 @@ This is the **second** component to ship with this exact bug (`plans/components/
 
 Fix is the same: destructure `type` with a default (§3a).
 
+### 0a. Audit log — closed, reopened, and closed again
+
+The list above was drawn from *components named after an input type*, and on that basis the audit closed at Text Input (`plans/components/text-input.md` §0i), which turned out clean because `<input>` already defaults to `type="text"`.
+
+**That criterion was wrong.** `plans/components/theme-controller.md` §0b found a sixth instance the list could never have contained: `theme-controller` names a *behaviour*, not a type, yet its CSS depends on the type more strictly than any of them — the theme selector is `input.theme-controller[value=x]:checked`, and only a checkbox or radio can be `:checked`.
+
+Corrected criterion:
+
+> **every component whose CSS matches on `:checked`, `:indeterminate`, or an `[type=…]` attribute.**
+
+It proved itself one plan later: `plans/components/toggle.md` §0a found Toggle under it, where the size classes literally select `.toggle-xs[type=checkbox]`, so without the attribute every size class silently no-ops while the base pill still renders.
+
+Full log:
+
+| Component | Plan | Outcome |
+|---|---|---|
+| Checkbox | `checkbox.md` §0 | bug — missing `type="checkbox"` |
+| File Input | this plan | bug — missing `type="file"` |
+| Radio | `radio.md` §3c | bug |
+| Range | `range.md` | bug; closed the original list |
+| OTP | `otp.md` §0 | different defect — wrong root element (`div` → `label`) |
+| Text Input | `text-input.md` §0i | **clean** — `type="text"` is the spec default |
+| Theme Controller | `theme-controller.md` §0b | bug — reopened the audit, corrected the criterion |
+| Toggle | `toggle.md` §0a | bug — found *by* the corrected criterion |
+
+Under the corrected criterion the list is now complete: no other component's CSS matches on `:checked`, `:indeterminate` or `[type=…]`. Any new component that does must be checked before its plan is written.
+
 ## 1. Variant audit
 
 **15 classes: 1 base + 1 style + 8 colour + 5 size**, matching the doc page's frontmatter. `grep -oE '\.file-input[a-z0-9-]*' fileinput.css | sort -u` returns exactly those 15 **[verified]**.

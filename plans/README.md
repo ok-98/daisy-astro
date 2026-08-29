@@ -100,6 +100,10 @@ This package ships `.astro` files that emit class names; it ships no CSS. The co
 
 with the same packages in `devDependencies` so Storybook renders styled locally. A runtime `dependency` would be wrong — it risks a second, conflicting daisyUI in the consumer's build and takes theme control away from them.
 
+**daisyUI's `prefix` option is not supported.** Every class name this package emits is a literal string in a `.astro` file (§1b requires that — an interpolated name gets no CSS). daisyUI's `prefix` config renames every class it generates, so a consumer who sets it gets a component library emitting names their build no longer defines, and the failure is silent: unstyled markup, no error. Tailwind's own prefix option is a separate setting and does not affect daisyUI's class names.
+
+Found while planning Theme Controller, whose doc page documents the two prefixes behaving differently (`components/theme-controller.md` §0f). If prefix support is ever wanted, it needs a build-time or config-driven mechanism across every component — not something a single component can solve.
+
 daisyUI 5 requires Tailwind 4 and is CSS-first: no `tailwind.config.js`. Storybook gets its styles from `.storybook/preview.css`:
 
 ```css
@@ -251,7 +255,15 @@ const { as: Tag = 'button', color, ...rest } = Astro.props as Props<HTMLTag>;
 
 ### 7. Interactive components in Storybook
 
-Handled by the framework: its renderer applies scoped styles and executes client scripts after injecting the SSR'd HTML, so script-backed components (Theme Controller, Swap, Text Rotate) behave in the canvas.
+Handled by the framework: its renderer applies scoped styles and executes client scripts after injecting the SSR'd HTML, so script-backed components behave in the canvas.
+
+That list used to name Theme Controller, Swap and Text Rotate. Two of the three were wrong, and planning them established why:
+
+- **Text Rotate** is pure `@keyframes` plus `:has()` child counting, with no JavaScript at all (`components/text-rotate.md` §0h).
+- **Theme Controller** switches themes entirely in CSS; daisyUI's own docs hand persistence to the application (`components/theme-controller.md` §0h).
+- **Swap** is a checkbox hack and should be re-checked when `components/swap.md` is implemented — on current evidence it is CSS too.
+
+The framework capability is real and worth keeping recorded; the examples were not. Interactivity that genuinely needs script in this library is caller-side (a Theme Controller persisting to `localStorage`, a Toggle's `indeterminate` DOM property, a Validator story's form submit), never inside a component.
 
 This was a real limitation of the previous hand-rolled bridge, which injected HTML with `container.innerHTML` — scripts inserted that way are never executed by the browser, so those components previewed as dead markup. Adopting the framework removed the problem rather than working around it. Noted here so the constraint isn't reintroduced from memory.
 
