@@ -302,7 +302,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Status | `status` | Planned — [`plans/components/status.md`](components/status.md) (empty dot; uneven size steps; animation is a class) |
 | Table | `table` | Planned — [`plans/components/table.md`](components/table.md) (one class, no parts; ships in the utilities layer so daisyUI emits responsive variants) |
 | Text Rotate | `text-rotate` | Planned — [`plans/components/text-rotate.md`](components/text-rotate.md) (span root, generated inner track, 6-item ceiling; CSS-only — see §254 correction) |
-| Timeline | `timeline` | Not started |
+| Timeline | `timeline` | Planned — [`plans/components/timeline.md`](components/timeline.md) (five components; <hr> siblings are the connector lines and are read by position) |
 
 ### Navigation
 | Component | Slug | Status |
