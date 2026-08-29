@@ -96,8 +96,8 @@ The one thing to confirm (Step 5): that Tailwind's scan of the *story file's* `c
 
 ### 3d. Unverified assumptions — resolve while building, don't build on them
 
-1. **Slot sanitization vs inline `<svg>`.** Every icon example on the doc page is inline SVG, and the framework sanitizes slot HTML with conservative defaults (`plans/README.md` §4). Alert is where this bites hardest: a stripped `<svg>` removes a direct child, which per §2 *also* changes the grid layout — so the failure looks like a broken component, not a missing icon. Check the framework's Sanitization guide the moment an icon doesn't appear. If SVG cannot be allowlisted, the icon stories fall back to a text stand-in and that fallback gets a comment saying why.
-2. **Multiple root children from one slot string.** The stories pass `slots: { default: '<svg…></svg><span>…</span>' }` — several siblings in one slot value. Whether the framework preserves them as siblings (rather than wrapping) is untested here, and §2 says the layout depends on it. Verify in the rendered HTML, not by eye.
+1. ~~**Slot sanitization vs inline `<svg>`.**~~ **Answered 2026-08-29 (while building Button): SVG survives.** Sanitization is disabled in `.storybook/main.ts` — the framework's default allowlist has no `svg` at all, so it had to go; see `plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3. No text stand-in is needed. The symptom is still worth knowing: a stripped `<svg>` removes a direct child, which per §2 also changes the grid layout, so it reads as a broken component rather than a missing icon.
+2. ~~**Multiple root children from one slot string.**~~ **Answered 2026-08-29: siblings are preserved.** One slot value renders as direct children of the root, unwrapped, whether it is a multi-element HTML string or an array of strings and components (`Button.stories.ts` `WithIcon` renders `<svg>` and a text node as siblings inside `.btn`). Same question as `plans/components/aura.md` §3e.1.
 
 ## 4. Component implementation
 

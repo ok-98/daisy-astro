@@ -13,7 +13,7 @@
 - Stories run on `@storybook-astro/framework`: import the `.astro` file as `component`, pass slot content via `args.slots`.
 - One story file: `Playground`, one story per daisyUI doc-page example, plus any variant axis the examples miss.
 
-> **Status:** the component in §4 is **implemented** and the baseline stories in §5 are **verified** through a static Storybook build (output in §8a). Remaining work is the rest of the doc-example stories — see §6.
+> **Status:** **Implemented.** The component in §4 and all 21 stories in §5 are in the repo and verified through a static Storybook build (§8c) plus a clean `astro check`. Only Step 6 (side-by-side visual comparison against the doc page) is open.
 
 ---
 
@@ -322,39 +322,36 @@ export const Responsive = {
 
 - [x] **Step 3: done — baseline stories written** (`Default`, `Variants`, `DisabledLink`, `Passthrough`) and verified through a static build; recorded output in §8.
 
-- [ ] **Step 4:** Settle the `LoginButtons` scope question from section 5 (3 providers vs all 18) before writing the remaining stories, so it doesn't get half-built.
+- [x] **Step 4: done — `LoginButtons` ships three providers** (GitHub, Google, Apple), the §5 recommendation, with a comment pointing at the doc page for the other 15.
 
-- [ ] **Step 5:** Add the remaining doc-example stories from the §5 table: `Sizes`, `Colors`, `Soft`, `Outline`, `Dash`, `Active`, `GhostAndLink`, `Wide`, `AnyHtmlTag`, `Disabled` (attribute form alongside the existing link form), `Shapes`, `WithIcon`, `Block`, `WithLoadingSpinner`, `LoginButtons`, plus `Playground`.
+- [x] **Step 5: done — every remaining doc-example story is written.** 21 stories: `Playground`, `Default`, `Sizes`, `Responsive`, `Colors`, `Soft`, `Outline`, `Dash`, `Active`, `GhostAndLink`, `Wide`, `Block`, `AnyHtmlTag`, `Disabled`, `DisabledLink`, `Shapes`, `WithIcon`, `WithLoadingSpinner`, `LoginButtons`, `Variants`, `Passthrough`.
 
-- [ ] **Step 6:** Run `pnpm storybook` and compare each story side by side with its section on https://daisyui.com/components/button/.
-  - **Blocker to expect:** daisyUI's CSS is not loaded in Storybook yet, so buttons render with correct classes but no styling. Wiring Tailwind + daisyUI into `.storybook/preview.ts` is shared by all 68 components and belongs in its own plan. Until it lands, verify at the markup level (Step 7).
-  - Watch for stripped SVG in `Shapes` / `WithIcon` / `LoginButtons` — that is slot sanitization, not a component bug (§5).
+  The multi-variant sweeps (`Sizes`, `Colors`, `Soft`, `Outline`, `Dash`, `Active`, …) use the framework's own slot values rather than any DOM helper: a story may `render: () => [...]` a list mixing HTML strings with configured-component descriptors (`{ component, props, slots }`), so the sweep is `row(...)` + `btn(...)` — two arrow functions, six lines, in the story file. See `plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3 for the shape.
 
-- [ ] **Step 7:** Verify markup headlessly:
+- [ ] **Step 6:** Run `pnpm storybook` and compare each story side by side with its section on https://daisyui.com/components/button/. **Still open — needs human eyes**, `pnpm storybook` then http://localhost:6006. Everything checkable without a browser has been checked:
+  - **The old blocker is gone: daisyUI's CSS loads.** `.storybook/preview.css` imports Tailwind, loads the daisyUI plugin with an explicit theme list, and `@source "../src"` points the scanner at the components. Verified in the built stylesheet (`storybook-static/_astro/iframe-*.css`, 151 KB): every class these stories emit has a rule — `btn`, all 8 colours, `btn-soft`/`dash`/`outline`/`ghost`/`link`, `btn-active`, `btn-disabled`, all 5 sizes, `btn-wide`/`block`/`square`/`circle`, `loading-spinner` — plus all five extra themes.
+  - **`@source "../src"` reaches `.ts` story files too**, which matters because some utilities appear only in stories: `.size-\[1\.2em\]{width:1.2em;height:1.2em}` (the icon) and `.border-\[\#e5e5e5\]{border-color:#e5e5e5}` (the Google button) are both in the output.
+  - SVG is no longer stripped in `Shapes` / `WithIcon` / `LoginButtons`: slot sanitization is disabled (Tier 0.3), because the framework's default allowlist contains no `svg`, `button`, `input` or `label`.
+  - What the visual pass is still for: spacing and icon alignment inside `btn`, whether `btn-neutral` outline/dash disappears against the canvas background (§5 note 8), and that `Responsive` actually steps through its five breakpoints.
 
-```bash
-pnpm build-storybook
-grep -rhoE '<(button|a|input)[^>]*btn[^>]*>' storybook-static/astro-prerendered-stories.json
-```
+- [x] **Step 7: done — markup verified headlessly.** `pnpm build-storybook`, then read `storybook-static/astro-prerendered-stories.json`; full output in §8c. Every story matches its daisyUI counterpart's classes and structure. `npx astro check` is clean (144 files, 0 errors).
 
-Compare against §8. Every doc-example story should appear with the classes its daisyUI counterpart uses.
-
-- [ ] **Step 8:** Update the Button row in `plans/README.md` to **Implemented**.
+- [x] **Step 8: done — the Button row in `plans/README.md` says Implemented.**
 
 - [ ] **Step 9:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 25 daisyUI button classes reachable via props (8 color, 5 style, 2 behavior, 5 size, 4 modifier, 1 base).
-- [ ] Native attributes forward: `id`, `data-*`, `aria-*`, `style`, `type`, `href` (with `as="a"`) all land on the element.
-- [ ] Caller `class` merges with generated classes instead of replacing or being dropped.
-- [ ] `style` attribute survives — no `btn-color:red`-style junk class (regression test for 3a).
-- [ ] `disabled` emits the native attribute on `button`/`input`, and `btn-disabled` + `tabindex="-1"` + `role="button"` + `aria-disabled="true"` on `a`/`div` (regression test for 3b).
-- [ ] `as="a"` type-checks `href`; `as="button"` rejects it.
-- [ ] Content enters via the default slot; no `label` content prop was added.
-- [ ] A story exists for every one of the 18 daisyUI doc-page examples (per the §5 mapping, with 8 folded into `Outline`/`Dash`), each matching the page's markup.
-- [ ] `Responsive` works through `class` passthrough — no responsive size prop was invented.
-- [ ] `as="a"` does **not** silently gain `role="button"` (see §4); the `AnyHtmlTag` story passes it explicitly, mirroring the doc example.
+- [x] All 25 daisyUI button classes reachable via props (8 color, 5 style, 2 behavior, 5 size, 4 modifier, 1 base).
+- [x] Native attributes forward: `id`, `data-*`, `aria-*`, `style`, `type`, `href` (with `as="a"`) all land on the element.
+- [x] Caller `class` merges with generated classes instead of replacing or being dropped.
+- [x] `style` attribute survives — no `btn-color:red`-style junk class (regression test for 3a).
+- [x] `disabled` emits the native attribute on `button`/`input`, and `btn-disabled` + `tabindex="-1"` + `role="button"` + `aria-disabled="true"` on `a`/`div` (regression test for 3b).
+- [x] `as="a"` type-checks `href`; `as="button"` rejects it.
+- [x] Content enters via the default slot; no `label` content prop was added.
+- [x] A story exists for every one of the 18 daisyUI doc-page examples (per the §5 mapping, with 8 folded into `Outline`/`Dash`), each matching the page's markup.
+- [x] `Responsive` works through `class` passthrough — no responsive size prop was invented.
+- [x] `as="a"` does **not** silently gain `role="button"` (see §4); the `AnyHtmlTag` story passes it explicitly, mirroring the doc example.
 
 ## 8. Recorded output
 
@@ -387,3 +384,48 @@ Kept because it covers prop combinations the baseline stories don't yet, includi
 {"as":"input","type":"submit","size":"lg","value":"Go"}
                                                     → <input type="submit" value="Go" class="btn btn-lg"/>
 ```
+
+### 8c. The full story set (2026-08-29)
+
+All 21 stories, from `storybook-static/astro-prerendered-stories.json`. Sweeps
+are abridged to their first two entries; the row wrapper is
+`<div class="flex flex-wrap items-center gap-2">`, written by the story file's
+`row()` helper, not by the component.
+
+```
+Playground   → <button class="btn btn-primary">Button</button>
+Default      → <button class="btn">Click me</button>
+Sizes        → …<button class="btn btn-xs">Xsmall</button><button class="btn btn-sm">Small</button>…
+Responsive   → <button class="btn btn-xs sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl">Responsive</button>
+Colors       → …<button class="btn">Default</button><button class="btn btn-neutral">neutral</button>…
+Soft         → …<button class="btn btn-soft">Default</button><button class="btn btn-neutral btn-soft">neutral</button>…
+Outline      → …<button class="btn btn-outline">Default</button><button class="btn btn-neutral btn-outline">neutral</button>…
+Dash         → …<button class="btn btn-dash">Default</button><button class="btn btn-neutral btn-dash">neutral</button>…
+Active       → …<button class="btn btn-active">Default</button><button class="btn btn-neutral btn-active">neutral</button>…
+GhostAndLink → …<button class="btn btn-ghost">Ghost</button><button class="btn btn-link">Link</button></div>
+Wide         → <button class="btn btn-wide">Wide</button>
+Block        → <button class="btn btn-block">Block</button>
+AnyHtmlTag   → …<a role="button" class="btn">Link</a><button type="submit" class="btn">Button</button>
+                <input type="button" value="Input" class="btn"/><input type="submit" value="Submit" class="btn"/>
+                <form style="display:contents" autocomplete="off">
+                  <input type="radio" aria-label="Radio" class="btn"/>
+                  <input type="checkbox" aria-label="Checkbox" class="btn"/>
+                  <input type="reset" value="Reset" class="btn"/></form></div>
+Disabled     → …<button disabled class="btn">Disabled using attribute</button>
+                <a tabindex="-1" role="button" aria-disabled="true" href="#" class="btn btn-disabled">Disabled using class name</a></div>
+DisabledLink → <a tabindex="-1" role="button" aria-disabled="true" href="#" class="btn btn-disabled">Disabled link</a>
+Shapes       → …<button class="btn btn-square"><svg …><path …/></svg></button><button class="btn btn-circle"><svg …>…</svg></button></div>
+WithIcon     → …<button class="btn"><svg …>…</svg>Like</button><button class="btn">Like<svg …>…</svg></button></div>
+WithLoading… → …<button class="btn btn-square"><span class="loading loading-spinner"></span></button>
+                <button class="btn"><span class="loading loading-spinner"></span>loading</button></div>
+LoginButtons → …<button class="btn bg-black text-white border-black"><svg …>…</svg>Login with GitHub</button>…
+Variants     → <button class="btn btn-primary btn-lg btn-outline">Primary large outline</button>
+Passthrough  → <button id="go" data-test="yes" style="letter-spacing:2px" class="btn mine">Passthrough</button>
+```
+
+Four things this run settles beyond the component itself:
+
+- Inline SVG reaches the DOM intact (`Shapes`, `WithIcon`, `LoginButtons`) — slot sanitization is off; see `plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3.
+- `<svg>` and a text node sit as **siblings** inside `.btn` (`WithIcon`), which is `alert.md` §3d.2's question.
+- `as="input"` renders a void element and drops the empty slot (`AnyHtmlTag`), including for `type="radio"` / `type="checkbox"`.
+- Unbalanced HTML-string fragments in a slot array work as wrappers — `'<form …>'` … `'</form>'` around three components came out correctly nested.

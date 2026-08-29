@@ -1,5 +1,12 @@
 @import "tailwindcss";
-@plugin "daisyui";
+
+/* Themes are opt-in: `@plugin "daisyui"` with no `themes` option builds light
+   and dark only, and a `data-theme` naming any other theme then does nothing —
+   silently. The extra five are the ones the Theme Controller stories name.
+   See plans/IMPLEMENTATION-ORDER.md Tier 0.2. */
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark, synthwave, retro, cyberpunk, valentine, aqua;
+}
 
 /* Storybook renders components directly, with no app to scan, so point
    Tailwind at the component sources explicitly. */

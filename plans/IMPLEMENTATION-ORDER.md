@@ -51,29 +51,56 @@ These are not components and they gate everything. Do them first, in order.
       `tooltip.md` §0d derives its seven-colour union with
       `Exclude<DaisyColor, 'neutral'>` rather than adding a second colour type.
 
-- [ ] **0.2 — Enable the themes the stories name.** `.storybook/preview.css` is
-      currently `@plugin "daisyui";` with no `themes` option, which in daisyUI 5
-      means **light and dark only**. `theme-controller.md` §5 names `synthwave`,
-      `retro`, `cyberpunk`, `valentine` and `aqua`; without them every Theme
-      Controller story renders a control that does nothing, and §0a says that
-      failure is *silent*. Enable them before Theme Controller, and note in the
-      story descriptions that the set is build-dependent.
+- [x] **0.2 — done: the themes the stories name are enabled.**
+      `.storybook/preview.css` was `@plugin "daisyui";` with no `themes` option,
+      which in daisyUI 5 means **light and dark only**. It now names the five
+      `theme-controller.md` §5 uses:
 
-- [ ] **0.3 — Settle the three open probes.** Roughly 35 plans defer to these.
-      Settle each once, record the answer in `aura.md` §3e.1, and stop
-      re-asking:
+      ```css
+      @plugin "daisyui" {
+        themes: light --default, dark --prefersdark, synthwave, retro, cyberpunk, valentine, aqua;
+      }
+      ```
 
-  | Probe | Question | Decisive plan |
+      The set is still build-dependent — say so in the Theme Controller story
+      descriptions, since a `data-theme` naming an unbuilt theme fails silently
+      (`theme-controller.md` §0a).
+
+- [x] **0.3 — done: all four probes are settled.** Answers below; they were
+      taken from a throwaway `src/components/_Probe` story rendered through
+      `pnpm build-storybook` on 2026-08-29 (component + stories deleted after),
+      cross-read against the framework source. Recorded here as the canonical
+      copy, with pointers in `aura.md` §3e.1 and `alert.md` §3d. **Stop
+      re-asking.**
+
+  | Probe | Question | Answer |
   |---|---|---|
-  | **Slot wrapping** | Does slot content land as a *direct child* of the component root? | `timeline.md` §2 (`.timeline > li`, `hr:first-child`) and `text-rotate.md` §2 (`:has(> :nth-child(n))` — animation dies outright) |
-  | **Slot sanitization: SVG** | Does the framework strip inline `<svg>` from `args.slots`? | `text-input.md` §5 (`SearchWithIcon`), `toggle.md` §5 (`IconsInside` — icons are `:nth-child`-addressed, so a dropped one reindexes the other) |
-  | **Slot sanitization: table elements** | Do `<thead>`/`<tr>`/`<td>` survive being passed as a slot string? | `table.md` §5 |
-  | **Astro components nested via `slots`** | Can a story nest `<CardBody>` inside `<Card>` through `args.slots`? | `card.md` §3f.4, `accordion.md` §3d.1, `chat-bubble.md`, `dock.md`, `timeline.md` §5 |
+  | **Slot wrapping** | Does slot content land as a *direct child* of the component root? | **Yes, unwrapped.** `<div class="probe"><span class="card">CARD</span></div>` — nothing in between. `.timeline > li`, `:has(> .card)` and `:nth-child` selectors all work. |
+  | **Slot sanitization: SVG** | Does the framework strip inline `<svg>` from `args.slots`? | **It did, and sanitization is now off** (see below). Inline SVG survives verbatim, `<path>` children included. |
+  | **Slot sanitization: table elements** | Do `<thead>`/`<tr>`/`<td>` survive being passed as a slot string? | **Yes** — and they always would have: `table`/`thead`/`tbody`/`tr`/`th`/`td`/`caption`/`col`/`colgroup` are all in the framework's default allowlist. |
+  | **Astro components nested via `slots`** | Can a story nest `<CardBody>` inside `<Card>` through `args.slots`? | **Yes, with props and slots of its own**, nested arbitrarily deep. No wrapper `.astro` story components are needed anywhere. |
 
-  The last one decides whether multi-part components can have honest stories at
-  all, or whether every one of them needs a wrapper `.astro` story component.
-  Answer it before Card, and the pattern is settled for Chat, Dock, Timeline,
-  Menu, Tabs, Fieldset and Stat.
+  **Sanitization is disabled** in `.storybook/main.ts`
+  (`framework.options.sanitization = { enabled: false }`). The framework's
+  default `sanitize-html` allowlist has no `svg`, `button`, `input`, `label`,
+  `select`, `textarea`, `form`, `fieldset` or `legend` and drops the `style`
+  attribute — i.e. it removes most of this library's story content. Story slots
+  are first-party source in this repo, not user input, so there is no trust
+  boundary the allowlist was defending. Widening it per component would have
+  been the same decision taken 68 times.
+
+  **The nesting shape**, since every multi-part component's stories now use it:
+
+  ```ts
+  slots: { default: { component: CardBody, props: { … }, slots: { default: '…' } } }
+  ```
+
+  A slot value may be a string, a bare component reference, one of those
+  descriptors, or an array mixing all three — concatenated into that one slot.
+  A story may also skip `args` entirely and `render: () => [ … ]` the same
+  array, which is how the "all 8 colours in a row" doc examples are done; see
+  `Button.stories.ts` for the pattern (`row()` / `btn()`, six lines, no DOM
+  helpers).
 
 ---
 

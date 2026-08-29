@@ -288,7 +288,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 ### Actions
 | Component | Slug | Status |
 |---|---|---|
-| Button | `button` | Planned — [`plans/components/button.md`](components/button.md) (current code is a 2-prop scaffold, plan replaces it) |
+| Button | `button` | **Implemented** — [`plans/components/button.md`](components/button.md) (21 stories; Step 6, the visual pass, still open) |
 | Dropdown | `dropdown` | Planned — [`plans/components/dropdown.md`](components/dropdown.md) (3 methods; component covers 2, popover is composition) |
 | FAB / Speed Dial | `fab` | Planned — [`plans/components/fab.md`](components/fab.md) (focus-driven, :nth-child-ordered, flower caps at 4 actions) |
 | Modal | `modal` | Planned — [`plans/components/modal.md`](components/modal.md) (4 methods, one component; `open` is not the same as modal) |
