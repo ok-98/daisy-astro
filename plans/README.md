@@ -324,7 +324,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Loading | `loading` | Planned — [`plans/components/loading.md`](components/loading.md) (SVG mask over currentColor; no colour prop) |
 | Progress | `progress` | Planned — [`plans/components/progress.md`](components/progress.md) (omit `value` for indeterminate; no size axis) |
 | Radial progress | `radial-progress` | Planned — [`plans/components/radial-progress.md`](components/radial-progress.md) (API is 3 custom properties; `value` required) |
-| Skeleton | `skeleton` | Not started |
+| Skeleton | `skeleton` | Planned — [`plans/components/skeleton.md`](components/skeleton.md) (no size of its own; `text` mode shimmers glyphs) |
 | Toast | `toast` | Not started |
 | Tooltip | `tooltip` | Not started |
 
