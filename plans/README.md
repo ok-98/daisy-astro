@@ -340,7 +340,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Radio | `radio` | Planned — [`plans/components/radio.md`](components/radio.md) (scaffold missing `type="radio"`; unique `name` per group) |
 | Range | `range` | Planned — [`plans/components/range.md`](components/range.md) (scaffold missing `type="range"`; 5 custom properties, no props) |
 | Rating | `rating` | Planned — [`plans/components/rating.md`](components/rating.md) (radio group + Mask shapes; `:has(~ :checked)` fill) |
-| Select | `select` | Not started |
+| Select | `select` | Planned — [`plans/components/select.md`](components/select.md) (first component where the `size` collision has a real cost) |
 | Text Input | `text-input` | Not started |
 | Textarea | `textarea` | Not started |
 | Toggle | `toggle` | Not started |
