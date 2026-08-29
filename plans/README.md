@@ -312,7 +312,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Link | `link` | Planned — [`plans/components/link.md`](components/link.md) (`link-hover` removes the underline rather than adding an effect) |
 | Megamenu | `megamenu` | Planned — [`plans/components/megamenu.md`](components/megamenu.md) (Popover API + anchor positioning; max 10 items) |
 | Menu | `menu` | Planned — [`plans/components/menu.md`](components/menu.md) (16 classes, 5 as props; items are bare `<li><a>`) |
-| Navbar | `navbar` | Not started |
+| Navbar | `navbar` | Planned — [`plans/components/navbar.md`](components/navbar.md) (`Navbar`+start/center/end; 50%/50% halves) |
 | Pagination | `pagination` | Not started |
 | Steps | `steps` | Not started |
 | Tab | `tab` | Not started |
