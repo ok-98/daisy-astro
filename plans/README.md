@@ -275,7 +275,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Component | Slug | Status |
 |---|---|---|
 | Button | `button` | Planned — [`plans/components/button.md`](components/button.md) (current code is a 2-prop scaffold, plan replaces it) |
-| Dropdown | `dropdown` | Not started |
+| Dropdown | `dropdown` | Planned — [`plans/components/dropdown.md`](components/dropdown.md) (3 methods; component covers 2, popover is composition) |
 | FAB / Speed Dial | `fab` | Not started |
 | Modal | `modal` | Not started |
 | Swap | `swap` | Not started |
