@@ -315,7 +315,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Navbar | `navbar` | Planned — [`plans/components/navbar.md`](components/navbar.md) (`Navbar`+start/center/end; 50%/50% halves) |
 | Pagination | `pagination` | Planned — [`plans/components/pagination.md`](components/pagination.md) (**no component**: daisyUI has no pagination class; served by `Join` + `Button`) |
 | Steps | `steps` | Planned — [`plans/components/steps.md`](components/steps.md) (`Steps`+`Step`+`StepIcon`; CSS counter, bar needs 2 same-coloured steps) |
-| Tab | `tab` | Not started |
+| Tab | `tab` | Planned — [`plans/components/tab.md`](components/tab.md) (`tabs` is the component; 4 tab shapes; panels need radios) |
 
 ### Feedback
 | Component | Slug | Status |
