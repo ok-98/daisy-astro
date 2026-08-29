@@ -364,7 +364,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 |---|---|---|
 | Browser | `browser-mockup` | Planned — [`plans/components/browser-mockup.md`](components/browser-mockup.md) (current code is a dummy scaffold) |
 | Code | `code-mockup` | Planned — [`plans/components/code-mockup.md`](components/code-mockup.md) (scaffold markup is already correct; plan is docs + stories) |
-| Phone | `phone-mockup` | Not started |
+| Phone | `phone-mockup` | Planned — [`plans/components/phone-mockup.md`](components/phone-mockup.md) (`PhoneMockup`+camera+display; fixed 462/978 ratio) |
 | Window | `window-mockup` | Not started |
 
 ## Workflow for a new component
