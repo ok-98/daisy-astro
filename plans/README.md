@@ -341,7 +341,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Range | `range` | Planned — [`plans/components/range.md`](components/range.md) (scaffold missing `type="range"`; 5 custom properties, no props) |
 | Rating | `rating` | Planned — [`plans/components/rating.md`](components/rating.md) (radio group + Mask shapes; `:has(~ :checked)` fill) |
 | Select | `select` | Planned — [`plans/components/select.md`](components/select.md) (first component where the `size` collision has a real cost) |
-| Text Input | `text-input` | Not started |
+| Text Input | `text-input` | Planned — [`plans/components/text-input.md`](components/text-input.md) (dual root: input or label wrapper; type narrowed to daisyUI documented twelve) |
 | Textarea | `textarea` | Planned — [`plans/components/textarea.md`](components/textarea.md) (scaffold whitespace kills placeholder; sizes change font only) |
 | Toggle | `toggle` | Not started |
 | Validator | `validator` | Not started |
