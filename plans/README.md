@@ -338,7 +338,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Filter | `filter` | Planned — [`plans/components/filter.md`](components/filter.md) (options are `Button as="input"`; label comes from `aria-label`) |
 | Label | `label` | Planned — [`plans/components/label.md`](components/label.md) (`Label`+`FloatingLabel`; neither is a plain form label) |
 | Radio | `radio` | Planned — [`plans/components/radio.md`](components/radio.md) (scaffold missing `type="radio"`; unique `name` per group) |
-| Range | `range` | Not started |
+| Range | `range` | Planned — [`plans/components/range.md`](components/range.md) (scaffold missing `type="range"`; 5 custom properties, no props) |
 | Rating | `rating` | Not started |
 | Select | `select` | Not started |
 | Text Input | `text-input` | Not started |
