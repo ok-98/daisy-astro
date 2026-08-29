@@ -311,7 +311,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Dock | `dock` | Planned — [`plans/components/dock.md`](components/dock.md) (`Dock`/`DockItem`/`DockLabel`; position:fixed is built in) |
 | Link | `link` | Planned — [`plans/components/link.md`](components/link.md) (`link-hover` removes the underline rather than adding an effect) |
 | Megamenu | `megamenu` | Planned — [`plans/components/megamenu.md`](components/megamenu.md) (Popover API + anchor positioning; max 10 items) |
-| Menu | `menu` | Not started |
+| Menu | `menu` | Planned — [`plans/components/menu.md`](components/menu.md) (16 classes, 5 as props; items are bare `<li><a>`) |
 | Navbar | `navbar` | Not started |
 | Pagination | `pagination` | Not started |
 | Steps | `steps` | Not started |
