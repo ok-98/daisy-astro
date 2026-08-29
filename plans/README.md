@@ -339,7 +339,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Label | `label` | Planned — [`plans/components/label.md`](components/label.md) (`Label`+`FloatingLabel`; neither is a plain form label) |
 | Radio | `radio` | Planned — [`plans/components/radio.md`](components/radio.md) (scaffold missing `type="radio"`; unique `name` per group) |
 | Range | `range` | Planned — [`plans/components/range.md`](components/range.md) (scaffold missing `type="range"`; 5 custom properties, no props) |
-| Rating | `rating` | Not started |
+| Rating | `rating` | Planned — [`plans/components/rating.md`](components/rating.md) (radio group + Mask shapes; `:has(~ :checked)` fill) |
 | Select | `select` | Not started |
 | Text Input | `text-input` | Not started |
 | Textarea | `textarea` | Not started |
