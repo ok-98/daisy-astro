@@ -313,7 +313,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Megamenu | `megamenu` | Planned — [`plans/components/megamenu.md`](components/megamenu.md) (Popover API + anchor positioning; max 10 items) |
 | Menu | `menu` | Planned — [`plans/components/menu.md`](components/menu.md) (16 classes, 5 as props; items are bare `<li><a>`) |
 | Navbar | `navbar` | Planned — [`plans/components/navbar.md`](components/navbar.md) (`Navbar`+start/center/end; 50%/50% halves) |
-| Pagination | `pagination` | Not started |
+| Pagination | `pagination` | Planned — [`plans/components/pagination.md`](components/pagination.md) (**no component**: daisyUI has no pagination class; served by `Join` + `Button`) |
 | Steps | `steps` | Not started |
 | Tab | `tab` | Not started |
 
