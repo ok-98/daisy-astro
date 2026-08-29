@@ -353,7 +353,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Divider | `divider` | Planned — [`plans/components/divider.md`](components/divider.md) (slot whitespace breaks the empty-divider `:empty` rule) |
 | Drawer sidebar | `drawer` | Planned — [`plans/components/drawer.md`](components/drawer.md) (`Drawer`+`DrawerButton`; sibling-order-dependent skeleton, required `toggleId`) |
 | Footer | `footer` | Planned — [`plans/components/footer.md`](components/footer.md) (`Footer`+`FooterTitle`; grid of grids, center changes the flow axis) |
-| Hero | `hero` | Not started |
+| Hero | `hero` | Planned — [`plans/components/hero.md`](components/hero.md) (`Hero`+`HeroContent`+`HeroOverlay`; one-cell grid) |
 | Indicator | `indicator` | Not started |
 | Join (group items) | `join` | Not started |
 | Mask | `mask` | Not started |
