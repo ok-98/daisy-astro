@@ -322,7 +322,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 |---|---|---|
 | Alert | `alert` | Planned — [`plans/components/alert.md`](components/alert.md) (current code is a dummy scaffold) |
 | Loading | `loading` | Planned — [`plans/components/loading.md`](components/loading.md) (SVG mask over currentColor; no colour prop) |
-| Progress | `progress` | Not started |
+| Progress | `progress` | Planned — [`plans/components/progress.md`](components/progress.md) (omit `value` for indeterminate; no size axis) |
 | Radial progress | `radial-progress` | Not started |
 | Skeleton | `skeleton` | Not started |
 | Toast | `toast` | Not started |
