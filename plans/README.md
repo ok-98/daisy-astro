@@ -342,7 +342,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Rating | `rating` | Planned — [`plans/components/rating.md`](components/rating.md) (radio group + Mask shapes; `:has(~ :checked)` fill) |
 | Select | `select` | Planned — [`plans/components/select.md`](components/select.md) (first component where the `size` collision has a real cost) |
 | Text Input | `text-input` | Not started |
-| Textarea | `textarea` | Not started |
+| Textarea | `textarea` | Planned — [`plans/components/textarea.md`](components/textarea.md) (scaffold whitespace kills placeholder; sizes change font only) |
 | Toggle | `toggle` | Not started |
 | Validator | `validator` | Not started |
 | OTP | `otp` | Planned — [`plans/components/otp.md`](components/otp.md) (scaffold root must be `label`, not `div`) |
