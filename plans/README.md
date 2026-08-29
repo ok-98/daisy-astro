@@ -4,6 +4,8 @@
 
 This document is the index and ruleset. Each component gets its own plan under `plans/components/<slug>.md`, written from `plans/TEMPLATE.md` when work on that component starts. This file does not implement anything — it defines the shared conventions so per-component plans don't each reinvent them, and tracks which components have a plan yet.
 
+> **Building, not planning?** Read [`plans/IMPLEMENTATION-ORDER.md`](IMPLEMENTATION-ORDER.md) first. All 68 plans are written; that document derives the dependency graph between them, sequences the work into six stages, and gives the rules that stop a wrong order turning into silent debt. Start with Tier 0 — three probes and a Storybook theme setting gate roughly 35 plans.
+
 ## Source of truth
 
 daisyUI component list confirmed against the official docs (`daisyui.com/components/`) and the `daisyui` npm package source (`packages/daisyui/src/components/*.css` in `saadeghi/daisyui` on GitHub) on 2026-08-23. All 68 are part of the free, open-source `daisyui` package — none require a paid tier.
