@@ -294,7 +294,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Collapse | `collapse` | Planned — [`plans/components/collapse.md`](components/collapse.md) (single impl of the 7 `collapse-*` classes; supersedes `AccordionItem`) |
 | Countdown | `countdown` | Planned — [`plans/components/countdown.md`](components/countdown.md) (wrapper + `CountdownValue`; transition effect, not a timer) |
 | Diff | `diff` | Planned — [`plans/components/diff.md`](components/diff.md) (native CSS `resize`, no JS; narrowest browser support — no drag on iOS Safari) |
-| Hover 3D card | `hover-3d-card` | Not started |
+| Hover 3D card | `hover-3d-card` | Planned — [`plans/components/hover-3d-card.md`](components/hover-3d-card.md) (component generates the 8 hover zones; doc examples pending) |
 | Hover Gallery | `hover-gallery` | Not started |
 | Kbd | `kbd` | Not started |
 | List | `list` | Not started |
