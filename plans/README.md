@@ -321,7 +321,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Component | Slug | Status |
 |---|---|---|
 | Alert | `alert` | Planned — [`plans/components/alert.md`](components/alert.md) (current code is a dummy scaffold) |
-| Loading | `loading` | Not started |
+| Loading | `loading` | Planned — [`plans/components/loading.md`](components/loading.md) (SVG mask over currentColor; no colour prop) |
 | Progress | `progress` | Not started |
 | Radial progress | `radial-progress` | Not started |
 | Skeleton | `skeleton` | Not started |
