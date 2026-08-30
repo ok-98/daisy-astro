@@ -1,14 +1,75 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/radial-progress/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+/**
+ * A ring showing progress, drawn as a masked conic gradient with a leading dot.
+ *
+ * Deliberately a `div` rather than the native progress element: browsers cannot
+ * put text inside that element, and Firefox will not render pseudo-elements in
+ * it at all — which is where the whole ring is drawn. The consequence is that
+ * the accessibility Progress gets for free must be supplied here, so this
+ * component emits `role="progressbar"` and derives `aria-valuenow` from
+ * `value`. Both are overridable; deriving the label means the two cannot drift
+ * apart (plan §3a). `aria-valuemin` / `aria-valuemax` are left alone — they
+ * already default to 0 and 100, which is what the ring assumes.
+ *
+ * The API is three CSS custom properties, not classes: `--value`, `--size` and
+ * `--thickness`. Colour is `currentColor`, so the ring is recoloured with
+ * `class="text-primary"` and there is no colour prop. A filled disc behind the
+ * ring is a separate concern again — `class="bg-primary text-primary-content
+ * border-4 border-primary"` — which no single prop could express (plan §3c).
+ *
+ * `box-sizing: content-box`, against Tailwind's global `border-box`: a border
+ * therefore **grows** the element instead of eating into the ring, which is what
+ * keeps the arc and the dot aligned. Overriding it with `box-border` breaks the
+ * geometry (plan §3d).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * **Required**, 0–100. daisyUI defaults `--value` to 0, so an unset value
+   * renders a plausible empty ring rather than failing — which is why this is
+   * required rather than optional (plan §3b). Unlike the native progress
+   * element there is no indeterminate state to express.
+   *
+   * Not clamped: above 100 the arc saturates but the leading dot keeps rotating
+   * past the top, which reads as a bug.
+   */
+  value: number;
+  /** Any CSS length. Defaults to `5rem`; `thickness` derives from it. */
+  size?: string;
+  /** Any CSS length. Defaults to 10% of `size`, so scaling `size` alone keeps the ring proportional. */
+  thickness?: string;
+}
 
-const { class: className, ...rest } = Astro.props;
+// These three are CSS custom properties in an inline style, not class names, so
+// plans/README.md §1b's interpolation ban does not apply here (plan §1a).
+
+const {
+  value,
+  size,
+  thickness,
+  // `style` is native and would otherwise be clobbered by the custom properties.
+  style,
+  role = 'progressbar',
+  'aria-valuenow': ariaValueNow = value,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const vars = [
+  `--value:${value};`,
+  size ? ` --size:${size};` : '',
+  thickness ? ` --thickness:${thickness};` : '',
+].join('');
 ---
 
-<div class:list={['radial-progress', className]} {...rest}>
+<div
+  class:list={['radial-progress', className]}
+  style={[vars, style].filter(Boolean).join(' ')}
+  role={role}
+  aria-valuenow={ariaValueNow}
+  {...rest}
+>
   <slot />
 </div>

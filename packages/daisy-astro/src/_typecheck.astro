@@ -21,6 +21,7 @@ import Badge from './components/Badge/Badge.astro';
 import Button from './components/Button/Button.astro';
 import Divider from './components/Divider/Divider.astro';
 import Progress from './components/Progress/Progress.astro';
+import RadialProgress from './components/RadialProgress/RadialProgress.astro';
 import Skeleton from './components/Skeleton/Skeleton.astro';
 import Kbd from './components/Kbd/Kbd.astro';
 import Link from './components/Link/Link.astro';
@@ -54,6 +55,9 @@ import Status from './components/Status/Status.astro';
 <Progress class="w-56" value={40} max={100} />
 <Progress class="w-56" />
 <Progress color="primary" class="w-56 h-4" id="p" data-test="y" aria-label="Upload" />
+
+<RadialProgress value={70}>70%</RadialProgress>
+<RadialProgress value={70} size="12rem" thickness="2px" class="text-primary" style="opacity:.5" id="r" data-test="y" />
 
 <Skeleton class="h-32 w-32" />
 <Skeleton text as="span">ok</Skeleton>

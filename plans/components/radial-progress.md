@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): props extend `HTMLAttributes<'div'>`; `class:list` for merging; **no variant classes** so no `Record` map (§1b); **no shared unions** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/radialprogress.css` and the doc page source. §3e lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `RadialProgress.astro` and 10 stories are in the repo per §4/§5. §3a's synchronisation is asserted in the build output: across all 17 rings rendered by the stories, `--value` and `aria-valuenow` agree — zero mismatches (§8). §3e.1 is answered (see §3e). Step 5 (visual pass) is open. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/radialprogress.css` and the doc page source. §3e lists what is **unverified**.
 
 ---
 
@@ -114,7 +114,7 @@ Two more geometry notes worth a JSDoc line each:
 
 ### 3e. Unverified assumptions
 
-1. **`transition: --radialprogress`** requires the property to be registered with `@property` **[the `@property` declaration is not in `radialprogress.css` — check `daisyui.css`, as `plans/components/countdown.md` §3f.3 had to for `--aura-angle`]**. Without registration the value jumps instead of animating; without `@property` support at all it still renders correctly, just without the tween. Confirm where it is declared.
+1. ~~**`transition: --radialprogress`**~~ **Answered 2026-08-30: it is registered, and the registration reaches our build.** `@property --radialprogress{syntax:"<percentage>";inherits:true;initial-value:0%}` is declared in `daisyui/base/properties.css` (and inlined into `daisyui.css`), and the same declaration appears in `storybook-static/_astro/*.css` **[verified]**. So the tween is available; whether the browser honours it is Step 5, and a jumpy `Playground` slider means `@property` support, not a missing rule. Same shape as `plans/components/countdown.md` §3f.3's `--aura-angle` question, and this answers the pattern for both.
 2. **`mask` support** — the annulus is a `mask: radial-gradient(...)` **[verified]**. Shared with `plans/components/loading.md` §3e.2 and `plans/components/mask.md` §3e.1; one check covers all three, and an unmasked full disc is the symptom.
 3. **Custom properties through Astro's `style` attribute** — shared with `plans/components/countdown.md` §3f.1. This component passes three of them and must merge with a caller's own `style` (§4).
 
@@ -222,27 +222,49 @@ Plus `Playground` (a `value` control, so the tween is visible) and `Passthrough`
 
 ## 6. Steps
 
-- [ ] **Step 1:** Settle §3e.1 (where `--radialprogress` is registered) and §3e.2 (`mask` support) — the first explains a jumpy `Playground`, the second a solid disc.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, then walk the gate.
-- [ ] **Step 4:** Replace `RadialProgress.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` is a 70 % arc with a leading dot at the right angle and the label centred; `DifferentValues` sweeps 0→100 with 0 showing an empty ring and 100 a full one; `CustomColor` recolours the ring only; `WithBackgroundAndBorder` fills the disc and the border **grows** the element (§3d); `CustomSizeAndThickness` shows a hairline and a fat ring at the same diameter; dragging `Playground`'s `value` **animates** (§3d, §3e.1); `OutOfRange` shows the dot past the top (§3b).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE 'class="radial-progress[^"]*" style="--value:[0-9]+;[^"]*" role="progressbar" aria-valuenow="[0-9]+"' storybook-static/astro-prerendered-stories.json | head
-  ```
-  Confirms `--value` and `aria-valuenow` agree (§3a).
-- [ ] **Step 7:** Update the `Radial progress` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done for §3e.1** — `--radialprogress` is registered in `daisyui/base/properties.css` and the declaration is present in the built stylesheet, so a jumpy slider would be browser support rather than a missing rule. §3e.2 (`mask` support) stays open and is shared with Loading and Mask; a solid disc instead of a ring is that.
+- [x] **Step 2: skipped as planned.** No shared unions; `variants.ts` untouched.
+- [x] **Step 3: done.** Scaffold replaced per §4 and the gate walked. The probe errored on exactly the two achievable intended lines — a missing `value`, and `value="70"` as a string. §4's third line (`color="primary"` must error) was dropped as unachievable: `color` is a native attribute on every element, so no component can reject it (`plans/components/avatar.md` §3e.3).
+- [x] **Step 4: done.** `RadialProgress.stories.ts`, 10 stories per §5. `Playground`'s `value` is a range control so the tween is draggable.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: `Default` is a 70% arc with the leading dot at the right angle and the label centred; `DifferentValues` sweeps 0→100; `CustomColor` recolours the ring only; `WithBackgroundAndBorder` fills the disc and the border **grows** the element (§3d); `CustomSizeAndThickness` shows a hairline and a fat ring at the same diameter; dragging `Playground`'s slider **animates** rather than jumping (§3d, §3e.1); `OutOfRange` shows the dot past the top (§3b).
+- [x] **Step 6: done — forwarding confirmed and §3a asserted.** `Passthrough` renders `<div class="radial-progress text-accent mine" style="--value:55; --size:8rem; --thickness:1rem; opacity:.9" role="progressbar" aria-valuenow="55" id="radial-1" data-test="yes">55%</div>` — note the caller's `opacity:.9` surviving **after** the three custom properties, which is §3e.3. Across all 17 rings in the stories, `--value` and `aria-valuenow` agree. Full output in §8.
+- [x] **Step 7: done — the `Radial progress` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] The single daisyUI class is applied; the API is the three custom properties (§1, §1a).
-- [ ] `value` is required and a missing one is a type error (§3b).
-- [ ] `role="progressbar"` and `aria-valuenow` are emitted and always agree with `value` (§3a) — asserted in the build output.
-- [ ] A caller's `style` survives alongside the custom properties (§3e.3).
-- [ ] No invented axis — no `color` prop (§3c), no size union (§1a).
-- [ ] JSDoc states: why it is a `div` (§3a), that colour is `text-*` and the disc is separate (§3c), the `content-box` border behaviour (§3d), and that `value` is unclamped (§3b).
-- [ ] One story per doc-page example, plus `NoLabel`, `OutOfRange` and `AccessibleName`.
-- [ ] Every box in §4's gate ticked.
+- [x] The single daisyUI class is applied; the API is the three custom properties (§1, §1a).
+- [x] `value` is required and a missing one is a type error (§3b).
+- [x] `role="progressbar"` and `aria-valuenow` are emitted and always agree with `value` (§3a) — asserted in the build output.
+- [x] A caller's `style` survives alongside the custom properties (§3e.3).
+- [x] No invented axis — no `color` prop (§3c), no size union (§1a).
+- [x] JSDoc states: why it is a `div` (§3a), that colour is `text-*` and the disc is separate (§3c), the `content-box` border behaviour (§3d), and that `value` is unclamped (§3b).
+- [x] One story per doc-page example, plus `NoLabel`, `OutOfRange` and `AccessibleName`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default        → <div class="radial-progress" style="--value:70;" role="progressbar" aria-valuenow="70">70%</div>
+DifferentValues→ … --value:0 / 20 / 60 / 80 / 100, each with a matching aria-valuenow
+CustomColor    → <div class="radial-progress text-primary" style="--value:70;" …>70%</div>
+WithBackground…→ <div class="radial-progress bg-primary text-primary-content border-4 border-primary" …>
+CustomSize…    → style="--value:70; --size:12rem; --thickness:2px;"  and  --thickness:2rem
+NoLabel        → <div class="radial-progress text-primary" style="--value:70;" role="progressbar"
+                   aria-valuenow="70" aria-label="Upload progress"></div>
+OutOfRange     → --value:100 and --value:130, both with matching aria-valuenow
+Passthrough    → <div class="radial-progress text-accent mine"
+                   style="--value:55; --size:8rem; --thickness:1rem; opacity:.9"
+                   role="progressbar" aria-valuenow="55" id="radial-1" data-test="yes">55%</div>
+```
+
+What this settles:
+
+- **§3a holds mechanically, not by discipline.** 17 rings across the stories; `--value` and `aria-valuenow` match in every one, because the label is derived from the prop rather than written twice. Both stay overridable — `NoLabel` adds its own `aria-label` alongside.
+- **A caller's `style` survives** (§3e.3): `opacity:.9` sits after the three custom properties rather than replacing them.
+- The markup matches the doc page attribute for attribute, including the `--size`/`--thickness` pair on the size example.
+- `@property --radialprogress` is in the built stylesheet, so the value tween is wired (§3e.1).
+
+Not settled here: the ring itself. Whether the arc, the leading dot and the `content-box` border geometry are right is Step 5, and so is whether `mask` renders an annulus rather than a solid disc (§3e.2).
