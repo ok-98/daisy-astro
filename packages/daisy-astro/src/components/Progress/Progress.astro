@@ -1,14 +1,51 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/progress/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisyColor } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'progress'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+/**
+ * A styled native progress element.
+ *
+ * `value` and `max` are plain attributes and pass straight through — they are
+ * deliberately not props, since declaring them would shadow the real thing for
+ * no gain (plan §2).
+ *
+ * **Omit `value` entirely for an indeterminate bar** (plan §3a). That is a
+ * documented daisyUI example, not a missing prop: with no attribute the
+ * `:indeterminate` rules paint an animated repeating stripe. `value={0}` is a
+ * determinate empty bar instead — visually similar, different to assistive
+ * technology. Nothing here defaults `value`, which is what keeps both
+ * reachable.
+ *
+ * Colour sets `currentColor`, so one prop drives both the fill and the 20%
+ * track; there is no way to decouple them, and `class="text-primary"` is
+ * equivalent (plan §3b).
+ *
+ * Fixed .5rem height and 100% width, with no size axis at all — size it with
+ * `class="w-56 h-4"` (plan §3c).
+ *
+ * Under `prefers-reduced-motion` the indeterminate animation **stops**, leaving
+ * a static striped bar (plan §3a).
+ */
+interface Props extends HTMLAttributes<'progress'> {
+  color?: DaisyColor;
+}
 
-const { class: className, ...rest } = Astro.props;
+// Full literal class names. NEVER `progress-${color}` (plans/README.md §1b).
+const COLOR: Record<DaisyColor, string> = {
+  primary: 'progress-primary',
+  secondary: 'progress-secondary',
+  accent: 'progress-accent',
+  neutral: 'progress-neutral',
+  info: 'progress-info',
+  success: 'progress-success',
+  warning: 'progress-warning',
+  error: 'progress-error',
+};
+
+const { color, class: className, ...rest } = Astro.props;
+
+// No slot: every doc example is self-closing (plan §2).
 ---
 
-<progress class:list={['progress', className]} {...rest}>
-  <slot />
-</progress>
+<progress class:list={['progress', color && COLOR[color], className]} {...rest}></progress>

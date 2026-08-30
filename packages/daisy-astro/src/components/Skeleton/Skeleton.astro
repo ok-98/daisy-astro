@@ -1,14 +1,51 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/skeleton/
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+// A shimmering loading placeholder.
+//
+// IT HAS NO SIZE OF ITS OWN. The class sets no width, height or display, so a
+// skeleton with no size classes is a zero-height block — invisible. Every
+// daisyUI example supplies both dimensions, and so must every caller:
+// `class="h-32 w-full"` (plan §3c). This is the component most likely to be
+// reported as "renders nothing".
+//
+// Two modes:
+//   default  an empty box, shimmered as a background
+//   text     shimmers the glyphs instead, so it needs content and wants an
+//            inline root — pass `text` together with `as="span"` (plan §3a)
+//
+// The text mode sets `color: transparent` and clips the gradient to the text,
+// so a caller's own `text-*` colour class does nothing, and the content stays
+// selectable and in the accessibility tree. With no content it renders nothing
+// at all rather than an empty box.
+//
+// Under `prefers-reduced-motion: reduce` the shimmer stops entirely, leaving a
+// static grey box — pair it with another loading signal if that matters
+// (plan §3d).
+//
+// NOTE: no angle brackets in this comment, deliberately. A less-than sign
+// anywhere in the frontmatter — comments included — truncates Astro's
+// TypeScript parse, and Props silently stops being inferred
+// (plans/README.md §5c). The `= 'div'` default type parameter is that same
+// section's second rule.
+type Props<Tag extends HTMLTag = 'div'> = Polymorphic<{
+  as: Tag;
+  /**
+   * Animates the text colour instead of the background. Requires content, and
+   * is **not** paired automatically with an inline root — a block-level
+   * shimmering heading is a legitimate thing to want, and a prop that silently
+   * changes the element is worse than a documented one (plan §3b).
+   */
+  text?: boolean;
+}>;
 
-const { class: className, ...rest } = Astro.props;
+// A boolean written as an object key is a literal in source, so it satisfies
+// plans/README.md §1b as written; with no multi-value axis there is no map.
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const { as: Tag = 'div', text = false, class: className, ...rest } = Astro.props as Props<HTMLTag>;
 ---
 
-<div class:list={['skeleton', className]} {...rest}>
+<Tag class:list={['skeleton', { 'skeleton-text': text }, className]} {...rest}>
   <slot />
-</div>
+</Tag>

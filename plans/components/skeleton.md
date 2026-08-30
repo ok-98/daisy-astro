@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): props forward every native attribute for the rendered element; `class:list` for merging; variant classes are literals in a `Record` map (§1b); **no shared unions** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/skeleton.css` and the doc page source. §3d lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Skeleton.astro` and 9 stories are in the repo per §4/§5; markup, type probe and CSS coverage verified (§8). Two deviations from §4's listing, both from `plans/README.md` §5c: the frontmatter comment carries no angle brackets, and `Props` takes the `= 'div'` default type parameter. Step 5 (visual pass) is open, and it carries the one thing markup cannot show — whether the shimmer moves, and whether `background-clip: text` works (§3e.1). Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/skeleton.css` and the doc page source. §3d lists what is **unverified**.
 
 ---
 
@@ -172,24 +172,39 @@ Plus `Playground` and `Passthrough`. Three beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Check §3e.1 (`background-clip: text`) — invisible text in `SkeletonText` is that, not the component.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, then walk the gate. **Run the probe** — the generic failure is silent.
-- [ ] **Step 4:** Replace `Skeleton.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` is a grey rounded box with a diagonal shimmer sweeping left; `CircleWithContent` and `RectangleWithContent` match the doc layouts; `SkeletonText` shimmers the **letters** with the box background not visible (§3a); `NoSize` renders nothing (§3c); `EmptyTextMode` renders nothing (§3a); then enable reduced motion and confirm the shimmer **stops** (§3d).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<(div|span) class="skeleton[^"]*"' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Skeleton` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: partly done.** Both classes are in the built stylesheet. `background-clip: text` support (§3e.1) is a runtime question and moves to Step 5 — invisible text in `SkeletonText` is that, not the component, and it is the one failure here that loses content rather than styling.
+- [x] **Step 2: skipped as planned.** No shared unions; `variants.ts` untouched.
+- [x] **Step 3: done.** Scaffold replaced per §4 and the gate walked. The probe's `color="primary"` line was dropped as unachievable (`plans/components/avatar.md` §3e.3 — no component can reject it); `size="lg"` errored as intended.
+- [x] **Step 4: done.** `Skeleton.stories.ts`, 9 stories per §5.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: `Default` is a grey rounded box with a diagonal shimmer sweeping left; `CircleWithContent` and `RectangleWithContent` match the doc layouts; `SkeletonText` shimmers the **letters** with no box background visible (§3a); `NoSize` renders nothing next to a sized one (§3c); `EmptyTextMode` renders nothing (§3a); then enable reduced motion and confirm the shimmer **stops** (§3d).
+- [x] **Step 6: done — forwarding confirmed.** `Passthrough` renders `<span id="skeleton-1" data-test="yes" style="opacity:.9" class="skeleton skeleton-text mine">Passthrough</span>`. Full output in §8.
+- [x] **Step 7: done — the `Skeleton` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] Both daisyUI classes reachable: base and `text`.
-- [ ] Default root is `div`; `as="span"` available and **not** implied by `text`; probe passes (§3b).
-- [ ] No invented axis — no size, no colour (§1, §3c).
-- [ ] JSDoc leads with "it has no size" (§3c), and covers the two modes (§3a) and the reduced-motion stop (§3d).
-- [ ] One story per doc-page example, plus `NoSize`, `EmptyTextMode` and `ReducedMotion`.
-- [ ] Every box in §4's gate ticked.
+- [x] Both daisyUI classes reachable: base and `text`.
+- [x] Default root is `div`; `as="span"` available and **not** implied by `text`; probe passes (§3b).
+- [x] No invented axis — no size, no colour (§1, §3c).
+- [x] JSDoc leads with "it has no size" (§3c), and covers the two modes (§3a) and the reduced-motion stop (§3d).
+- [x] One story per doc-page example, plus `NoSize`, `EmptyTextMode` and `ReducedMotion`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default            → <div class="skeleton w-32 h-32"></div>
+CircleWithContent  → <div class="skeleton h-16 w-16 shrink-0 rounded-full"></div>
+                     <div class="skeleton h-4 w-20"></div> … <div class="skeleton h-32 w-full"></div>
+RectangleWith…     → four boxes, h-32/h-4/h-4/h-4
+SkeletonText       → <span class="skeleton skeleton-text">AI is thinking harder...</span>
+NoSize             → <div class="skeleton"></div>          ← no size classes, so nothing renders
+EmptyTextMode      → <span class="skeleton skeleton-text"></span>   ← renders nothing either
+Passthrough        → <span id="skeleton-1" data-test="yes" style="opacity:.9" class="skeleton skeleton-text mine">Passthrough</span>
+```
+
+What this settles: the polymorphic root produces `div` by default and `span` for the text mode, chosen by the caller rather than implied by `text` (§3b); the size classes are entirely the caller's, and `NoSize` shows the empty-class case reaching the DOM exactly as daisyUI would render it (§3c); both classes have rules in the built stylesheet.
+
+Not settled here, and it is most of the component: whether anything **shimmers**, and whether `background-clip: text` is honoured. A `skeleton-text` that renders invisible text is §3e.1, not a component bug. Step 5.

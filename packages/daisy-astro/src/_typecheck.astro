@@ -19,6 +19,9 @@ import Avatar from './components/Avatar/Avatar.astro';
 import AvatarGroup from './components/Avatar/AvatarGroup.astro';
 import Badge from './components/Badge/Badge.astro';
 import Button from './components/Button/Button.astro';
+import Divider from './components/Divider/Divider.astro';
+import Progress from './components/Progress/Progress.astro';
+import Skeleton from './components/Skeleton/Skeleton.astro';
 import Kbd from './components/Kbd/Kbd.astro';
 import Link from './components/Link/Link.astro';
 import Loading from './components/Loading/Loading.astro';
@@ -43,6 +46,18 @@ import Status from './components/Status/Status.astro';
 <Mask shape="squircle" src="/a.webp" alt="A" class="w-40 h-40" />
 <Mask shape="star" half="1" class="w-20 h-40" src="/a.webp" alt="A" />
 <Mask as="div" shape="heart" class="w-24">ok</Mask>
+
+<Divider>OR</Divider>
+<Divider />
+<Divider color="primary" direction="horizontal" placement="start" role="separator" id="d" data-test="y">Start</Divider>
+
+<Progress class="w-56" value={40} max={100} />
+<Progress class="w-56" />
+<Progress color="primary" class="w-56 h-4" id="p" data-test="y" aria-label="Upload" />
+
+<Skeleton class="h-32 w-32" />
+<Skeleton text as="span">ok</Skeleton>
+<Skeleton class="h-16 w-16" id="sk" data-test="y" title="t" />
 
 <Kbd>K</Kbd>
 <Kbd size="lg" id="k" data-test="y" class="mx-1">K</Kbd>

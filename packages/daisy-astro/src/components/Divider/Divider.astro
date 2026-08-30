@@ -1,14 +1,87 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/divider/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisyColor } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'div'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type DividerDirection = 'vertical' | 'horizontal';
+type DividerPlacement = 'start' | 'end';
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A rule between two elements, with optional text in the middle.
+ *
+ * Renders a `div`, never an `hr`: daisyUI draws the two line halves as
+ * `:before` / `:after` pseudo-elements, and a void element generates neither —
+ * nor can it hold text (plan §3e).
+ *
+ * No ARIA is defaulted. `role="separator"` fits a divider that carries meaning,
+ * `aria-hidden="true"` fits a purely decorative one, and both ride the usual
+ * attribute passthrough (plan §3e).
+ *
+ * The default line colour comes from the `--divider-color` custom property, so
+ * a caller can override it inline without any prop (plan §3d).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * Colours the two line halves **only** — the text keeps its inherited
+   * colour. For both, add `class="text-primary"` alongside (plan §3d).
+   */
+  color?: DaisyColor;
+  /**
+   * daisyUI names these after the layout being divided, not the line drawn:
+   * `vertical` (the default) divides stacked elements and draws a
+   * **horizontal** bar; `horizontal` divides side-by-side elements and draws a
+   * **vertical** bar (plan §3b). The responsive form is a caller class:
+   * `class="lg:divider-horizontal"`.
+   */
+  direction?: DividerDirection;
+  /**
+   * Pushes the text to the start or end — implemented by *hiding* the line
+   * half on that side, not by aligning anything. So `start` removes the bar
+   * before the text (plan §3c).
+   */
+  placement?: DividerPlacement;
+}
+
+// Full literal class names. NEVER `divider-${color}` — an interpolated class
+// gets no CSS from daisyUI (plans/README.md §1b).
+const COLOR: Record<DaisyColor, string> = {
+  primary: 'divider-primary',
+  secondary: 'divider-secondary',
+  accent: 'divider-accent',
+  neutral: 'divider-neutral',
+  info: 'divider-info',
+  success: 'divider-success',
+  warning: 'divider-warning',
+  error: 'divider-error',
+};
+
+const DIRECTION: Record<DividerDirection, string> = {
+  vertical: 'divider-vertical',
+  horizontal: 'divider-horizontal',
+};
+
+const PLACEMENT: Record<DividerPlacement, string> = {
+  start: 'divider-start',
+  end: 'divider-end',
+};
+
+const { color, direction, placement, class: className, ...rest } = Astro.props;
+
+// KEEP THE SLOT BELOW ON ONE LINE, with no whitespace around it. daisyUI gates
+// the 1rem gap on `.divider:not(:empty)`, and a newline inside the element can
+// make a text-less divider count as non-empty — which puts a 1rem hole in the
+// middle of a line that should be continuous (plan §3a). Astro preserves
+// template whitespace, so this is a formatting choice with a rendering
+// consequence: do not let a formatter reflow it.
 ---
 
-<div class:list={['divider', className]} {...rest}>
-  <slot />
-</div>
+<div
+  class:list={[
+    'divider',
+    color && COLOR[color],
+    direction && DIRECTION[direction],
+    placement && PLACEMENT[placement],
+    className,
+  ]}
+  {...rest}
+><slot /></div>

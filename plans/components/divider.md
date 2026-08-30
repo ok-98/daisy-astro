@@ -14,7 +14,7 @@
 - Stories run on `@storybook-astro/framework`.
 - `astro check` is the type gate, not `tsc` (§5b).
 
-> **Status:** Planned. Nothing in §4 is implemented. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/divider.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/divider/+page.md` in `saadeghi/daisyui`). §3f lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Divider.astro` and 11 stories are in the repo per §4/§5. **§3a is settled in the build output, which is the point of this plan**: a text-less divider renders with zero child nodes, and no divider in any story emits whitespace-only content (§8). One deviation from §4's listing: the whitespace warning is a frontmatter comment, not an HTML comment above the element — an HTML comment there ships into every rendered divider (found while building Avatar). Step 5 (visual pass) is open. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/divider.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/divider/+page.md` in `saadeghi/daisyui`). §3f lists what is **unverified**.
 
 ---
 
@@ -305,38 +305,47 @@ The stories that need surrounding content blocks compose them the way the framew
 
 ## 6. Steps
 
-- [ ] **Step 1:** Nothing to re-read — §1 and §2 are filled from the doc page and the shipped CSS. Note that §3f removes the slot-wrapping unknown that gates seven sibling plans; no cross-plan dependency here.
-- [ ] **Step 2:** No new shared unions — `color` reuses `DaisyColor`, both other unions are local, no size axis (§1). `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Divider.astro` dummy scaffold per §4, **with `<slot />` written without surrounding whitespace** (§3a), then walk the Astro idioms gate.
-- [ ] **Step 4:** Replace `Divider.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Divider`, verify:
-  - **`NoText` is one unbroken line** — no notch in the middle. Then inspect it in devtools and confirm the element has **no child nodes** (§3a, §3f.1). Do both; the visual check alone can miss a 1rem gap in a 2px line.
-  - `EmptyVsText`: the gap appears only on the one with text.
-  - `Default` sits between the two blocks with equal margin above and below; `Horizontal` sits between them left-to-right and stretches to the blocks' height (§3b).
-  - `Responsive` is a horizontal bar below `lg` and a vertical bar above it, with the wrapper flipping too.
-  - `Colors`: eight distinct line colours, and the **text stays the default colour** in all of them (§3d).
-  - `Placements`: `start` has no bar before the text, `end` has none after it (§3c).
-  - Optional: print-preview one story once and confirm the `.5px` border fallback appears (§4).
-- [ ] **Step 6:** Confirm forwarding via `Passthrough` — `id`, `data-*`, `style`, `class`, `role` all survive. Headless check, which is also the definitive answer to §3a:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="divider[^"]*"[^>]*></div>' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoE '<div class="divider[^"]*"[^>]*>[[:space:]]+</div>' storybook-static/astro-prerendered-stories.json | head
-  ```
-  The first must match for `NoText`; the second must return **nothing**. A hit on the second means whitespace is being emitted inside the element.
-- [ ] **Step 7:** Update the `Divider` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done.** §3f's conclusion holds — no child selectors, so no cross-plan dependency here.
+- [x] **Step 2: skipped as planned.** `DaisyColor` reused unchanged; both other unions local; `variants.ts` untouched.
+- [x] **Step 3: done.** Scaffold replaced per §4, with the slot written on one line and no whitespace around it, and the gate walked. The probe errored on exactly three lines (`color="banana"`, `direction="diagonal"`, `size="lg"`).
+- [x] **Step 4: done.** `Divider.stories.ts`, 11 stories per §5, each reproducing the doc page's wrapper and content blocks.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes**, though §3a is already answered more definitively in the DOM than it could be by eye (see §8). Verify: `Default` sits between the blocks with equal margin; `Horizontal` draws a **vertical** bar and stretches to the blocks' height (§3b); `Responsive` flips at `lg`; `Colors` shows eight line colours with the **text unchanged** (§3d); `Placements` drops the bar on the text's side (§3c); `EmptyVsText` shows the gap only on the one with text; optionally print-preview one story for the `.5px` border fallback.
+- [x] **Step 6: done — forwarding confirmed, and §3a settled.** `Passthrough` renders `id`, `data-*`, `style` and `role="separator"` with `class` merged as `divider mine`. The two headless checks this step exists for: two dividers render as `<div class="divider"></div>` with **zero child nodes**, and **no** divider anywhere matches the whitespace-only pattern. Full output in §8.
+- [x] **Step 7: done — the `Divider` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 13 daisyUI classes from §1 are reachable: `divider` always, 8 colours via `color`, 2 directions via `direction`, 2 placements via `placement`.
-- [ ] `color` uses `DaisyColor`, imported, not redeclared.
-- [ ] **A text-less `<Divider />` renders with no child nodes and no gap** — confirmed in the build output, not by eye (§0, §3a).
-- [ ] `<slot />` is written with no surrounding whitespace, with a comment explaining why (§3a).
-- [ ] No fallback slot content, no `text` prop, no `Astro.slots.has()` gating (§2).
-- [ ] Root is a `div`, not `<hr>`, and `role`/`aria-hidden` pass through (§3e).
-- [ ] No invented axis — no `size`, no style/variant prop (§1).
-- [ ] JSDoc states: `direction` names the layout not the line (§3b), `placement` hides a line half (§3c), colour applies to the lines only (§3d), and `--divider-color` is an available override.
-- [ ] `Playground` exposes every prop as a control.
-- [ ] One story per doc-page example, reproducing that example's markup and copy, plus `EmptyVsText` and `ColorIsLineOnly`.
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] All 13 daisyUI classes from §1 are reachable: `divider` always, 8 colours via `color`, 2 directions via `direction`, 2 placements via `placement`.
+- [x] `color` uses `DaisyColor`, imported, not redeclared.
+- [x] **A text-less `<Divider />` renders with no child nodes and no gap** — confirmed in the build output, not by eye (§0, §3a).
+- [x] `<slot />` is written with no surrounding whitespace, with a comment explaining why (§3a).
+- [x] No fallback slot content, no `text` prop, no `Astro.slots.has()` gating (§2).
+- [x] Root is a `div`, not `<hr>`, and `role`/`aria-hidden` pass through (§3e).
+- [x] No invented axis — no `size`, no style/variant prop (§1).
+- [x] JSDoc states: `direction` names the layout not the line (§3b), `placement` hides a line half (§3c), colour applies to the lines only (§3d), and `--divider-color` is an available override.
+- [x] `Playground` exposes every prop as a control.
+- [x] One story per doc-page example, reproducing that example's markup and copy, plus `EmptyVsText` and `ColorIsLineOnly`.
+- [x] Every box in §4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+NoText       → …<div class="grid h-20 card bg-base-300 …">content</div>
+               <div class="divider"></div>                       ← zero child nodes
+               <div class="grid h-20 card bg-base-300 …">content</div>
+EmptyVsText  → <div class="divider"></div><div class="divider">with text</div>
+Horizontal   → <div class="divider divider-horizontal">OR</div>   between two `grow` blocks
+Responsive   → <div class="divider lg:divider-horizontal">OR</div>
+Colors       → <div class="divider">Default</div> then one per colour, text unstyled
+Placements   → <div class="divider divider-start">Start</div> … divider-end
+Passthrough  → <div class="divider mine" id="divider-1" data-test="yes" style="letter-spacing:2px" role="separator">Passthrough</div>
+```
+
+**§3a, settled.** Across all 11 stories: `2` dividers match `<div class="divider[^"]*"[^>]*></div>` — genuinely empty — and `0` match the whitespace-only pattern. So the `:empty` question never arises: there is no text node to argue about, under Selectors 3 or 4 semantics. That is the bug this plan exists to prevent, and it is now checked by a grep rather than by eye.
+
+Also settled: `lg:divider-horizontal` is a real rule in the built stylesheet (`--divider-m:0 1rem`, plus the `.divider` composition and both pseudo-elements), so §1's "responsive is a caller class" decision costs nothing.
+
+Not settled here: everything about how it *looks* — the direction naming in §3b, the hidden line half in §3c, and whether the colour really leaves the text alone. Step 5.

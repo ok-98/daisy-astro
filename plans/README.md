@@ -369,9 +369,9 @@ Copy the example markup from the doc page into the story rather than inventing d
 |---|---|---|
 | Alert | `alert` | Planned — [`plans/components/alert.md`](components/alert.md) (current code is a dummy scaffold) |
 | Loading | `loading` | **Implemented** — [`plans/components/loading.md`](components/loading.md) (12 stories; no colour prop, no slot; animation unverified until the visual pass) |
-| Progress | `progress` | Planned — [`plans/components/progress.md`](components/progress.md) (omit `value` for indeterminate; no size axis) |
+| Progress | `progress` | **Implemented** — [`plans/components/progress.md`](components/progress.md) (15 stories; indeterminate asserted in the build; visual pass open) |
 | Radial progress | `radial-progress` | Planned — [`plans/components/radial-progress.md`](components/radial-progress.md) (API is 3 custom properties; `value` required) |
-| Skeleton | `skeleton` | Planned — [`plans/components/skeleton.md`](components/skeleton.md) (no size of its own; `text` mode shimmers glyphs) |
+| Skeleton | `skeleton` | **Implemented** — [`plans/components/skeleton.md`](components/skeleton.md) (9 stories; no size of its own; visual pass open) |
 | Toast | `toast` | Planned — [`plans/components/toast.md`](components/toast.md) (position:fixed escapes the Storybook canvas; align/position naming shared with Indicator) |
 | Tooltip | `tooltip` | Planned — [`plans/components/tooltip.md`](components/tooltip.md) (seven colors, not eight — neutral is the base; align swaps axis on left/right) |
 
@@ -397,7 +397,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 ### Layout
 | Component | Slug | Status |
 |---|---|---|
-| Divider | `divider` | Planned — [`plans/components/divider.md`](components/divider.md) (slot whitespace breaks the empty-divider `:empty` rule) |
+| Divider | `divider` | **Implemented** — [`plans/components/divider.md`](components/divider.md) (11 stories; empty divider verified to have zero child nodes; visual pass open) |
 | Drawer sidebar | `drawer` | Planned — [`plans/components/drawer.md`](components/drawer.md) (`Drawer`+`DrawerButton`; sibling-order-dependent skeleton, required `toggleId`) |
 | Footer | `footer` | Planned — [`plans/components/footer.md`](components/footer.md) (`Footer`+`FooterTitle`; grid of grids, center changes the flow axis) |
 | Hero | `hero` | Planned — [`plans/components/hero.md`](components/hero.md) (`Hero`+`HeroContent`+`HeroOverlay`; one-cell grid) |

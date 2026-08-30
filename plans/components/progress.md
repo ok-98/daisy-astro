@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): props extend `HTMLAttributes<'progress'>`; `class:list` for merging; variant classes are literals in a `Record` map (§1b); **uses `DaisyColor`, not `DaisySize`** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/progress.css` and the doc page source. §3e lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Progress.astro` and 15 stories are in the repo per §4/§5. §3a's indeterminate case is asserted in the build output — no `value=""` is emitted anywhere, and the indeterminate bar carries no `value` attribute at all (§8). Step 5 (visual pass) is open. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/progress.css` and the doc page source. §3e lists what is **unverified**.
 
 ---
 
@@ -173,28 +173,46 @@ Plus `Playground` (with a `value` control) and `Passthrough`. Three beyond the d
 
 ## 6. Steps
 
-- [ ] **Step 1:** Check §3e.2 (clearing `value` in a control produces no attribute) before writing `Indeterminate` and `ZeroVsIndeterminate`.
-- [ ] **Step 2:** No new shared unions — `DaisyColor` reused unchanged. `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, then walk the gate.
-- [ ] **Step 4:** Replace `Progress.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` shows five distinct fills; `Colors` shows eight hues with the **track tinted to match** (§3b); `Indeterminate` animates a repeating stripe; `ZeroVsIndeterminate` differs (§3a); `Thickness` shows two heights; changing `Playground`'s `value` **animates** rather than jumping (§3d); then enable reduced motion and confirm the indeterminate bar goes **static** rather than slowing (§3a).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<progress class="progress[^"]*"[^>]*></progress>' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoc 'value=""' storybook-static/astro-prerendered-stories.json   # must be 0
-  ```
-  The second guards §3a — an empty `value` attribute is neither indeterminate nor zero.
-- [ ] **Step 7:** Update the `Progress` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done.** §3e.2 is answered in the build output rather than in the controls UI: omitting `value` in a story's args produces **no attribute**, and `value=""` appears zero times across every story in the library. Whether Storybook's number control can *clear* the value back to nothing is a Step 5 question, and a lesser one — the component's own behaviour is what this plan was worried about.
+- [x] **Step 2: skipped as planned.** `DaisyColor` reused unchanged; `variants.ts` untouched.
+- [x] **Step 3: done.** Scaffold replaced per §4 and the gate walked. Two probe lines from §4's listing were dropped as unachievable: `color="primary"`-style colour errors are impossible on any component (`plans/components/avatar.md` §3e.3 — though `color="banana"` still errors here, since this component *does* declare `color`), and passing children to a slotless component is not a type error (`plans/components/status.md` §3e.4).
+- [x] **Step 4: done.** `Progress.stories.ts`, 15 stories per §5.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: `Default` shows five distinct fills; `Colors` shows eight hues with the **track tinted to match** (§3b); `Indeterminate` animates a repeating stripe; `ZeroVsIndeterminate` differs visibly as well as in the DOM (§3a); `Thickness` shows two heights; changing `Playground`'s `value` **animates** rather than jumping (§3d); then enable reduced motion and confirm the indeterminate bar goes **static** rather than slowing (§3a).
+- [x] **Step 6: done — forwarding confirmed and the `value` rule asserted.** `Passthrough` renders `<progress class="progress progress-accent w-56 mine" value="55" max="100" id="progress-1" data-test="yes" style="opacity:.9" aria-label="Upload"></progress>`; every rendered progress element is empty; `value=""` count is **0**. Full output in §8.
+- [x] **Step 7: done — the `Progress` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 9 daisyUI classes reachable: base plus 8 colours.
-- [ ] `color` uses `DaisyColor`, imported, not redeclared.
-- [ ] Omitting `value` renders **no `value` attribute** and an indeterminate bar (§3a) — asserted in the build output.
-- [ ] No slot, and every rendered element is empty (§2).
-- [ ] No invented axis — no size, no `value`/`max` props, no striped style (§1, §2).
-- [ ] JSDoc states: omit `value` for indeterminate (§3a), colour drives fill **and** track (§3b), sizing is `w-*`/`h-*` (§3c), and reduced motion stops the animation (§3a).
-- [ ] One story per doc-page example, plus `Colors`, `ZeroVsIndeterminate` and `Thickness`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 9 daisyUI classes reachable: base plus 8 colours.
+- [x] `color` uses `DaisyColor`, imported, not redeclared.
+- [x] Omitting `value` renders **no `value` attribute** and an indeterminate bar (§3a) — asserted in the build output.
+- [x] No slot, and every rendered element is empty (§2).
+- [x] No invented axis — no size, no `value`/`max` props, no striped style (§1, §2).
+- [x] JSDoc states: omit `value` for indeterminate (§3a), colour drives fill **and** track (§3b), sizing is `w-*`/`h-*` (§3c), and reduced motion stops the animation (§3a).
+- [x] One story per doc-page example, plus `Colors`, `ZeroVsIndeterminate` and `Thickness`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default        → <progress class="progress w-56" value="0" max="100"></progress>
+                 … 10, 40, 70, 100                                   (one column per colour example)
+Indeterminate  → <progress class="progress w-56"></progress>          ← no value attribute at all
+ZeroVs…        → <progress class="progress w-56" value="0" max="100"></progress>
+                 <progress class="progress w-56"></progress>
+Colors         → <progress class="progress progress-primary w-56" value="70" max="100"> ×8
+Thickness      → … class="progress progress-primary w-56" / … "w-56 h-4"
+Passthrough    → <progress class="progress progress-accent w-56 mine" value="55" max="100"
+                   id="progress-1" data-test="yes" style="opacity:.9" aria-label="Upload"></progress>
+```
+
+What this settles:
+
+- **The indeterminate case works as designed** (§3a): omitting `value` emits no attribute, and `value=""` — which would be neither indeterminate nor zero — appears **zero** times across the whole build.
+- `value` and `max` reach the DOM as plain attributes without being declared as props (§2).
+- Every rendered element is empty (§2), and all 9 classes have rules in the built stylesheet.
+
+Not settled here: the fill animation, the tinted track, and the reduced-motion behaviour are all runtime. Step 5.
