@@ -1,0 +1,19 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * Replaces a step's generated number with arbitrary content.
+ *
+ * Must be a **direct child** of its `Step`: daisyUI selects it with a child
+ * combinator, and the same rule is what suppresses the number — so an icon
+ * nested any deeper shows up *beside* a number rather than instead of it
+ * (plan §3c).
+ */
+interface Props extends HTMLAttributes<'span'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<span class:list={['step-icon', className]} {...rest}>
+  <slot />
+</span>

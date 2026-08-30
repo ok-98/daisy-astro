@@ -1,14 +1,39 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/steps/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'ul'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type StepsDirection = 'vertical' | 'horizontal';
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A numbered progress trail.
+ *
+ * Steps are numbered by a **CSS counter**, so nothing needs an index prop and
+ * the numbering stays correct when steps are added or removed (plan §3c).
+ *
+ * Colour belongs on each `Step`, not here — daisyUI writes the colour class on
+ * the item, and a `step-primary` on this element matches nothing at all
+ * (plan §3a).
+ *
+ * The responsive trail is a caller class: `class="steps-vertical
+ * lg:steps-horizontal"`, which is the doc page's own example (plan §3d).
+ *
+ * Long trails scroll horizontally, but this element is `inline-grid` and so
+ * sizes to its content — the scroll needs a constrained parent, which is why
+ * the doc page wraps it in a div with `overflow-x-auto` (plan §3d).
+ */
+interface Props extends HTMLAttributes<'ul'> {
+  direction?: StepsDirection;
+}
+
+// Full literal class names. NEVER `steps-${direction}` (plans/README.md §1b).
+const DIRECTION: Record<StepsDirection, string> = {
+  vertical: 'steps-vertical',
+  horizontal: 'steps-horizontal',
+};
+
+const { direction, class: className, ...rest } = Astro.props;
 ---
 
-<ul class:list={['steps', className]} {...rest}>
+<ul class:list={['steps', direction && DIRECTION[direction], className]} {...rest}>
   <slot />
 </ul>

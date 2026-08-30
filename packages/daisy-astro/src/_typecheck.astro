@@ -31,6 +31,9 @@ import Link from './components/Link/Link.astro';
 import Loading from './components/Loading/Loading.astro';
 import Mask from './components/Mask/Mask.astro';
 import Status from './components/Status/Status.astro';
+import Step from './components/Steps/Step.astro';
+import StepIcon from './components/Steps/StepIcon.astro';
+import Steps from './components/Steps/Steps.astro';
 ---
 
 <Button color="primary" size="lg" variant="outline" shape="circle" width="wide" active disabled>ok</Button>
@@ -82,6 +85,10 @@ import Status from './components/Status/Status.astro';
 <Loading />
 <Loading variant="bars" size="lg" class="text-primary" aria-label="Loading" />
 <Loading id="ld" data-test="y" title="t" />
+
+<Steps><Step color="primary">Register</Step><Step>Purchase</Step></Steps>
+<Steps direction="vertical" class="lg:steps-horizontal" id="st" data-test="y"><Step data-content="✓">ok</Step></Steps>
+<Step><StepIcon class="mine" id="si">★</StepIcon>Step 3</Step>
 
 <Status />
 <Status color="success" size="lg" aria-label="Online" />

@@ -1,0 +1,50 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import type { DaisyColor } from '../../lib/variants';
+
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+/**
+ * One node in a `Steps` trail.
+ *
+ * Two ways to replace the number, both daisyUI's:
+ *
+ *   - `data-content="✓"` as a plain attribute. An **empty string is
+ *     meaningful** — it gives a deliberately blank circle, which the doc page
+ *     uses — so it is passed through rather than being a prop that might drop
+ *     falsy values (plan §3c).
+ *   - Nesting a `StepIcon` as a **direct child**, which suppresses the
+ *     generated number entirely rather than sitting beside it.
+ *
+ * Either way the counter keeps incrementing, so later steps stay correctly
+ * numbered (plan §3c).
+ */
+interface Props extends HTMLAttributes<'li'> {
+  /**
+   * Tints this step's circle **and** the bar leading into it — but the bar only
+   * when the **previous** step carries the same colour, because daisyUI selects
+   * it with an adjacent-sibling rule. So two consecutive coloured steps give
+   * one coloured bar between them, and the first step of a run keeps a grey
+   * bar. That is what makes a progress trail read correctly, and it is also why
+   * there is no `progress` prop colouring everything up to step N (plan §3b).
+   */
+  color?: DaisyColor;
+}
+
+// Full literal class names. NEVER `step-${color}` (plans/README.md §1b).
+const COLOR: Record<DaisyColor, string> = {
+  primary: 'step-primary',
+  secondary: 'step-secondary',
+  accent: 'step-accent',
+  neutral: 'step-neutral',
+  info: 'step-info',
+  success: 'step-success',
+  warning: 'step-warning',
+  error: 'step-error',
+};
+
+const { color, class: className, ...rest } = Astro.props;
+---
+
+<li class:list={['step', color && COLOR[color], className]} {...rest}>
+  <slot />
+</li>

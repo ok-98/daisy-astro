@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): props extend `HTMLAttributes<'ul'>` / `HTMLAttributes<'li'>` / `HTMLAttributes<'span'>`; `class:list` for merging; variant classes are literals in a `Record` map (§1b); **uses `DaisyColor`, not `DaisySize`** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/steps.css` and the doc page source. §3e lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Steps.astro`, `Step.astro` and `StepIcon.astro`, with 13 + 3 + 2 stories per §5. §3e.1 is answered in the build output at both levels: 19 lists render `<li class="step">` as a direct child, and 6 steps render `<span class="step-icon">` as a direct child (§8). Step 5 (visual pass) is open, and it carries §3e.2 and §3e.3. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/steps.css` and the doc page source. §3e lists what is **unverified**.
 
 ---
 
@@ -116,7 +116,8 @@ The responsive example is `steps-vertical lg:steps-horizontal` **[verified]** �
 
 1. **Do children land as direct children?** Blocking at two levels: `.steps .step` is a descendant selector and would survive a wrapper, but `.step > .step-icon` and the `+` sibling selector in §3b **both** require the real structure — a wrapper around each step breaks the bar colouring, and one around the icon breaks the icon. Twenty-seventh plan touching the shared question in `plans/components/aura.md` §3e.1.
 2. **`counter(step)` across stories.** `counter-reset: step` is on `.steps` **[verified]**, so each list restarts — but confirm that several `Steps` on one docs page do not share a counter, which would number the second list from where the first ended.
-3. **`:has()` support** — `&:not(:has(.step-icon)):after` **[verified]**. Without it a step with an icon shows **both** the icon and the counter. Check before judging `WithStepIcon`.
+3. **`:has()` support** — `&:not(:has(.step-icon)):after` **[verified]**. Without it a step with an icon shows **both** the icon and the counter. Check before judging `WithStepIcon`; `IconAndCounter` is the story that shows it plainly.
+4. **`data-content=""` serialises as a bare attribute.** Found 2026-08-30. Astro renders an empty-string attribute as `data-content` rather than `data-content=""`, so the doc page's blank-circle step is **not** a byte-for-byte match. The behaviour is unchanged — a bare attribute is an empty value in HTML, `[data-content]` still matches, and `attr(data-content)` still yields an empty string, which is the blank circle. Recorded because a grep for `data-content=""` in the build output finds nothing and looks like the attribute was dropped. Confirm the blank circle at Step 5 rather than trusting the reasoning.
 
 ## 4. Component implementation
 
@@ -250,26 +251,51 @@ Two `Steps` lists on one page in `Playground`, to settle §3e.2.
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3e.1 (direct children, both levels) — blocking. Check §3e.2 (counter isolation) and §3e.3 (`:has()`).
-- [ ] **Step 2:** No new shared unions — `DaisyColor` reused unchanged. `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Steps.astro` scaffold and create `Step.astro` and `StepIcon.astro` per §4, then walk the gate.
-- [ ] **Step 4:** Replace `Steps.stories.ts` and create the two sub-component story files per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Horizontal` numbers 1–4 automatically with a bar between each (§3c); the **first** step has no leading bar (§0); `ColorRun` colours the bar only between two same-coloured steps (§3b); `WithDataContent` shows the symbols and a **blank** circle for the empty one (§3c); `WithStepIcon` shows the emoji with **no** number beside it (§3c); `Vertical` stacks with vertical bars; `Responsive` flips at `lg`; `ScrollableWrapper` scrolls inside its wrapper (§3d); two lists number independently (§3e.2).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<ul class="steps[^"]*"[^>]*><li class="step' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoE '<li class="step[^"]*"[^>]*><span class="step-icon"' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Steps` row in `plans/README.md` to **Implemented**, noting `Step` and `StepIcon`.
+- [x] **Step 1: done — §3e.1 is answered at both levels.** `<ul class="steps…"><li class="step` matches 19 times and `<li class="step…"><span class="step-icon` 6 times across the stories, so the adjacent-sibling rule in §3b and the child combinator in §3c both have the structure they need. §3e.2 (counter isolation) and §3e.3 (`:has()`) are runtime and move to Step 5 — `Playground` renders two trails for the first and `IconAndCounter` covers the second.
+- [x] **Step 2: skipped as planned.** `DaisyColor` reused unchanged; `variants.ts` untouched.
+- [x] **Step 3: done.** `Steps.astro` replaced and `Step.astro` / `StepIcon.astro` created per §4; gate walked.
+
+  One §4 probe line was unachievable: `<Steps color="primary">` does **not** error, because `color` is a native attribute on every element and no component can reject it (`plans/components/avatar.md` §3e.3). The mistake it was meant to catch is real but type-invisible, so `ColorOnContainer` demonstrates it in a story instead. The other three lines errored as intended.
+- [x] **Step 4: done.** `Steps.stories.ts` (13), `Step.stories.ts` (3) and `StepIcon.stories.ts` (2). The sub-component stories nest their subject inside a real `Steps`, since `.steps .step` is a descendant selector and neither part means anything alone.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: `Horizontal` numbers 1–4 automatically with a bar between each and **no** bar before the first; `ColorRun` colours the bar only between the two same-coloured steps (§3b); `WithDataContent` shows the symbols and a **blank** circle for step 6 (§3c, §3e.4); `WithStepIcon` and `IconAndCounter` show the emoji with **no** number beside it (§3e.3); `Vertical` stacks; `Responsive` flips at `lg`; `ScrollableWrapper` scrolls inside its wrapper (§3d); and `Playground`'s two trails both start at 1 (§3e.2).
+- [x] **Step 6: done — forwarding confirmed on all three, and §3e.1 settled.** `Passthrough` renders `<ul class="steps steps-vertical mine" id="steps-1" data-test="yes" style="letter-spacing:2px">`, and `StepIcon`'s renders `<span class="step-icon mine" id="icon-1" …>` inside a real step. Full output in §8.
+- [x] **Step 7: done — the `Steps` row in `plans/README.md` says Implemented**, covering `Step` and `StepIcon` in the same row.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 13 daisyUI classes reachable across three components.
-- [ ] `color` is a `Step` prop and `direction` a `Steps` prop (§3a).
-- [ ] Children render as direct children at both levels (§3e.1) — checked in the build output.
-- [ ] No invented axis — no size, no `steps` array, no `data-content` prop, no `progress` prop (§1, §2, §3b).
-- [ ] JSDoc states: numbering is a CSS counter (§3c), the bar needs two consecutive same-coloured steps (§3b), the two ways to replace the number including the empty-string case (§3c), and the scroll wrapper (§3d).
-- [ ] One story per doc-page example, plus `ColorRun`, `ColorOnContainer` and `IconAndCounter`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 13 daisyUI classes reachable across three components.
+- [x] `color` is a `Step` prop and `direction` a `Steps` prop (§3a). Note the misplacement is not type-catchable — `color` on `Steps` is accepted as a native attribute and silently does nothing, which `ColorOnContainer` shows.
+- [x] Children render as direct children at both levels (§3e.1) — checked in the build output.
+- [x] No invented axis — no size, no `steps` array, no `data-content` prop, no `progress` prop (§1, §2, §3b).
+- [x] JSDoc states: numbering is a CSS counter (§3c), the bar needs two consecutive same-coloured steps (§3b), the two ways to replace the number including the empty-string case (§3c), and the scroll wrapper (§3d).
+- [x] One story per doc-page example, plus `ColorRun`, `ColorOnContainer` and `IconAndCounter`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Horizontal      → <ul class="steps"><li class="step step-primary">Register</li>
+                  <li class="step step-primary">Choose plan</li><li class="step">Purchase</li>…
+Vertical        → <ul class="steps steps-vertical">…
+Responsive      → <ul class="steps steps-vertical lg:steps-horizontal">…
+WithStepIcon    → <li class="step step-neutral"><span class="step-icon">😕</span>Step 1</li>…
+WithDataContent → … data-content="?" … "!" … "✓" … "✕" … "★" … <li class="step step-neutral" data-content>Step 6</li> … "●"
+CustomColors    → three step-info then <li class="step step-error" data-content="?">Sit on toilet</li>
+ScrollableWrap… → <div class="overflow-x-auto"><ul class="steps">… 24 steps …</ul></div>
+IconAndCounter  → <li class="step">numbered</li><li class="step"><span class="step-icon">★</span>icon, no number</li>…
+Passthrough     → <ul class="steps steps-vertical mine" id="steps-1" data-test="yes" style="letter-spacing:2px">…
+StepIcon/Pass…  → <ul class="steps"><li class="step"><span class="step-icon mine" id="icon-1" data-test="yes"
+                    style="letter-spacing:2px">★</span>Passthrough</li></ul>
+```
+
+What this settles:
+
+- **§3e.1, at both levels.** `.steps > li.step` adjacency matches 19 times and `.step > .step-icon` 6 times. Nothing is injected between a list and its items or between a step and its icon, so §3b's adjacent-sibling bar rule and §3c's icon-suppression rule both have the structure they depend on.
+- `color` lands on the `li` and `direction` on the `ul`, which is where daisyUI writes them (§3a).
+- `data-content` passes through as a plain attribute including the empty case — serialised bare, see §3e.4.
+- All 13 classes have rules in the built stylesheet.
+
+Not settled here: the counter, the bars, the icon suppression and the scroll are all runtime. Step 5, and §3e.2/§3e.3 with it.
