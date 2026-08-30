@@ -396,7 +396,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Textarea | `textarea` | Planned — [`plans/components/textarea.md`](components/textarea.md) (scaffold whitespace kills placeholder; sizes change font only) |
 | Toggle | `toggle` | Planned — [`plans/components/toggle.md`](components/toggle.md) (size classes select [type=checkbox]; colors only render while checked) |
 | Validator | `validator` | Planned — [`plans/components/validator.md`](components/validator.md) (**no Validator component**: the class only sets --input-color for other controls; ships `ValidatorHint` only) |
-| OTP | `otp` | Planned — [`plans/components/otp.md`](components/otp.md) (scaffold root must be `label`, not `div`) |
+| OTP | `otp` | **Implemented** — [`plans/components/otp.md`](components/otp.md) (10 stories; scaffold's `div` root fixed to `label`; visual pass open) |
 
 ### Layout
 | Component | Slug | Status |

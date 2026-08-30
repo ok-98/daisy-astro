@@ -1,14 +1,88 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/otp/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisyColor, DaisySize } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'div'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+/**
+ * A one-time-code field: **one** real input stretched behind N empty span
+ * boxes, aligned by letter-spacing rather than being N separate fields
+ * (plan §0).
+ *
+ * **The number of spans must equal the input's `maxlength`.** Nothing enforces
+ * it — the boxes decide the container's width while `maxlength` decides how
+ * many characters can be typed, so a mismatch fails silently and
+ * asymmetrically: too many spans leaves trailing boxes that can never be
+ * filled, too few leaves typed characters sitting outside the last box on
+ * transparent background (plan §3a). **Maximum eight boxes** — daisyUI has
+ * offsets for 1 through 8 only, and a ninth stacks on top of the first.
+ *
+ * The boxes are not generated from a `length` prop, deliberately: the input is
+ * a direct child too, and it carries `name`, `pattern`, `maxlength`, `value`
+ * and any framework binding. Generating the boxes would mean either
+ * re-exposing a dozen input props through this wrapper, or leaving the caller
+ * to match a number passed elsewhere — the same footgun with an extra prop
+ * (plan §3b). Writing both halves together at least keeps the mismatch visible
+ * in one place.
+ *
+ * Three behaviours that look like bugs and are not (plan §3c, §3d):
+ *
+ *   - **The root is a label, and that is load-bearing.** The input is
+ *     `pointer-events: none`, so clicking a box focuses the field only because
+ *     the label wraps it. With a div root the component renders correctly and
+ *     cannot be focused by clicking — which is exactly what the scaffold did.
+ *   - **The caret disappears once the value is valid**, by design: a caret
+ *     parked after the last character would sit outside the boxes. While the
+ *     value is incomplete it is visible and tracks the active box.
+ *   - **The focus ring lands on the boxes, not the input**, with a 20ms
+ *     per-box stagger.
+ *
+ * Do not override the font family: the alignment depends on monospace metrics
+ * and tabular figures, and daisyUI already compensates for per-engine
+ * differences (plan §3d). The code stays left-to-right inside an RTL page.
+ */
+interface Props extends HTMLAttributes<'label'> {
+  color?: DaisyColor;
+  size?: DaisySize;
+  /** Connects the boxes into one continuous field. */
+  joined?: boolean;
+}
 
-const { class: className, ...rest } = Astro.props;
+// Full literal class names. NEVER `otp-${color}` (plans/README.md §1b).
+const COLOR: Record<DaisyColor, string> = {
+  primary: 'otp-primary',
+  secondary: 'otp-secondary',
+  accent: 'otp-accent',
+  neutral: 'otp-neutral',
+  info: 'otp-info',
+  success: 'otp-success',
+  warning: 'otp-warning',
+  error: 'otp-error',
+};
+
+const SIZE: Record<DaisySize, string> = {
+  xs: 'otp-xs',
+  sm: 'otp-sm',
+  md: 'otp-md',
+  lg: 'otp-lg',
+  xl: 'otp-xl',
+};
+
+const { color, size, joined = false, class: className, ...rest } = Astro.props;
+
+// The root below is a label, not the div the scaffold shipped — see the note
+// above. Every daisyUI rule here is a child selector with nth-child offsets, so
+// the slot content must land as direct children (plan §3e.2).
 ---
 
-<div class:list={['otp', className]} {...rest}>
+<label
+  class:list={[
+    'otp',
+    color && COLOR[color],
+    size && SIZE[size],
+    { 'otp-joined': joined },
+    className,
+  ]}
+  {...rest}
+>
   <slot />
-</div>
+</label>

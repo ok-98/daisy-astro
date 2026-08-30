@@ -23,6 +23,7 @@ import Button from './components/Button/Button.astro';
 import Countdown from './components/Countdown/Countdown.astro';
 import CountdownValue from './components/Countdown/CountdownValue.astro';
 import Divider from './components/Divider/Divider.astro';
+import Otp from './components/Otp/Otp.astro';
 import Progress from './components/Progress/Progress.astro';
 import Radio from './components/Radio/Radio.astro';
 import Range from './components/Range/Range.astro';
@@ -72,6 +73,8 @@ import Steps from './components/Steps/Steps.astro';
 
 <RadialProgress value={70}>70%</RadialProgress>
 <RadialProgress value={70} size="12rem" thickness="2px" class="text-primary" style="opacity:.5" id="r" data-test="y" />
+
+<Otp color="primary" size="lg" joined id="ot" data-test="y" class="mine">boxes and input go here</Otp>
 
 <Radio name="plan" value="free" checked />
 <Radio name="plan" color="primary" size="lg" disabled id="rd" data-test="y" class="mine" />

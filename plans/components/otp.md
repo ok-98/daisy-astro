@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): props extend `HTMLAttributes<'label'>`; `class:list` for merging; variant classes are literals in a `Record` map (§1b); **uses `DaisyColor` and `DaisySize` unchanged** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/otp.css` and the doc page source. §3e lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Otp.astro` and 10 stories are in the repo per §4/§5, with the scaffold's wrong root fixed and asserted: **23 label roots, 0 div roots**, and the first span is a direct child in all 23 (§8). Step 5 (visual pass) is open and carries §3e.1. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/otp.css` and the doc page source. §3e lists what is **unverified**.
 
 ---
 
@@ -108,8 +108,8 @@ There is also an `@supports (font: -apple-system-body)` branch that changes `--o
 
 ### 3e. Unverified assumptions
 
-1. **`field-sizing: content` and `:has()` support.** The width ladder is `:has()` and the input relies on `field-sizing` **[verified]**. Without `:has()` the container has no width at all; without `field-sizing` the input's intrinsic width may not track. Check first — a collapsed or misaligned OTP has one of these two causes.
-2. **Do slot children land as direct children of `.otp`?** Blocking. Every rule is `> span` / `> input` with `:nth-child` offsets **[verified]**, so a wrapper collapses all boxes onto the first position. Twenty-second plan touching the shared question in `plans/components/aura.md` §3e.1.
+1. **`field-sizing: content` and `:has()` support.** The width ladder is `:has()` and the input relies on `field-sizing` **[verified]**. Both **reach the built stylesheet** — `.otp:has(>span:first-child)` through `:nth-child(8)`, and `field-sizing:content` on the input **[verified 2026-08-30]** — so anything wrong at Step 5 is browser support, not a missing rule. Without `:has()` the container has no width at all; without `field-sizing` the input's intrinsic width may not track. A collapsed or misaligned OTP has one of these two causes, not a component fault.
+2. ~~**Do slot children land as direct children of `.otp`?**~~ **Answered 2026-08-30: yes.** `<label class="otp…"><span></span>` matches in all 23 rendered OTPs — no wrapper between the root and the boxes, so the `> span` rules and their `:nth-child` offsets all apply. Consistent with the library-wide answer in `plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3; this was the failure where a wrapper would have collapsed every box onto the first position.
 3. **Boolean/validation attributes through the story `args` pipeline** — shared with `plans/components/checkbox.md` §3f.1; `required` and `pattern` matter here.
 
 **Scaffold audit note:** `plans/components/file-input.md` §0 flagged Radio, Range, Text Input and OTP for the missing-`type` bug. OTP's scaffold has a **different** bug — the wrong root element — so the audit stands for the other three and this one is now resolved.
@@ -209,27 +209,50 @@ Plus `Playground` and `Passthrough`. Three beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Check §3e.1 (`:has()` and `field-sizing`) — a collapsed OTP has one of those two causes, not a component fault. Resolve §3e.2 (direct children) — blocking.
-- [ ] **Step 2:** No new shared unions — `DaisyColor`/`DaisySize` reused unchanged. `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, **changing the root from `div` to `label`** (§0), then walk the gate.
-- [ ] **Step 4:** Replace `Otp.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` shows four separate boxes; **clicking any box focuses the field** (§0); typing fills the boxes left to right with each character centred; the caret disappears once four digits are entered (§3c); the focus ring lands on the boxes with a visible stagger; `Joined` connects them; `Sizes` and `Colors` differ across five and eight; `MismatchedLength` and `NineBoxes` misbehave as documented; RTL leaves the code left-to-right (§3d).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<label class="otp[^"]*"[^>]*><span></span>' storybook-static/astro-prerendered-stories.json | head
-  ```
-  A `<div class="otp"` hit means §0 was not fixed.
-- [ ] **Step 7:** Update the `OTP` row in `plans/README.md` to **Implemented**. Note in `plans/components/file-input.md` §0's audit list that OTP is resolved (its bug was the root element, not `type`).
+- [x] **Step 1: done at the markup and stylesheet level.** §3e.2 is answered — slot children are direct children in all 23 rendered OTPs. §3e.1's two rules are both present in the built CSS, so support is the only remaining variable and it moves to Step 5.
+- [x] **Step 2: skipped as planned.** `DaisyColor`/`DaisySize` reused unchanged; `variants.ts` untouched.
+- [x] **Step 3: done — the scaffold's root is fixed.** `label`, not `div` (§0). Gate walked; the probe errored on all three intended lines. This bug was different in kind from the missing-`type` family, and the audit in `plans/components/file-input.md` §0a records it as such.
+- [x] **Step 4: done.** `Otp.stories.ts`, 10 stories per §5. The stories derive `maxlength` and `pattern` from the same box count, so §3a's mismatch cannot be written by accident — `MismatchedLength` constructs it deliberately.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and most of this component is only observable there.** Verify: `Default` shows four separate boxes; **clicking any box focuses the field** (§0 — this is what the label root buys, and `ClickToFocus` is the story for it); typing fills the boxes left to right with each character centred over one; the caret disappears once four digits are entered (§3c); the focus ring lands on the boxes with a visible stagger; `Joined` connects them; `Sizes` and `Colors` differ across five and eight; `MismatchedLength` leaves an unreachable fifth box; `NineBoxes` stacks the ninth on the first; RTL leaves the code left-to-right (§3d).
+- [x] **Step 6: done — forwarding confirmed and §0 asserted.** `Passthrough` renders `<label class="otp otp-accent otp-lg otp-joined mine" id="otp-1" data-test="yes" style="opacity:.9">`. Across every story: **23 label roots, 0 div roots.** Full output in §8.
+- [x] **Step 7: done — the `OTP` row in `plans/README.md` says Implemented**, and `plans/components/file-input.md` §0a's audit log records OTP as resolved.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 15 daisyUI classes reachable: base, `joined`, 5 sizes, 8 colours.
-- [ ] **Root is `<label>`** and clicking a box focuses the input (§0) — verified in the browser and in the build output.
-- [ ] Slot children render as direct children (§3e.2).
-- [ ] No invented axis — no `length` prop (§3b), no input props (§2).
-- [ ] JSDoc leads with the span-count/`maxlength` rule (§3a), and covers the eight-box cap, the `<label>` root, the hidden caret (§3c) and the font-family warning (§3d).
-- [ ] `plans/components/file-input.md` §0's scaffold audit is updated (§3e).
-- [ ] One story per doc-page example, plus `MismatchedLength`, `NineBoxes` and `ClickToFocus`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 15 daisyUI classes reachable: base, `joined`, 5 sizes, 8 colours.
+- [x] **Root is `<label>`** — asserted in the build output (23 of 23). That clicking a box *focuses* the input follows from it, but is a runtime behaviour and stays for Step 5 (§0).
+- [x] Slot children render as direct children (§3e.2).
+- [x] No invented axis — no `length` prop (§3b), no input props (§2).
+- [x] JSDoc leads with the span-count/`maxlength` rule (§3a), and covers the eight-box cap, the `<label>` root, the hidden caret (§3c) and the font-family warning (§3d).
+- [x] `plans/components/file-input.md` §0's scaffold audit is updated (§3e).
+- [x] One story per doc-page example, plus `MismatchedLength`, `NineBoxes` and `ClickToFocus`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default      → <label class="otp"><span></span><span></span><span></span><span></span>
+               <input type="text" autocomplete="one-time-code" inputmode="numeric"
+                      maxlength="4" pattern="[0-9]{4}" required /></label>
+SixDigits    → six spans, maxlength="6", pattern="[0-9]{6}"
+Joined       → <label class="otp otp-joined">…
+Sizes        → otp-xs … otp-xl, four boxes each
+Colors       → otp-neutral … otp-error, four boxes each
+Mismatched…  → five spans against maxlength="4", beside a matched four
+NineBoxes    → eight spans, then nine
+Passthrough  → <label class="otp otp-accent otp-lg otp-joined mine" id="otp-1" data-test="yes"
+                 style="opacity:.9">…
+```
+
+What this settles:
+
+- **The scaffold's root bug is gone and cannot return unnoticed**: 23 label roots, **0** div roots across every story. With a div the component would still render correctly and simply refuse to focus when clicked — the quiet kind of failure.
+- **§3e.2**: `<label class="otp…"><span></span>` matches all 23, so the boxes are direct children and every `> span:nth-child(n)` offset applies.
+- The input's attributes pass through untouched as slot content — no input props were re-exposed through the wrapper (§2, §3b).
+- `.otp:has(>span:first-child)` through `:nth-child(8)` and `field-sizing:content` are all in the built stylesheet, so §3e.1 reduces to browser support.
+- All 15 classes have rules in the built stylesheet.
+
+Not settled here, and it is most of the component: click-to-focus, the caret behaviour, the staggered focus ring, and whether the characters actually land inside the boxes. All Step 5.
