@@ -1,14 +1,66 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/status/
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
+import type { DaisyColor, DaisySize } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'span'> {}
+// A small status bead. The element is the dot - it takes no children.
+//
+// It announces nothing on its own: add aria-label when the state is the
+// information, or aria-hidden when it merely decorates. Neither is defaulted.
+//
+// Animation is a Tailwind class, not a prop: class="animate-bounce", or the
+// ping form, which stacks a pinging dot under a static one in a one-cell grid.
+// A small status bead. The element is the dot — it takes no children, and
+// this component renders no slot (plan §2).
+//
+// It announces nothing on its own: add `aria-label="Online"` when the state is
+// the information, or `aria-hidden="true"` when it merely decorates something
+// already labelled (plan §3a). Neither is defaulted — a generic
+// `aria-label="status"` would say that something has a status without saying
+// which.
+//
+// Animation is a Tailwind class, not a prop (plan §3d): pass
+// `class="animate-bounce"`. The ping form stacks two dots in a one-cell grid
+// (`inline-grid` with `grid-area:1/1` on the children) — a pinging one under a
+// static one. Animating the only dot leaves nothing behind once it fades. See
+// the WithPingAnimation and SinglePing stories.
+//
+// NOTE: no angle brackets in this comment, deliberately. A less-than sign
+// anywhere in the frontmatter — comments included — truncates Astro's
+// TypeScript parse, and Props silently stops being inferred
+// (plans/README.md §5c). Markup examples live in the stories instead.
+type Props<Tag extends HTMLTag = 'span'> = Polymorphic<{
+  as: Tag;
+  color?: DaisyColor;
+  /**
+   * The steps are uneven, unlike every other size axis in this library: xs is
+   * 2px, sm 4px, md 8px, lg 12px, xl 16px. `size="xs"` is effectively
+   * invisible against most backgrounds (plan §3c).
+   */
+  size?: DaisySize;
+}>;
 
-const { class: className, ...rest } = Astro.props;
+// Full literal class names. NEVER `status-${color}` (plans/README.md §1b).
+const COLOR: Record<DaisyColor, string> = {
+  primary: 'status-primary',
+  secondary: 'status-secondary',
+  accent: 'status-accent',
+  neutral: 'status-neutral',
+  info: 'status-info',
+  success: 'status-success',
+  warning: 'status-warning',
+  error: 'status-error',
+};
+
+const SIZE: Record<DaisySize, string> = {
+  xs: 'status-xs',
+  sm: 'status-sm',
+  md: 'status-md',
+  lg: 'status-lg',
+  xl: 'status-xl',
+};
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const { as: Tag = 'span', color, size, class: className, ...rest } = Astro.props as Props<HTMLTag>;
 ---
 
-<span class:list={['status', className]} {...rest}>
-  <slot />
-</span>
+<Tag class:list={['status', color && COLOR[color], size && SIZE[size], className]} {...rest}></Tag>

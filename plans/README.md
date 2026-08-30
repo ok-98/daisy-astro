@@ -238,9 +238,19 @@ Also annotate the destructure, since `Astro.props` is untyped inside a generic c
 const { as: Tag = 'button', color, ...rest } = Astro.props as Props<HTMLTag>;
 ```
 
-**Two more ways generic `Props` inference dies silently**, both found on 2026-08-30 while building Mask, and both with the same symptom as the `const` rule above — every call site errors with "not assignable to `IntrinsicAttributes`" while the component still renders:
+**Two more ways `Props` inference dies silently**, both found on 2026-08-30 while building Mask and Status, and both with the same symptom as the `const` rule above — the component renders fine while every call site errors with "not assignable to `IntrinsicAttributes`" (or, worse, accepts anything at all):
 
-1. **A `/** */` JSDoc block directly above `type Props` breaks it.** Astro stops inferring `Props` entirely. Line comments (`//`) in the same position are fine, and JSDoc on the *members inside* the type is fine — it is specifically a block comment between the last statement and the `type Props` line. So a polymorphic component documents itself with `//` above the type, and with JSDoc on each prop.
+1. **A less-than sign anywhere in the frontmatter — comments included — truncates the TypeScript parse.** Astro's compiler treats it as the start of the template, so everything after it, `type Props` included, stops being TypeScript. Bisected on 2026-08-30 against a generic component:
+
+   | Comment content above `type Props` | Result |
+   |---|---|
+   | plain prose, or `as="div"` in backticks | inference works |
+   | `a < b and c > d` | **broken** — and accepts *anything*, no errors at all |
+   | `Defaults to <img>` | **broken** |
+   | ```` ```astro <Status color="info" /> ``` ```` | **broken** |
+   | the same JSDoc with the markup line removed | works |
+
+   It is **not** about JSDoc vs `//` — both forms break with a `<` and both work without one. So: **no angle brackets in frontmatter comments.** Write "a native `kbd` element", not `` `<kbd>` ``; put markup examples in the stories, where they are executable anyway. The zero-error variant is the dangerous one: a component that accepts every prop looks perfectly healthy.
 
 2. **A polymorphic `Props` needs a default type parameter, or the default tag's own attributes are rejected.** `type Props<Tag extends HTMLTag> = Polymorphic<{ as: Tag; … }>` only resolves `Tag` when the caller passes `as`. Omit `as` and `Tag` stays unresolved, so `<Button type="submit">`, `<Badge title="t">` and `<Mask src="/a.webp">` are all type errors — ordinary calls, on the component's *own* default element. Declare the default the component actually renders:
 
@@ -261,6 +271,10 @@ Button and Badge both shipped with this defect and were fixed when Mask found it
 ```
 
 The third line is not filler: it is the only one that catches the missing default type parameter above.
+
+**A throwaway probe is not enough on its own — keep `src/_typecheck.astro` current.** Once the probe is deleted, nothing in `src` uses the component: story files are `.ts`, and `astro check` does not type-check story args against component props. So a component whose `Props` broke afterwards passes a clean `astro check` while every real call site fails. Mask shipped exactly that way for one commit — its frontmatter comment contained `<img>`, and the breakage only surfaced when the next component's probe went looking.
+
+`packages/daisy-astro/src/_typecheck.astro` closes that: one file, never imported, holding valid usages of every implemented component — including at least one native attribute of each default element passed **without** `as`. Add lines as components land. Lines that must *not* compile still belong in a throwaway probe; this file only holds what should pass. Verified 2026-08-30 that it fails when the bug is reintroduced and passes when it is not.
 
 **A probe line that will never error, so don't write it: `color` on a component with no colour axis.** Astro's base `HTMLAttributes` declares `color?: string` in its non-standard/obsolete attribute list (`astro-jsx.d.ts:563`, verified 2026-08-30 while building Avatar), so `<Avatar color="primary">` type-checks on every component in this library and forwards through `...rest` as a plain attribute — `<div class="avatar" color="primary">`. It emits no class and does nothing. Components that *do* have a colour axis declare `color` themselves and narrow it, so they are unaffected; components that don't cannot reject it, and a caller reaching for it gets silence rather than an error. Found in `plans/components/avatar.md` §3e.3.
 
@@ -329,10 +343,10 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Diff | `diff` | Planned — [`plans/components/diff.md`](components/diff.md) (native CSS `resize`, no JS; narrowest browser support — no drag on iOS Safari) |
 | Hover 3D card | `hover-3d-card` | Planned — [`plans/components/hover-3d-card.md`](components/hover-3d-card.md) (component generates the 8 hover zones; doc examples pending) |
 | Hover Gallery | `hover-gallery` | Planned — [`plans/components/hover-gallery.md`](components/hover-gallery.md) (first child is a resting frame; caps at 10) |
-| Kbd | `kbd` | Planned — [`plans/components/kbd.md`](components/kbd.md) (one class + 5 sizes; simplest in the library) |
+| Kbd | `kbd` | **Implemented** — [`plans/components/kbd.md`](components/kbd.md) (10 stories; no `as`, no `keys` prop; visual pass open) |
 | List | `list` | Planned — [`plans/components/list.md`](components/list.md) (`List`+`ListRow`; second child grows by default) |
 | Stat | `stat` | Planned — [`plans/components/stat.md`](components/stat.md) (`stats` is the component; 7 files — most in the library) |
-| Status | `status` | Planned — [`plans/components/status.md`](components/status.md) (empty dot; uneven size steps; animation is a class) |
+| Status | `status` | **Implemented** — [`plans/components/status.md`](components/status.md) (10 stories; no slot; uneven size steps; visual pass open) |
 | Table | `table` | Planned — [`plans/components/table.md`](components/table.md) (one class, no parts; ships in the utilities layer so daisyUI emits responsive variants) |
 | Text Rotate | `text-rotate` | Planned — [`plans/components/text-rotate.md`](components/text-rotate.md) (span root, generated inner track, 6-item ceiling; CSS-only — see §254 correction) |
 | Timeline | `timeline` | Planned — [`plans/components/timeline.md`](components/timeline.md) (five components; <hr> siblings are the connector lines and are read by position) |

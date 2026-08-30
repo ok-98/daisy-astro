@@ -23,18 +23,19 @@ type MaskHalf = '1' | '2';
 
 // Crops an element to a shape with a CSS mask.
 //
-// Defaults to `<img>`, masking the image itself, as daisyUI's own examples do.
-// Use `as="div"` to wrap other content — the shape the Avatar page uses (plan
-// §3a). With the `img` root the default slot must stay empty, since `<img>` is
-// void.
+// Defaults to an `img` root, masking the image itself, as daisyUI's own
+// examples do. Pass `as="div"` to wrap other content — the shape the Avatar
+// page uses (plan §3a). With the image root the default slot must stay empty,
+// since that element is void.
 //
 // Give it a square box (`class="w-40 h-40"`): the mask is `contain`-sized and
 // centred, so a non-square element leaves empty space around the shape rather
 // than stretching it (plan §3d).
 //
-// Written as line comments, not a `/** */` block: a JSDoc block directly above
-// `type Props` stops Astro inferring Props at all — the same silent failure as
-// the `const`-before-Props rule (plans/README.md §5c).
+// NOTE: no angle brackets in this comment, deliberately. A less-than sign
+// anywhere in the frontmatter — comments included — truncates Astro's
+// TypeScript parse, and Props silently stops being inferred
+// (plans/README.md §5c). This component shipped broken that way for one commit.
 type Props<Tag extends HTMLTag = 'img'> = Polymorphic<{
   as: Tag;
   /**

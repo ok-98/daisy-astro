@@ -1,0 +1,51 @@
+---
+// Type guard for every implemented component. Renders nothing and is never
+// imported — it exists so `astro check` has a *usage* of each component's
+// props.
+//
+// Why this file exists: a component whose `Props` stops being inferred still
+// renders correctly and still passes `astro check`, because nothing in `src`
+// uses it — story files are `.ts`, and `astro check` does not type-check story
+// args against component props. Mask shipped broken exactly that way for one
+// commit (plans/README.md §5c). Throwaway probes catch it once; this catches it
+// every run.
+//
+// Add a line per component as it lands: the props it is actually used with,
+// including at least one native attribute of its default element passed
+// WITHOUT `as` — that is the case the polymorphic default-type-parameter rule
+// exists for. Lines that must NOT compile belong in a throwaway probe, not
+// here.
+import Avatar from './components/Avatar/Avatar.astro';
+import AvatarGroup from './components/Avatar/AvatarGroup.astro';
+import Badge from './components/Badge/Badge.astro';
+import Button from './components/Button/Button.astro';
+import Kbd from './components/Kbd/Kbd.astro';
+import Mask from './components/Mask/Mask.astro';
+import Status from './components/Status/Status.astro';
+---
+
+<Button color="primary" size="lg" variant="outline" shape="circle" width="wide" active disabled>ok</Button>
+<Button id="b" data-test="y" type="submit" aria-label="Save">ok</Button>
+<Button as="a" href="/ok" disabled>ok</Button>
+<Button as="input" type="submit" value="Go" />
+
+<Badge color="primary" variant="soft" size="lg">ok</Badge>
+<Badge id="b" data-test="y" title="t">ok</Badge>
+<Badge as="div">ok</Badge>
+<Badge as="a" href="/ok">ok</Badge>
+
+<Avatar presence="online" placeholder innerClass="w-16" aria-label="AI, online">ok</Avatar>
+<Avatar id="a" data-test="y" class="mx-2" style="opacity:.9">ok</Avatar>
+<AvatarGroup class="-space-x-6"><Avatar innerClass="w-12">ok</Avatar></AvatarGroup>
+
+<Mask shape="squircle" src="/a.webp" alt="A" class="w-40 h-40" />
+<Mask shape="star" half="1" class="w-20 h-40" src="/a.webp" alt="A" />
+<Mask as="div" shape="heart" class="w-24">ok</Mask>
+
+<Kbd>K</Kbd>
+<Kbd size="lg" id="k" data-test="y" class="mx-1">K</Kbd>
+
+<Status />
+<Status color="success" size="lg" aria-label="Online" />
+<Status id="s" data-test="y" title="t" class="animate-bounce" />
+<Status as="div" aria-hidden="true" />

@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): props extend `HTMLAttributes<'kbd'>`; `class:list` for merging; variant classes are literals in a `Record` map (§1b); **uses `DaisySize` unchanged** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/kbd.css` and the doc page source. §3d lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Kbd.astro` and 10 stories are in the repo per §4/§5; markup, type probe and CSS coverage verified (§8). One deviation from §4's listing: the JSDoc holds no markup examples, because a less-than sign anywhere in the frontmatter breaks Props inference (`plans/README.md` §5c). Step 5 (visual pass) is open. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/kbd.css` and the doc page source. §3d lists what is **unverified**.
 
 ---
 
@@ -154,25 +154,39 @@ One beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Nothing to re-read. Note §3d removes the slot-wrapping unknown that gates sixteen sibling plans.
-- [ ] **Step 2:** No new shared unions — `DaisySize` reused unchanged. `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, then walk the gate.
-- [ ] **Step 4:** Replace `Kbd.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` is a square key with a visibly thicker bottom edge; `Sizes` shows five heights **and** five font sizes; `InText` sits on the sentence's baseline without pushing the line height (§3d.2); `FullKeyboard` rows align with no width classes (§3b); `FunctionKeys` and `ArrowKeys` render as glyphs, not emoji (§3d.1).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<kbd class="kbd[^"]*"' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Kbd` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done.** §3d does remove the slot-wrapping unknown, which is settled library-wide anyway (`plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3).
+- [x] **Step 2: skipped as planned.** `DaisySize` reused unchanged; `variants.ts` untouched.
+- [x] **Step 3: done.** Scaffold replaced per §4 and the gate walked. The probe errored on exactly the two intended lines (`size="2xl"`, a `keys` prop). `color="primary"` was dropped from the probe: it cannot error on any component (`plans/components/avatar.md` §3e.3).
+- [x] **Step 4: done.** `Kbd.stories.ts`, 10 stories per §5, markup copied from the doc page.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: `Default` is a square key with a visibly thicker bottom edge; `Sizes` shows five heights **and** five font sizes; `InText` sits on the sentence's baseline (§3d.2); `FullKeyboard` rows align with no width classes (§3b); `FunctionKeys` and `ArrowKeys` render as glyphs, not emoji (§3d.1); `WithShadow` shows the keycap flattening (§3c).
+- [x] **Step 6: done — forwarding confirmed.** `Passthrough` renders `<kbd class="kbd kbd-lg mine" id="kbd-1" data-test="yes" style="letter-spacing:2px">⌘</kbd>`. Full output in §8.
+- [x] **Step 7: done — the `Kbd` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 6 daisyUI classes reachable: base plus 5 sizes.
-- [ ] `size` uses `DaisySize`, imported, not redeclared.
-- [ ] Root is a native `<kbd>`; no `as`, no `keys` prop (§3a).
-- [ ] JSDoc states: a shortcut is several `Kbd`s (§3a), single keys are square automatically (§3b), and `shadow-*` flattens the keycap (§3c).
-- [ ] No invented axis — no colour, no style.
-- [ ] One story per doc-page example, plus `WithShadow`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 6 daisyUI classes reachable: base plus 5 sizes.
+- [x] `size` uses `DaisySize`, imported, not redeclared.
+- [x] Root is a native `<kbd>`; no `as`, no `keys` prop (§3a).
+- [x] JSDoc states: a shortcut is several `Kbd`s (§3a), single keys are square automatically (§3b), and `shadow-*` flattens the keycap (§3c).
+- [x] No invented axis — no colour, no style.
+- [x] One story per doc-page example, plus `WithShadow`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default        → <kbd class="kbd">K</kbd>
+Sizes          → <kbd class="kbd kbd-xs">Xsmall</kbd> … <kbd class="kbd kbd-xl">Xlarge</kbd>
+InText         → <span>Press <kbd class="kbd kbd-sm">F</kbd> to pay respects.</span>
+KeyCombination → <kbd class="kbd">ctrl</kbd>+<kbd class="kbd">shift</kbd>+<kbd class="kbd">del</kbd>
+FunctionKeys   → <kbd class="kbd">⌘</kbd><kbd class="kbd">⌥</kbd><kbd class="kbd">⇧</kbd><kbd class="kbd">⌃</kbd>
+FullKeyboard   → three rows of bare <kbd class="kbd">, no width classes anywhere
+ArrowKeys      → <kbd class="kbd">▲</kbd> / <kbd class="kbd">◀︎</kbd><kbd class="kbd">▶︎</kbd> / <kbd class="kbd">▼</kbd>
+WithShadow     → <kbd class="kbd">K</kbd><kbd class="kbd shadow-md">K</kbd>
+Passthrough    → <kbd class="kbd kbd-lg mine" id="kbd-1" data-test="yes" style="letter-spacing:2px">⌘</kbd>
+```
+
+What this settles: the root is a real `kbd` element everywhere; a combination is separate elements with caller text between them, not one element (§3a); the variation-selector arrows survive the pipeline byte for byte (§3d.1 — whether the *font* honours them is Step 5); all 6 classes have rules in the built stylesheet.

@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): props forward every native attribute for the rendered element; `class:list` for merging; variant classes are literals in a `Record` map (§1b); **uses `DaisyColor` and `DaisySize` unchanged** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/status.css` and the doc page source. §3e lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Status.astro` and 10 stories are in the repo per §4/§5; markup, type probe and CSS coverage verified (§8). Two deviations from §4's listing: the frontmatter comment holds no markup examples (a less-than sign there breaks Props inference — `plans/README.md` §5c, bisected while building this component), and `Props` carries the `= 'span'` default type parameter that same section requires. Step 5 (visual pass) is open. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/status.css` and the doc page source. §3e lists what is **unverified**.
 
 ---
 
@@ -87,7 +87,8 @@ The JSDoc shows both snippets — the ping one especially, since "why does my pi
 
 1. **`--depth` sensitivity.** Both the highlight and the shadow are multiplied by `var(--depth)` **[verified]**, a theme variable. In a theme with `--depth: 0` a Status is a flat circle with no bead effect — correct, but worth confirming once so it is not mistaken for a broken gradient.
 2. **Nothing structural** — no child selectors, no parts, no slot **[verified]**; the shared slot-wrapping question does not apply.
-3. **Generic prop inference** — `Polymorphic` brings §5c's silent failure (§3b).
+3. ~~**Generic prop inference.**~~ **Resolved, and it bit twice.** The probe caught both `plans/README.md` §5c rules: the missing default type parameter, and the less-than sign in a frontmatter comment. Bisecting the second one here produced that section's evidence table and corrected the mis-diagnosis recorded in `plans/components/mask.md` §3e.4.
+4. **The no-slot rule is not type-enforced.** `<Status>children</Status>` was expected to error and does **not** — Astro accepts children on any component, and this one simply drops them, since it renders no `slot`. So §2 is a documentation and review rule, not a compiler-checked one. The probe line asserting otherwise was wrong and is removed; §6's build assertion (every rendered status is empty) is what actually holds the line.
 
 ## 4. Component implementation
 
@@ -177,27 +178,52 @@ Plus `Playground` and `Passthrough`. Three beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Check §3e.1 (`--depth`) once so a flat dot in a zero-depth theme is recognised.
-- [ ] **Step 2:** No new shared unions — `DaisyColor`/`DaisySize` reused unchanged. `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, then walk the gate. **Run the probe** — the generic failure is silent, and the no-slot rule must actually error.
-- [ ] **Step 4:** Replace `Status.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` is a small dimmed bead with a visible highlight (§0); `Colors` shows eight tints with matching shadows; `Sizes` shows the **uneven** ladder, with xs barely visible (§3c); `WithPingAnimation` pulses around a solid dot while `SinglePing` fades away entirely (§3d); `InIndicator` pins to a corner.
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<span class="status[^"]*"[^>]*></span>' storybook-static/astro-prerendered-stories.json | head
-  ```
-  Every rendered status must be empty (§2).
-- [ ] **Step 7:** Update the `Status` row in `plans/README.md` to **Implemented**, and cross-reference `InIndicator` from `plans/components/indicator.md` §5's `StatusIndicator` story.
+- [x] **Step 1: partly done.** All 14 `status-*` rules are in the built stylesheet. `--depth` sensitivity (§3e.1) is visual and moves to Step 5.
+- [x] **Step 2: skipped as planned.** `DaisyColor`/`DaisySize` reused unchanged; `variants.ts` untouched.
+- [x] **Step 3: done.** Scaffold replaced per §4 and the gate walked. The probe errored on `color="banana"` and an `animation` prop, and passed every valid line — but see §3e.4: the no-slot line does **not** error, which is a real correction to this plan.
+- [x] **Step 4: done.** `Status.stories.ts`, 10 stories per §5, including the doc page's varied `aria-label`s.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: `Default` is a dimmed bead with a visible highlight (§0); `Colors` shows eight tints with matching shadows; `Sizes` shows the **uneven** ladder with xs barely visible (§3c); `WithPingAnimation` pulses around a solid dot while `SinglePing` fades to nothing (§3d); `InIndicator` pins to a corner; and a zero-`--depth` theme flattens the bead (§3e.1).
+- [x] **Step 6: done — forwarding confirmed and the empty-element rule asserted.** `Passthrough` renders `<div id="status-1" data-test="yes" style="opacity:.9" aria-label="Degraded" class="status status-warning status-lg mine"></div>`, and no rendered `.status` element in any story contains content (§2, checked across all ten). Full output in §8.
+- [x] **Step 7: done — the `Status` row in `plans/README.md` says Implemented.** `InIndicator` still needs cross-referencing from `plans/components/indicator.md` §5 when Indicator is built; the story carries a `TODO(daisy-astro)` marker until then.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 14 daisyUI classes reachable: base, 8 colours, 5 sizes.
-- [ ] `color` uses `DaisyColor` and `size` uses `DaisySize`, imported, neither redeclared.
-- [ ] No slot, and every rendered element is empty (§2) — asserted in the build output.
-- [ ] Default root is `span`; `as="div"` available; probe passes (§3b).
-- [ ] No invented axis — no animation prop (§3d), no ARIA defaults (§3a).
-- [ ] JSDoc states: it announces nothing by default with both remedies (§3a), the uneven size steps (§3c), and both animation recipes including why ping needs two dots (§3d).
-- [ ] One story per doc-page example, plus `WithAccessibleName`, `InIndicator` and `SinglePing`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 14 daisyUI classes reachable: base, 8 colours, 5 sizes.
+- [x] `color` uses `DaisyColor` and `size` uses `DaisySize`, imported, neither redeclared.
+- [x] No slot, and every rendered element is empty (§2) — asserted in the build output. Note it is *not* a type error to pass children; they are silently dropped (§3e.4).
+- [x] Default root is `span`; `as="div"` available; probe passes (§3b).
+- [x] No invented axis — no animation prop (§3d), no ARIA defaults (§3a).
+- [x] JSDoc states: it announces nothing by default with both remedies (§3a), the uneven size steps (§3c), and both animation recipes including why ping needs two dots (§3d).
+- [x] One story per doc-page example, plus `WithAccessibleName`, `InIndicator` and `SinglePing`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default          → <span class="status"></span>
+Sizes            → <div aria-label="status" class="status status-xs"></div> … status-xl
+Colors           → <div aria-label="status" class="status status-primary"></div> …
+                   <div aria-label="info" class="status status-info"></div> …   ← the page's varied labels
+WithPing…        → <div class="inline-grid *:[grid-area:1/1]">
+                     <div class="status status-error animate-ping"></div>
+                     <div class="status status-error"></div></div> Server is down
+WithBounce…      → <div class="status status-info animate-bounce"></div> Unread messages
+SinglePing       → <div class="status status-error animate-ping"></div> Server is down
+WithAccessible…  → <span class="status status-success"></span>
+                   <span aria-label="Online" class="status status-success"></span>
+                   <span aria-hidden="true" class="status status-success"></span><span>Online</span>
+InIndicator      → <div class="indicator"><span class="indicator-item"><span aria-label="Online" class="status status-success"></span></span>…
+Passthrough      → <div id="status-1" data-test="yes" style="opacity:.9" aria-label="Degraded" class="status status-warning status-lg mine"></div>
+```
+
+What this settles:
+
+- **Every rendered `.status` element is empty**, across all ten stories — §2's rule holds in output even though it is not a type error to pass children (§3e.4).
+- `aria-label` and `aria-hidden` ride `...rest` and land on the root, with nothing defaulted (§3a).
+- Both animation recipes are caller classes only; no `animation` prop exists, and `SinglePing` differs from `WithPingAnimation` by exactly the second dot (§3d).
+- All 14 classes have rules in the built stylesheet, and `animate-ping`/`animate-bounce` are generated from the story sources.
+
+Not settled here: everything visual — the bead highlight, the uneven size ladder, and whether the ping reads as a pulse. All Step 5.
