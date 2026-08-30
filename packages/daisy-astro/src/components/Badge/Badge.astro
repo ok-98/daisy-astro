@@ -7,7 +7,7 @@ type BadgeVariant = 'outline' | 'dash' | 'soft' | 'ghost';
 // `Props` MUST be declared before any `const` in this frontmatter, or Astro
 // stops inferring it and the component silently accepts no props at all
 // (plans/README.md §5c).
-type Props<Tag extends HTMLTag> = Polymorphic<{
+type Props<Tag extends HTMLTag = 'span'> = Polymorphic<{
   /**
    * Defaults to `span`. Both `span` and `div` render identically — `.badge` is
    * `inline-flex` — but a `div` badge is invalid inside `<p>`: the parser

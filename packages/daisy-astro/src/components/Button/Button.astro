@@ -9,7 +9,7 @@ type ButtonWidth = 'wide' | 'block';
 // `Props` MUST be declared before any `const` in this frontmatter, or Astro
 // stops inferring it and the component silently accepts no props at all.
 // See plans/README.md §10.
-type Props<Tag extends HTMLTag> = Polymorphic<{
+type Props<Tag extends HTMLTag = 'button'> = Polymorphic<{
   as: Tag;
   color?: DaisyColor;
   size?: DaisySize;

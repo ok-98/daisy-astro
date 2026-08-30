@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): props forward every native attribute for the rendered element; `class:list` for merging; variant classes are literals in a `Record` map (§1b); **no shared unions** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/mask.css` and the doc page source. §3e lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Mask.astro` and 21 stories are in the repo per §4/§5; markup, type probe and CSS coverage verified (§8). Building it turned up two silent type-inference failures that also affected Button and Badge — §3e.4 and §3e.5, now rules in `plans/README.md` §5c. Step 5 (visual pass) is open. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/mask.css` and the doc page source. §3e lists what is **unverified**.
 
 ---
 
@@ -94,9 +94,11 @@ Every doc example uses `w-40 h-40` **[verified]**, and the SVGs themselves are s
 
 ### 3e. Unverified assumptions
 
-1. **`mask-image` support and prefixing.** daisyUI emits unprefixed `mask-*` **[verified]**. Shared with `plans/components/loading.md` §3e.2 — one check covers both, and an unmasked rectangle is the symptom.
-2. **Generic prop inference** — `Polymorphic` brings §5c's silent failure. The probe is mandatory (§3a).
-3. **Do the doc page's `img.daisyui.com` URLs load in the Storybook sandbox?** Shared with Avatar, Card, Carousel, Diff, Hero and List.
+1. **`mask-image` support and prefixing.** daisyUI emits unprefixed `mask-*` **[verified]**, and all 17 rules are in the built stylesheet **[verified 2026-08-30]**. Whether the browser honours them is Step 5; an unmasked rectangle in every story is the symptom, and it means this, not the component.
+2. ~~**Generic prop inference.**~~ **Resolved, and it was real** — twice over, see §3e.4 and §3e.5. The probe was not optional.
+3. **Do the doc page's `img.daisyui.com` URLs load in the Storybook sandbox?** Still open, shared with Avatar, Card, Carousel, Diff, Hero and List. A blank box at Step 5 means swap in a local image.
+4. **A `/** */` JSDoc block directly above `type Props` kills inference** — found here, 2026-08-30. This plan's §4 listing put the component's documentation in exactly that position, and the result was every call site failing with "not assignable to `IntrinsicAttributes`" while the component rendered fine: the same silent shape as `plans/README.md` §5c's `const` rule. Line comments in that position are fine, and JSDoc on the props *inside* the type is fine. The shipped component documents itself with `//` above the type. Rule added to `plans/README.md` §5c.
+5. **A polymorphic `Props` needs a default type parameter** — found here, and it was **not** Mask-specific. `type Props<Tag extends HTMLTag>` resolves `Tag` only when the caller passes `as`; omit it and the default element's own attributes are rejected. Here that meant `<Mask shape="squircle" src="…" />` — the component's primary use — failing to type-check. Probing Button and Badge with the same shape showed both already shipped broken (`<Button type="submit">`, `<Badge title="t">`), so all three were fixed to `Tag extends HTMLTag = '<default tag>'` in the same commit. Rule added to `plans/README.md` §5c, amendments in `button.md` §8d and `badge.md` §8a.
 
 **Not a risk here:** no child selectors, no parts, no `:nth-child` **[verified]** — the shared slot-wrapping question does not apply. Same conclusion as `plans/components/kbd.md` §3d.
 
@@ -193,25 +195,47 @@ Plus `Playground` and `Passthrough`. Four beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Check §3e.1 (`mask-image` support) — an unmasked rectangle in every story means that, not the component. Settle §3e.3 (image URLs) with the six other plans.
-- [ ] **Step 2:** No new shared unions — both unions are local (§1). `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, then walk the gate. **Run the probe** — the generic failure is silent and `shape` being required must actually error.
-- [ ] **Step 4:** Replace `Mask.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: all fifteen shapes crop distinctly at `w-40 h-40`; the four triangles point in four different directions; `star` and `star-2` differ in weight; `hexagon` is vertical and `hexagon-2` horizontal; `Halves` shows left and right halves of the same star; `NonSquare` letterboxes rather than stretching (§3d); RTL swaps the two halves with no code change (§3c).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<img class="mask mask-[a-z0-9-]+[^"]*"' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Mask` row in `plans/README.md` to **Implemented**. Cross-reference §3c from `plans/components/rating.md` when it is written.
+- [x] **Step 1: done.** All 17 `mask-*` rules are in the built stylesheet (§3e.1). §3e.3 (image URLs) is still shared and open.
+- [x] **Step 2: skipped as planned.** Both unions stay local; `variants.ts` untouched.
+- [x] **Step 3: done.** Scaffold replaced per §4 and the gate walked. The probe earned its keep twice — §3e.4 and §3e.5 — and `shape` being required is confirmed by a real type error ("Property 'shape' is missing … but required").
+- [x] **Step 4: done.** `Mask.stories.ts`, 21 stories per §5, with the doc page's own `alt` text and photo.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: all fifteen shapes crop distinctly at `w-40 h-40`; the four triangles point four ways; `star` and `star-2` differ in weight; `hexagon` is vertical and `hexagon-2` horizontal; `Halves` shows left and right halves of the same star; `NonSquare` letterboxes rather than stretching (§3d); RTL swaps the halves with no code change (§3c); the images load at all (§3e.3).
+- [x] **Step 6: done — forwarding confirmed.** `Passthrough` renders `<img src="…" alt="Circle CSS mask" id="mask-1" data-test="yes" style="opacity:.9" class="mask mask-circle w-40 h-40 mine"/>`. Full output in §8.
+- [x] **Step 7: done — the `Mask` row in `plans/README.md` says Implemented.** §3c still needs cross-referencing from `plans/components/rating.md` when Rating is built — that plan exists, so this is a Rating-side task.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 17 daisyUI classes reachable: base, 15 shapes, 2 halves.
-- [ ] `shape` is required and a missing one is a type error (§3b).
-- [ ] Default root is `img`; `as="div"` works and takes children; probe passes (§3a).
-- [ ] No invented axis — no colour, no size, no `src`/`alt` props (§1, §2).
-- [ ] JSDoc states: `shape` is required (§3b), halves zoom rather than clip (§3c), a square box is expected (§3d), and which root takes children (§3a).
-- [ ] One story per doc-page example, plus `AllShapes`, `Halves`, `AsWrapper` and `NonSquare`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 17 daisyUI classes reachable: base, 15 shapes, 2 halves.
+- [x] `shape` is required and a missing one is a type error (§3b).
+- [x] Default root is `img`; `as="div"` works and takes children; probe passes (§3a).
+- [x] No invented axis — no colour, no size, no `src`/`alt` props (§1, §2).
+- [x] JSDoc states: `shape` is required (§3b), halves zoom rather than clip (§3c), a square box is expected (§3d), and which root takes children (§3a).
+- [x] One story per doc-page example, plus `AllShapes`, `Halves`, `AsWrapper` and `NonSquare`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 146 files, 3 errors — all three from the throwaway probe, all intended, none after deleting it.
+
+```
+Squircle    → <img src="…photo-1567653418876-5bb0e566e1c2.webp" alt="Squircle CSS mask" class="mask mask-squircle w-40 h-40"/>
+… one per shape, all fifteen, same photo and the page's own alt text …
+Triangle4   → <img … alt="Triangle-4 CSS mask" class="mask mask-triangle-4 w-40 h-40"/>
+AllShapes   → <div class="flex flex-wrap items-center gap-2"> ×15 at w-24 h-24 </div>
+Halves      → <img … class="mask mask-star w-40 h-40"/>
+              <img … class="mask mask-star mask-half-1 w-20 h-40"/>
+              <img … class="mask mask-star mask-half-2 w-20 h-40"/>
+AsWrapper   → <div class="mask mask-heart w-24"><img src="…" alt="Heart CSS mask" /></div>
+NonSquare   → <img … class="mask mask-heart w-64 h-24"/>
+Passthrough → <img src="…" alt="Circle CSS mask" id="mask-1" data-test="yes" style="opacity:.9" class="mask mask-circle w-40 h-40 mine"/>
+```
+
+What this settles:
+
+- Both roots work and produce the two documented shapes: the mask on the `<img>` itself (the Mask page) and on a wrapper `div` around an image (the Avatar page, §3a).
+- `src`, `alt`, `id`, `data-*` and `style` all forward, and caller `class` merges after the mask classes — with **no** `as` passed, which is the case §3e.5 had to be fixed for.
+- All 17 `mask-*` rules exist in the built stylesheet, halves included.
+- The story `alt` text matches the doc page verbatim ("Squircle CSS mask", "Hexagon-2 CSS mask", …), so a story is a direct diff against its example.
+
+Not settled here: every shape question is visual — whether the fifteen actually crop differently, whether the halves read as halves, whether `NonSquare` letterboxes. All Step 5.

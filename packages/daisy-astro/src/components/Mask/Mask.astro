@@ -1,14 +1,83 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/mask/
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+// `Props` MUST precede every `const` in this frontmatter, or Astro stops
+// inferring it and the component silently accepts no props (plans/README.md §5c).
+type MaskShape =
+  | 'squircle'
+  | 'heart'
+  | 'hexagon'
+  | 'hexagon-2'
+  | 'decagon'
+  | 'pentagon'
+  | 'diamond'
+  | 'square'
+  | 'circle'
+  | 'star'
+  | 'star-2'
+  | 'triangle'
+  | 'triangle-2'
+  | 'triangle-3'
+  | 'triangle-4';
+type MaskHalf = '1' | '2';
 
-const { class: className, ...rest } = Astro.props;
+// Crops an element to a shape with a CSS mask.
+//
+// Defaults to `<img>`, masking the image itself, as daisyUI's own examples do.
+// Use `as="div"` to wrap other content — the shape the Avatar page uses (plan
+// §3a). With the `img` root the default slot must stay empty, since `<img>` is
+// void.
+//
+// Give it a square box (`class="w-40 h-40"`): the mask is `contain`-sized and
+// centred, so a non-square element leaves empty space around the shape rather
+// than stretching it (plan §3d).
+//
+// Written as line comments, not a `/** */` block: a JSDoc block directly above
+// `type Props` stops Astro inferring Props at all — the same silent failure as
+// the `const`-before-Props rule (plans/README.md §5c).
+type Props<Tag extends HTMLTag = 'img'> = Polymorphic<{
+  as: Tag;
+  /**
+   * **Required** — `.mask` on its own sets position, size and repeat but no
+   * `mask-image`, so a shapeless mask renders the element completely unmasked:
+   * identical to not using the component at all, with no error (plan §3b).
+   */
+  shape: MaskShape;
+  /**
+   * Shows one half of the shape by zooming the mask to 200% and anchoring it
+   * to one edge — it does **not** clip the element. To get a visual half-shape
+   * (a half star), halve the element's width as well (plan §3c). RTL is
+   * handled by daisyUI's own mirrored rules; no direction logic here.
+   */
+  half?: MaskHalf;
+}>;
+
+// Full literal class names. NEVER `mask-${shape}` — an interpolated class gets
+// no CSS from daisyUI (plans/README.md §1b).
+const SHAPE: Record<MaskShape, string> = {
+  squircle: 'mask-squircle',
+  heart: 'mask-heart',
+  hexagon: 'mask-hexagon',
+  'hexagon-2': 'mask-hexagon-2',
+  decagon: 'mask-decagon',
+  pentagon: 'mask-pentagon',
+  diamond: 'mask-diamond',
+  square: 'mask-square',
+  circle: 'mask-circle',
+  star: 'mask-star',
+  'star-2': 'mask-star-2',
+  triangle: 'mask-triangle',
+  'triangle-2': 'mask-triangle-2',
+  'triangle-3': 'mask-triangle-3',
+  'triangle-4': 'mask-triangle-4',
+};
+
+const HALF: Record<MaskHalf, string> = { '1': 'mask-half-1', '2': 'mask-half-2' };
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const { as: Tag = 'img', shape, half, class: className, ...rest } = Astro.props as Props<HTMLTag>;
 ---
 
-<div class:list={['mask', className]} {...rest}>
+<Tag class:list={['mask', SHAPE[shape], half && HALF[half], className]} {...rest}>
   <slot />
-</div>
+</Tag>

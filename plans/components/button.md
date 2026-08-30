@@ -102,7 +102,11 @@ type ButtonWidth = 'wide' | 'block';
 
 // `Props` MUST be declared before any `const` in this frontmatter, or Astro
 // stops inferring it and the component silently accepts no props at all.
-type Props<Tag extends HTMLTag> = Polymorphic<{
+// The `= 'button'` default is load-bearing: without it `Tag` is unresolved
+// whenever the caller omits `as`, and `<Button type="submit">` — a native
+// attribute of this component's own default element — fails to type-check.
+// Added 2026-08-30 (plans/README.md §5c).
+type Props<Tag extends HTMLTag = 'button'> = Polymorphic<{
   as: Tag;
   color?: DaisyColor;
   size?: DaisySize;
@@ -384,6 +388,10 @@ Kept because it covers prop combinations the baseline stories don't yet, includi
 {"as":"input","type":"submit","size":"lg","value":"Go"}
                                                     → <input type="submit" value="Go" class="btn btn-lg"/>
 ```
+
+### 8d. Amendment, 2026-08-30 — default type parameter
+
+`Button.astro` shipped as `type Props<Tag extends HTMLTag>` with no default. That rejects every native attribute of `button` unless the caller passes `as`: `<Button type="submit">` and `<Button disabled>` were type errors. Found while building Mask, whose default root is `img` and whose `src`/`alt` made the gap obvious immediately. Fixed to `Tag extends HTMLTag = 'button'`, and the rule is now in `plans/README.md` §5c. The stories never caught it because story files are `.ts` — `astro check` does not type-check args against the component's props.
 
 ### 8c. The full story set (2026-08-29)
 

@@ -238,14 +238,29 @@ Also annotate the destructure, since `Astro.props` is untyped inside a generic c
 const { as: Tag = 'button', color, ...rest } = Astro.props as Props<HTMLTag>;
 ```
 
+**Two more ways generic `Props` inference dies silently**, both found on 2026-08-30 while building Mask, and both with the same symptom as the `const` rule above — every call site errors with "not assignable to `IntrinsicAttributes`" while the component still renders:
+
+1. **A `/** */` JSDoc block directly above `type Props` breaks it.** Astro stops inferring `Props` entirely. Line comments (`//`) in the same position are fine, and JSDoc on the *members inside* the type is fine — it is specifically a block comment between the last statement and the `type Props` line. So a polymorphic component documents itself with `//` above the type, and with JSDoc on each prop.
+
+2. **A polymorphic `Props` needs a default type parameter, or the default tag's own attributes are rejected.** `type Props<Tag extends HTMLTag> = Polymorphic<{ as: Tag; … }>` only resolves `Tag` when the caller passes `as`. Omit `as` and `Tag` stays unresolved, so `<Button type="submit">`, `<Badge title="t">` and `<Mask src="/a.webp">` are all type errors — ordinary calls, on the component's *own* default element. Declare the default the component actually renders:
+
+```astro
+type Props<Tag extends HTMLTag = 'button'> = Polymorphic<{ as: Tag; … }>;
+```
+
+Button and Badge both shipped with this defect and were fixed when Mask found it. Any new polymorphic component gets the default type parameter and a probe line that passes a native attribute of the default tag **without** `as`.
+
 **Verify prop typing with a throwaway probe** rather than assuming it works — a component that accepts nothing and one that accepts everything both pass `astro check` on their own. Write a scratch `.astro` that uses the component correctly *and* incorrectly, confirm only the incorrect lines error, then delete it:
 
 ```astro
 <Button color="primary">ok</Button>
 <Button as="a" href="/ok">ok</Button>
+<Button id="x" type="submit">ok — native attrs of the default tag, no `as`</Button>
 <Button color="banana">must error</Button>
 <Button href="/nope">must error — href needs as="a"</Button>
 ```
+
+The third line is not filler: it is the only one that catches the missing default type parameter above.
 
 **A probe line that will never error, so don't write it: `color` on a component with no colour axis.** Astro's base `HTMLAttributes` declares `color?: string` in its non-standard/obsolete attribute list (`astro-jsx.d.ts:563`, verified 2026-08-30 while building Avatar), so `<Avatar color="primary">` type-checks on every component in this library and forwards through `...rest` as a plain attribute — `<div class="avatar" color="primary">`. It emits no class and does nothing. Components that *do* have a colour axis declare `color` themselves and narrow it, so they are unaffected; components that don't cannot reject it, and a caller reaching for it gets silence rather than an error. Found in `plans/components/avatar.md` §3e.3.
 
@@ -374,7 +389,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Hero | `hero` | Planned — [`plans/components/hero.md`](components/hero.md) (`Hero`+`HeroContent`+`HeroOverlay`; one-cell grid) |
 | Indicator | `indicator` | Planned — [`plans/components/indicator.md`](components/indicator.md) (`Indicator`+`IndicatorItem`; placement is two axes, on the item) |
 | Join (group items) | `join` | Planned — [`plans/components/join.md`](components/join.md) (a *utility*, not a component; items may be nested) |
-| Mask | `mask` | Planned — [`plans/components/mask.md`](components/mask.md) (15 shapes; `shape` is required — the base class masks nothing) |
+| Mask | `mask` | **Implemented** — [`plans/components/mask.md`](components/mask.md) (21 stories; `shape` required; found the two §5c inference rules; visual pass open) |
 | Stack | `stack` | Planned — [`plans/components/stack.md`](components/stack.md) (first child is the front; only 3 distinct layers) |
 
 ### Mockup

@@ -128,7 +128,10 @@ type BadgeVariant = 'outline' | 'dash' | 'soft' | 'ghost';
 // `Props` MUST be declared before any `const` in this frontmatter, or Astro
 // stops inferring it and the component silently accepts no props at all
 // (plans/README.md §5c).
-type Props<Tag extends HTMLTag> = Polymorphic<{
+// The `= 'span'` default is load-bearing — without it `<Badge title="t">`
+// fails to type-check whenever `as` is omitted (plans/README.md §5c,
+// added 2026-08-30).
+type Props<Tag extends HTMLTag = 'span'> = Polymorphic<{
   /** Defaults to `span` — a `div` badge is invalid inside `<p>` (plan §3a). */
   as: Tag;
   color?: DaisyColor;
@@ -311,6 +314,10 @@ The axis stories render many badges at once; compose multiples the way the frame
 - [x] `Playground` exposes every prop as a control.
 - [x] One story per doc-page example, reproducing that example's markup, copy and — for the neutral outline/dash case — its light-background wrapper and warning.
 - [x] Every box in §4's Astro idioms gate ticked.
+
+## 8a. Amendment, 2026-08-30 — default type parameter
+
+Same fix as `plans/components/button.md` §8d: `type Props<Tag extends HTMLTag = 'span'>`. Without the default, omitting `as` left `Tag` unresolved and native `span` attributes were rejected. See `plans/README.md` §5c.
 
 ## 8. Recorded output
 
