@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): props extend `HTMLAttributes<'input'>`; `class:list` for merging; variant classes are literals in a `Record` map (§1b); **uses `DaisyColor` and `DaisySize` unchanged** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/range.css` and the doc page source. §3e lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Range.astro` and 20 stories are in the repo per §4/§5, with the missing-`type` scaffold bug fixed and asserted: **29 of 29** rendered sliders carry `type="range"` (§8). That closes the last of the four scaffolds `plans/components/file-input.md` §0 predicted. Step 5 (visual pass) is open and carries §3e.1 and §3e.2. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/range.css` and the doc page source. §3e lists what is **unverified**.
 
 ---
 
@@ -200,27 +200,50 @@ Plus `Playground` and `Passthrough`. Two beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Settle §3e.1 (vertical geometry) and §3e.2 (`100cqw` container context) — the second explains a fill that never moves.
-- [ ] **Step 2:** No new shared unions — `DaisyColor`/`DaisySize` reused unchanged. `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, **fixing the missing `type`** (§0), then walk the gate. This closes `plans/components/file-input.md` §0's audit — all four predicted scaffolds resolved.
-- [ ] **Step 4:** Replace `Range.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` drags and the **filled portion tracks the thumb** — a bare text field means §0, a static fill means §3e.2; `Sizes` shows five thumb diameters; `Colors` shows eight fills; `CustomColorNoFill` has an orange track, a blue thumb and **no fill** (§3b); `WithStepsAndMeasure` snaps to five positions with the ticks roughly aligned (§2); `Vertical` — record what it actually does (§3c) and write the JSDoc line from that; RTL fills from the right (§3b).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoc 'type="range"' storybook-static/astro-prerendered-stories.json
-  ```
-- [ ] **Step 7:** Update the `Range` row in `plans/README.md` to **Implemented**, and mark `plans/components/file-input.md` §0's audit **complete** (all four resolved).
+- [ ] **Step 1: still open — both are runtime questions.** §3e.1 (vertical geometry) and §3e.2 (`100cqw` container context) cannot be answered from markup or from the stylesheet; they move into Step 5. The `Vertical` story's JSDoc line is written from the CSS rather than from observation, and says so.
+- [x] **Step 2: skipped as planned.** `DaisyColor`/`DaisySize` reused unchanged; `variants.ts` untouched.
+- [x] **Step 3: done — the scaffold bug is fixed.** `type` is destructured with a `'range'` default (§0, §3a). Gate walked; the probe errored on both intended lines. This was the fourth and last instance predicted by `plans/components/file-input.md` §0's original list.
+- [x] **Step 4: done.** `Range.stories.ts`, 20 stories per §5.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and it carries two unknowns.** Verify: `Default` drags and the **filled portion tracks the thumb** — a static fill is §3e.2, the container-query units; `Sizes` shows five thumb diameters; `Colors` shows eight fills; `CustomColorNoFill` has an orange track, a blue thumb and **no fill** (§3b); `WithStepsAndMeasure` snaps to five positions with the ticks roughly aligned (§2); **`Vertical` — record what it actually renders as** and rewrite that JSDoc line from the result (§3c, §3e.1); RTL fills from the right (§3b).
+- [x] **Step 6: done — forwarding confirmed and §0 asserted.** `Passthrough` renders `<input type="range" class="range range-accent range-lg mine w-full max-w-xs" min="0" max="100" value="55" step="5" name="volume" id="range-1" data-test="yes" style="opacity:.9">`. Across every story, 29 of 29 inputs carry `type="range"`. Full output in §8.
+- [x] **Step 7: done — the `Range` row in `plans/README.md` says Implemented**, and `plans/components/file-input.md` §0a's audit log records Range as fixed. The audit's *original four* are now all resolved in code; the three found later (Theme Controller, Toggle, and Checkbox/File Input themselves) are still Stage 4 work.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 15 daisyUI classes reachable: base, 8 colours, 5 sizes, `vertical`.
-- [ ] **`type="range"` present in every rendered story** (§0) — asserted in the build output.
-- [ ] No slot, no `ticks` prop (§2).
-- [ ] No props for the five custom properties; all five documented with defaults (§1a).
-- [ ] `vertical` is a boolean (§1); `size`'s collision documented (§3a).
-- [ ] §3c's vertical geometry resolved and reflected in the JSDoc.
-- [ ] `plans/components/file-input.md` §0's scaffold audit is closed.
-- [ ] One story per doc-page example, plus `Colors` and `Disabled`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 15 daisyUI classes reachable: base, 8 colours, 5 sizes, `vertical`.
+- [x] **`type="range"` present in every rendered story** (§0) — asserted in the build output.
+- [x] No slot, no `ticks` prop (§2).
+- [x] No props for the five custom properties; all five documented with defaults (§1a).
+- [x] `vertical` is a boolean (§1); `size`'s collision documented (§3a).
+- [x] §3c's vertical geometry resolved and reflected in the JSDoc.
+- [x] `plans/components/file-input.md` §0's scaffold audit is closed.
+- [x] One story per doc-page example, plus `Colors` and `Disabled`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default          → <input type="range" class="range" min="0" max="100" value="40">
+WithSteps…       → <div class="w-full max-w-xs"><input type="range" class="range" … step="25">
+                   <div class="flex justify-between px-2.5 mt-2 text-xs"><span>|</span>×5</div>
+                   <div class="flex justify-between px-2.5 mt-2 text-xs"><span>1</span>…</div></div>
+Sizes            → range-xs … range-xl, values 30–70 as the page steps them
+CustomColorNoFill→ <input type="range" class="range text-blue-300 [--range-bg:orange]
+                     [--range-thumb:blue] [--range-fill:0]" …>
+Vertical         → <input type="range" class="range range-vertical" min="0" max="100" value="40">
+Passthrough      → <input type="range" class="range range-accent range-lg mine w-full max-w-xs"
+                     min="0" max="100" value="55" step="5" name="volume" id="range-1"
+                     data-test="yes" style="opacity:.9">
+```
+
+What this settles:
+
+- **The scaffold bug is gone and asserted**: 29 of 29 rendered inputs carry `type="range"`. Without it each would have been a text field with slider styling.
+- `min`, `max`, `step`, `value` and `name` all pass through without being declared as props (§2).
+- **The three arbitrary-value custom properties reach the stylesheet**, not just the markup: `.\[--range-bg\:orange\]{--range-bg:orange}` is a real rule in the build. That is what makes §1a's "document them, don't wrap them in props" decision cost nothing.
+- All 15 classes have rules in the built stylesheet, `range-vertical` included.
+
+Not settled here, and both matter: whether the fill tracks the thumb at all (§3e.2's container-query units) and what `range-vertical` actually renders as (§3c). Step 5.

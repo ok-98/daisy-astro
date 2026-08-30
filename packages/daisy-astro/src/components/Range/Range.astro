@@ -1,12 +1,84 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/range/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisyColor, DaisySize } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'input'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+/**
+ * A slider. `min`, `max`, `step` and `value` are plain attributes and pass
+ * straight through.
+ *
+ * Beyond the colour and size classes, daisyUI exposes five custom properties
+ * with **no class equivalents**, so they are set with arbitrary Tailwind values
+ * rather than props (plan §1a):
+ *
+ * | Property | Default | Effect |
+ * |---|---|---|
+ * | `--range-bg` | 10% of currentColor | the unfilled track |
+ * | `--range-thumb` | `--color-base-100` | the thumb's centre |
+ * | `--range-thumb-size` | from `size` | thumb diameter |
+ * | `--range-progress` | `currentColor` | the filled portion |
+ * | `--range-fill` | `1` | set to `0` to remove the fill entirely |
+ *
+ * The filled portion is `currentColor`, so `class="text-blue-300"` recolours
+ * it. The doc page's "custom color and no fill" example combines the two ideas:
+ * `class="range text-blue-300 [--range-bg:orange] [--range-thumb:blue] [--range-fill:0]"`.
+ *
+ * The thumb and track are vendor pseudo-elements, so ordinary utilities reach
+ * neither — those five properties are the supported seam (plan §3d).
+ *
+ * Tick marks are sibling markup below the input, hand-aligned; daisyUI provides
+ * no tick class and there is no `ticks` prop (plan §2).
+ */
+interface Props extends HTMLAttributes<'input'> {
+  color?: DaisyColor;
+  /**
+   * Shadows the native `size` attribute, which browsers ignore on a range, so
+   * nothing real is lost (plan §3a). Sets `--range-thumb-size`.
+   */
+  size?: DaisySize;
+  /**
+   * daisyUI's only direction class — there is no horizontal counterpart, hence
+   * a boolean rather than a union. The class changes the axis but not the box:
+   * `.range` sets its own width and a thumb-sized height, so a vertical slider
+   * also wants a height from the caller (plan §3c).
+   */
+  vertical?: boolean;
+}
 
-const { class: className, ...rest } = Astro.props;
+// Full literal class names. NEVER `range-${color}` (plans/README.md §1b).
+const COLOR: Record<DaisyColor, string> = {
+  primary: 'range-primary',
+  secondary: 'range-secondary',
+  accent: 'range-accent',
+  neutral: 'range-neutral',
+  info: 'range-info',
+  success: 'range-success',
+  warning: 'range-warning',
+  error: 'range-error',
+};
+
+const SIZE: Record<DaisySize, string> = {
+  xs: 'range-xs',
+  sm: 'range-sm',
+  md: 'range-md',
+  lg: 'range-lg',
+  xl: 'range-xl',
+};
+
+// `type` is on InputHTMLAttributes, so without this default it would sit in
+// `...rest` unset, leaving a TEXT field wearing slider styling — the scaffold's
+// bug, and the fourth and last instance of it (plan §0, §3a).
+const { type = 'range', color, size, vertical = false, class: className, ...rest } = Astro.props;
 ---
 
-<input class:list={['range', className]} {...rest} />
+<input
+  type={type}
+  class:list={[
+    'range',
+    color && COLOR[color],
+    size && SIZE[size],
+    { 'range-vertical': vertical },
+    className,
+  ]}
+  {...rest}
+/>

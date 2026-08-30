@@ -1,12 +1,62 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/radio/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisyColor, DaisySize } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'input'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+/**
+ * A radio input.
+ *
+ * **Give every group a unique `name`.** That attribute is what makes a set of
+ * radios mutually exclusive: without one they are not a group at all, and two
+ * different groups sharing a name become one, so choosing in either clears the
+ * other. daisyUI's doc page opens with this warning (plan §3b).
+ *
+ * The label is a **sibling** inside a `label.label`, not a child — this is a
+ * void element and has no slot (plan §2).
+ *
+ * The disabled state is styled from the native attribute, so there is no
+ * disabled class and no branching to do.
+ */
+interface Props extends HTMLAttributes<'input'> {
+  color?: DaisyColor;
+  /**
+   * Shadows the native `size` attribute. Nothing real is lost: per the HTML
+   * spec `size` applies only to text-like inputs and browsers ignore it on a
+   * radio, so this name is free to mean daisyUI's control size (plan §3c).
+   */
+  size?: DaisySize;
+}
 
-const { class: className, ...rest } = Astro.props;
+// Full literal class names. NEVER `radio-${color}` (plans/README.md §1b).
+const COLOR: Record<DaisyColor, string> = {
+  primary: 'radio-primary',
+  secondary: 'radio-secondary',
+  accent: 'radio-accent',
+  neutral: 'radio-neutral',
+  info: 'radio-info',
+  success: 'radio-success',
+  warning: 'radio-warning',
+  error: 'radio-error',
+};
+
+const SIZE: Record<DaisySize, string> = {
+  xs: 'radio-xs',
+  sm: 'radio-sm',
+  md: 'radio-md',
+  lg: 'radio-lg',
+  xl: 'radio-xl',
+};
+
+// `type` is on InputHTMLAttributes, so without this default it would sit in
+// `...rest` unset — and an input with no type is a TEXT field wearing radio
+// styling: circular, unselectable, silent. That was the scaffold's bug
+// (plan §0, §3a). Destructured rather than hardcoded, so a caller can still
+// override it deliberately.
+const { type = 'radio', color, size, class: className, ...rest } = Astro.props;
 ---
 
-<input class:list={['radio', className]} {...rest} />
+<input
+  type={type}
+  class:list={['radio', color && COLOR[color], size && SIZE[size], className]}
+  {...rest}
+/>

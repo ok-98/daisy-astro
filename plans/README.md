@@ -388,8 +388,8 @@ Copy the example markup from the doc page into the story rather than inventing d
 | File Input | `file-input` | Planned — [`plans/components/file-input.md`](components/file-input.md) (scaffold missing `type="file"`, same bug as Checkbox) |
 | Filter | `filter` | Planned — [`plans/components/filter.md`](components/filter.md) (options are `Button as="input"`; label comes from `aria-label`) |
 | Label | `label` | Planned — [`plans/components/label.md`](components/label.md) (`Label`+`FloatingLabel`; neither is a plain form label) |
-| Radio | `radio` | Planned — [`plans/components/radio.md`](components/radio.md) (scaffold missing `type="radio"`; unique `name` per group) |
-| Range | `range` | Planned — [`plans/components/range.md`](components/range.md) (scaffold missing `type="range"`; 5 custom properties, no props) |
+| Radio | `radio` | **Implemented** — [`plans/components/radio.md`](components/radio.md) (15 stories; scaffold's missing `type` fixed; visual pass open) |
+| Range | `range` | **Implemented** — [`plans/components/range.md`](components/range.md) (20 stories; scaffold's missing `type` fixed; visual pass open) |
 | Rating | `rating` | Planned — [`plans/components/rating.md`](components/rating.md) (radio group + Mask shapes; `:has(~ :checked)` fill) |
 | Select | `select` | Planned — [`plans/components/select.md`](components/select.md) (first component where the `size` collision has a real cost) |
 | Text Input | `text-input` | Planned — [`plans/components/text-input.md`](components/text-input.md) (dual root: input or label wrapper; type narrowed to daisyUI documented twelve) |

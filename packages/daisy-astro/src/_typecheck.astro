@@ -24,6 +24,8 @@ import Countdown from './components/Countdown/Countdown.astro';
 import CountdownValue from './components/Countdown/CountdownValue.astro';
 import Divider from './components/Divider/Divider.astro';
 import Progress from './components/Progress/Progress.astro';
+import Radio from './components/Radio/Radio.astro';
+import Range from './components/Range/Range.astro';
 import RadialProgress from './components/RadialProgress/RadialProgress.astro';
 import Skeleton from './components/Skeleton/Skeleton.astro';
 import Kbd from './components/Kbd/Kbd.astro';
@@ -70,6 +72,12 @@ import Steps from './components/Steps/Steps.astro';
 
 <RadialProgress value={70}>70%</RadialProgress>
 <RadialProgress value={70} size="12rem" thickness="2px" class="text-primary" style="opacity:.5" id="r" data-test="y" />
+
+<Radio name="plan" value="free" checked />
+<Radio name="plan" color="primary" size="lg" disabled id="rd" data-test="y" class="mine" />
+
+<Range min="0" max="100" value="40" />
+<Range color="primary" size="lg" step="25" vertical id="rg" data-test="y" class="[--range-fill:0]" />
 
 <Skeleton class="h-32 w-32" />
 <Skeleton text as="span">ok</Skeleton>

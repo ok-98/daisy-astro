@@ -42,8 +42,8 @@ Full log:
 |---|---|---|
 | Checkbox | `checkbox.md` §0 | bug — missing `type="checkbox"` |
 | File Input | this plan | bug — missing `type="file"` |
-| Radio | `radio.md` §3c | bug |
-| Range | `range.md` | bug; closed the original list |
+| Radio | `radio.md` §3c | bug — **fixed in code 2026-08-30**, asserted: 45/45 rendered radios carry `type` |
+| Range | `range.md` | bug; closed the original list — **fixed in code 2026-08-30**, asserted: 29/29 rendered sliders carry `type` |
 | OTP | `otp.md` §0 | different defect — wrong root element (`div` → `label`) |
 | Text Input | `text-input.md` §0i | **clean** — `type="text"` is the spec default |
 | Theme Controller | `theme-controller.md` §0b | bug — reopened the audit, corrected the criterion |

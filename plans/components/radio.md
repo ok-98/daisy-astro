@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): props extend `HTMLAttributes<'input'>`; `class:list` for merging; variant classes are literals in a `Record` map (§1b); **uses `DaisyColor` and `DaisySize` unchanged** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/radio.css` and the doc page source. §3d lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Radio.astro` and 15 stories are in the repo per §4/§5, with the missing-`type` scaffold bug fixed and asserted: **45 of 45** rendered radios carry `type="radio"` (§8). Step 5 (visual pass) is open. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/radio.css` and the doc page source. §3d lists what is **unverified**.
 
 ---
 
@@ -159,29 +159,50 @@ Plus `Playground` and `Passthrough`. Two beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Check §3d.2 (name isolation) before writing the eleven single-colour stories.
-- [ ] **Step 2:** No new shared unions — `DaisyColor`/`DaisySize` reused unchanged. `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, **fixing the missing `type`** (§0), then walk the gate. **Also open `Range/Range.astro`** and confirm the same bug — it is the last of the four `plans/components/file-input.md` §0 predicted.
-- [ ] **Step 4:** Replace `Radio.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` shows two circles where **selecting one clears the other**; a bare text field means §0; `Sizes` shows five diameters, each independently checkable (§3b); `Colors` shows eight fills; `Disabled` is dimmed and inert; `CustomColors` recolours via `checked:` variants; `SharedNameCollision` misbehaves as documented.
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoc 'type="radio"' storybook-static/astro-prerendered-stories.json
-  ```
-  Every rendered radio must carry it (§0).
-- [ ] **Step 7:** Update the `Radio` row in `plans/README.md` to **Implemented**, and record in `plans/components/file-input.md` §0's audit that Radio is resolved.
+- [x] **Step 1: done at the markup level.** Every story scopes its `name`, and the build output confirms the prefixes are distinct — whether two groups on one docs page truly stay independent is a runtime question and moves to Step 5, where `SharedNameCollision` demonstrates both halves.
+- [x] **Step 2: skipped as planned.** `DaisyColor`/`DaisySize` reused unchanged; `variants.ts` untouched.
+- [x] **Step 3: done — the scaffold bug is fixed.** `type` is destructured with a `'radio'` default, so the component can no longer render a text field wearing radio styling (§0, §3a). Gate walked; the probe errored on all five intended lines. **`Range/Range.astro` was checked in the same pass and had the same bug** — fixed there too, in the same commit.
+- [x] **Step 4: done.** `Radio.stories.ts`, 15 stories per §5, each with a story-scoped `name` prefix.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: `Default` shows two circles where **selecting one clears the other**; `Sizes` shows five diameters, each independently checkable (§3b); `Colors` shows eight fills; `Disabled` is dimmed and inert; `CustomColors` recolours through `checked:` variants; and `SharedNameCollision` misbehaves exactly as documented — choosing in the left pair clears the right.
+- [x] **Step 6: done — forwarding confirmed and §0 asserted.** `Passthrough` renders `<input type="radio" class="radio radio-accent radio-lg mine" name="pass-1" value="free" checked id="radio-1" data-test="yes" style="opacity:.9">`. Across every story, 45 of 45 inputs carry `type="radio"`. Full output in §8.
+- [x] **Step 7: done — the `Radio` row in `plans/README.md` says Implemented**, and `plans/components/file-input.md` §0a's audit log records Radio as fixed.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 14 daisyUI classes reachable: base, 8 colours, 5 sizes.
-- [ ] **`type="radio"` present in every rendered story** (§0) — asserted in the build output.
-- [ ] `color` uses `DaisyColor` and `size` uses `DaisySize`, imported, neither redeclared.
-- [ ] No slot, no wrapping label (§2).
-- [ ] No invented axis — no style/variant prop, no `disabled` branching (§1).
-- [ ] JSDoc leads with the unique-`name` rule (§3b) and documents the `size` collision (§3c).
-- [ ] Stories use scoped `name` prefixes, and `Sizes` follows the doc page's **rendered** markup with the discrepancy noted (§3b).
-- [ ] `plans/components/file-input.md` §0's audit is updated for Radio (and Range checked).
-- [ ] One story per doc-page example, plus `Colors` and `SharedNameCollision`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 14 daisyUI classes reachable: base, 8 colours, 5 sizes.
+- [x] **`type="radio"` present in every rendered story** (§0) — asserted in the build output.
+- [x] `color` uses `DaisyColor` and `size` uses `DaisySize`, imported, neither redeclared.
+- [x] No slot, no wrapping label (§2).
+- [x] No invented axis — no style/variant prop, no `disabled` branching (§1).
+- [x] JSDoc leads with the unique-`name` rule (§3b) and documents the `size` collision (§3c).
+- [x] Stories use scoped `name` prefixes, and `Sizes` follows the doc page's **rendered** markup with the discrepancy noted (§3b).
+- [x] `plans/components/file-input.md` §0's audit is updated for Radio (and Range checked).
+- [x] One story per doc-page example, plus `Colors` and `SharedNameCollision`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default       → <input type="radio" class="radio" name="default-1" checked>
+                <input type="radio" class="radio" name="default-1">
+Sizes         → <input type="radio" class="radio radio-xs" name="sizes-0" checked> … radio-xl / sizes-4
+Primary       → <input type="radio" class="radio radio-primary" name="primary-1" checked> + unchecked pair
+Disabled      → <input type="radio" class="radio" name="disabled-1" disabled checked> …
+CustomColors  → <input type="radio" class="radio bg-red-100 border-red-300 checked:bg-red-200
+                  checked:text-red-600 checked:border-red-600" name="custom-1" checked> …
+SharedName…   → four radios all name="collide", then two independent pairs
+Passthrough   → <input type="radio" class="radio radio-accent radio-lg mine" name="pass-1" value="free"
+                  checked id="radio-1" data-test="yes" style="opacity:.9">
+```
+
+What this settles:
+
+- **The scaffold bug is gone and cannot come back unnoticed**: 45 of 45 rendered inputs carry `type="radio"`. Without it every one of them would have been a text field with a circular border.
+- Group names are scoped per story, so the eleven single-colour stories do not interfere on a shared docs page (§3b).
+- `checked` and `disabled` survive the args pipeline as real boolean attributes (§3d.1), and the `checked:` Tailwind variants in `CustomColors` have rules in the built stylesheet.
+- All 14 classes have rules in the built stylesheet.
+
+Not settled here: whether selecting one radio clears its group-mates, which is the whole point of the component. Step 5.
