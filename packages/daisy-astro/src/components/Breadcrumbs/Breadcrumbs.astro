@@ -1,14 +1,71 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/breadcrumbs/
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+type BreadcrumbsList = 'ul' | 'ol' | 'menu';
 
-const { class: className, ...rest } = Astro.props;
+// A breadcrumb trail. daisyUI defines exactly one class for this component and
+// does everything else through descendant rules, so there are no variant props.
+//
+// Two deliberate departures from daisyUI's own example markup, both
+// accessibility rather than style:
+//
+//   - The root defaults to `nav`, not `div`. A breadcrumb trail is a navigation
+//     landmark, and the class carries no element qualifier so the tag is free.
+//     Pass `as="div"` for daisyUI's literal markup (plan §3b).
+//   - `aria-label` defaults to "Breadcrumb", and stays overridable.
+//
+// `aria-current="page"` on the last item is still the caller's job — it belongs
+// on slot content, which this component does not own.
+//
+// Two quirks of daisyUI's CSS worth knowing, neither patched here:
+//
+//   - Every element inside an item gets `cursor: pointer` and a hover
+//     underline, including a non-navigable last crumb. daisyUI's own example
+//     sidesteps this by putting bare text in the final item, with no wrapping
+//     element — the rules all target child elements of the item, so bare text
+//     matches none of them. Otherwise the fix is a caller class such as
+//     `cursor-default no-underline` (plan §3e).
+//   - The chevron separator comes from `li + *::before` and is not
+//     configurable: no variable, no modifier class. There is deliberately no
+//     `separator` prop; a caller who wants a slash overrides that pseudo-element
+//     themselves (plan §3d). RTL is already handled in the CSS.
+//
+// NOTE: no angle brackets in this comment, deliberately — neither direction.
+// An angle bracket anywhere in the frontmatter — comments included — truncates Astro's
+// TypeScript parse, and Props silently stops being inferred
+// (plans/README.md §5c). The `= 'nav'` default type parameter is that same
+// section's second rule.
+type Props<Tag extends HTMLTag = 'nav'> = Polymorphic<{
+  as: Tag;
+  /**
+   * The list element. daisyUI's selector names `ul`, `ol` and `menu` and styles
+   * all three identically. Defaults to `ul`, matching the doc page, so the
+   * rendered inner markup is a byte-for-byte diff against it — but `'ol'` is
+   * the semantically stronger choice for an ordered path (plan §3c).
+   */
+  listAs?: BreadcrumbsList;
+}>;
+
+// No variant class map: there is exactly one class (plan §1). `listAs` holds
+// element names rather than class names, so plans/README.md §1b does not apply.
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const {
+  as: Tag = 'nav',
+  listAs: List = 'ul',
+  'aria-label': ariaLabel = 'Breadcrumb',
+  class: className,
+  ...rest
+} = Astro.props as Props<HTMLTag>;
+
+// The list below is a required DIRECT child: `.breadcrumbs > ul` is a child
+// selector, and without a match nothing is laid out at all — no flex row, no
+// separators. The component renders it so that every call site does not have to
+// (plan §3a). The slot takes the list items.
 ---
 
-<div class:list={['breadcrumbs', className]} {...rest}>
-  <slot />
-</div>
+<Tag class:list={['breadcrumbs', className]} aria-label={ariaLabel} {...rest}>
+  <List>
+    <slot />
+  </List>
+</Tag>

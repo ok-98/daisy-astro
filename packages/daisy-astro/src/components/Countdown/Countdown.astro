@@ -1,10 +1,29 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/countdown/
 import type { HTMLAttributes } from 'astro/types';
 
+/**
+ * daisyUI's Countdown is a **transition effect, not a timer** — it renders a
+ * number from 0 to 999 with rolling digits, and changing that number is the
+ * caller's job. There is no script here, and no `to` / `from` / `interval` /
+ * `autostart` prop, because daisyUI ships no such behaviour (plan §0).
+ *
+ * To make it count, update three things together on the value span — the
+ * `--value` custom property, the `aria-label`, and the text node — from
+ * whatever runs the page. Updating only `--value` silently breaks the
+ * accessible name (plan §3e).
+ *
+ * Children must be `CountdownValue`s, plus any literal separators as bare text.
+ * daisyUI styles the direct children of this element, so a wrapper element
+ * around them leaves the digits `visibility: hidden` — invisible, not merely
+ * unstyled (plan §3f.2).
+ *
+ * Size and font are caller classes. The doc examples use `font-mono`, which
+ * together with daisyUI's `tabular-nums` is what stops the digits dancing
+ * (plan §3c).
+ */
 interface Props extends HTMLAttributes<'span'> {}
+
+// No variant class map: daisyUI defines exactly one class here (plan §1).
 
 const { class: className, ...rest } = Astro.props;
 ---

@@ -1,0 +1,54 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+/**
+ * One digit group inside a `Countdown`.
+ *
+ * This element carries no daisyUI class — it is styled entirely by the parent's
+ * child selector, so it must be a **direct** child of `Countdown` (plan §0a).
+ *
+ * It exists as a component because the same number has to appear in three
+ * places at once: the `--value` custom property, the `aria-label`, and the text
+ * node. The visible digits are CSS generated content and the text node is
+ * `visibility: hidden`, so a missing `aria-label` means screen readers get
+ * nothing at all — an accessibility bug rather than a visual one. One `value`
+ * prop emits all three, so they cannot drift (plan §3a).
+ */
+interface Props extends HTMLAttributes<'span'> {
+  /**
+   * 0–999. daisyUI clamps and wraps rather than erroring: negatives read as 0,
+   * and 1000 or more wraps around (plan §1a).
+   */
+  value: number;
+  /**
+   * Minimum digits shown. The element's width grows with the digit count, so a
+   * value crossing 9 to 10 widens the box and shifts everything after it;
+   * `digits={2}` pins the width and stops a clock jittering on rollover
+   * (plan §3c). daisyUI's default is 1.
+   */
+  digits?: 1 | 2 | 3;
+}
+
+const {
+  value,
+  digits,
+  // `style` is native and would otherwise be clobbered by the custom
+  // properties below (plan §3b).
+  style,
+  // The accessible name. Defaulted, still overridable (plan §3a).
+  'aria-label': ariaLabel = String(value),
+  'aria-live': ariaLive = 'polite',
+  ...rest
+} = Astro.props;
+
+// A CSS custom property in an inline style — not a class name, so
+// plans/README.md §1b's interpolation ban does not apply here (plan §3b).
+const vars = `--value:${value};${digits ? ` --digits:${digits};` : ''}`;
+---
+
+<span
+  style={[vars, style].filter(Boolean).join(' ')}
+  aria-label={ariaLabel}
+  aria-live={ariaLive}
+  {...rest}>{value}</span>

@@ -14,7 +14,7 @@
 - Stories run on `@storybook-astro/framework`: import the `.astro` file as `component`, pass slot content via `args.slots`.
 - `astro check` is the type gate, not `tsc` (§5b).
 
-> **Status:** Planned. Nothing in §4 is implemented. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/breadcrumbs.css`), the doc page source (`packages/docs/src/routes/(routes)/components/breadcrumbs/+page.md` in `saadeghi/daisyui`), and `astro@7.2.4`'s `astro-jsx.d.ts`. §3f lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Breadcrumbs.astro` and 8 stories are in the repo per §4/§5. §3f.1 is answered in the build output — in all 8 stories the list element follows the root immediately and `<li>` follows the list, with nothing injected between (§8). Building it also sharpened `plans/README.md` §5c: a bare `>` in a frontmatter comment breaks generic inference too, and this component's own JSDoc tripped it. Step 5 (visual pass) is open. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/breadcrumbs.css`), the doc page source (`packages/docs/src/routes/(routes)/components/breadcrumbs/+page.md` in `saadeghi/daisyui`), and `astro@7.2.4`'s `astro-jsx.d.ts`. §3f lists what is **unverified**.
 
 ---
 
@@ -279,38 +279,53 @@ export const Passthrough = {
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3f.1 first — whether slot content lands directly inside the list element. Blocking (§3a), and shared with `plans/components/aura.md` §3e.1 and `plans/components/alert.md` §3d.2; record the answer in all three.
-- [ ] **Step 2:** No new shared unions, and no use of the existing ones — there are no variant axes (§1). `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Breadcrumbs.astro` dummy scaffold per §4, then walk the Astro idioms gate. **Run the probe** — the generic-inference failure is silent.
-- [ ] **Step 4:** Replace `Breadcrumbs.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Breadcrumbs`, verify:
-  - `Playground` renders and every control changes the markup.
-  - Items sit on **one horizontal row** with chevrons between them — if they stack vertically with no separators, the list is not a direct child (§3a) and nothing else in this list will be right.
-  - The first item has **no** leading chevron and every later item has one (§3d).
-  - `OrderedList` looks identical to `Default` (§3c).
-  - `MaxWidth` scrolls horizontally instead of wrapping, and check §3f.3 while there.
-  - `CurrentPage`: the marked item shows a default cursor and no hover underline, while a plain `<span>` item shows a pointer (§3e).
-  - `WithIcons`: the SVGs are present (§3f.2), and icon-plus-text is spaced by the `gap:.5rem` from `li > *`.
-  - Flip the Storybook canvas to RTL if the toolbar offers it: chevrons should point the other way with no code change (§3d).
-- [ ] **Step 6:** Confirm forwarding via `Passthrough` — `id`, `data-*`, `style`, `class` all survive, and `aria-label` reads `You are here`, not `Breadcrumb`. Headless check:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<(nav|div)[^>]*class="[^"]*breadcrumbs[^"]*"[^>]*><[uo]l>' storybook-static/astro-prerendered-stories.json | head
-  ```
-  That pattern also answers §3f.1: the list must follow the root immediately, with no wrapper between them, and `<li>` must follow the list.
-- [ ] **Step 7:** Update the `Breadcrumbs` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done — §3f.1 is answered, and the answer is yes.** Slot content lands directly inside the list element: `class="breadcrumbs …"><ul><li>` in every story, 8 of 8, with no wrapper anywhere (§8). Same answer as the library-wide result recorded in `plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3, now confirmed for this component's specific child selector.
+- [x] **Step 2: skipped as planned.** No variant axes; `variants.ts` untouched.
+- [x] **Step 3: done.** Scaffold replaced per §4 and the gate walked, with two deviations: the "required direct child" note is a frontmatter comment rather than an HTML comment in the template (an HTML comment there ships into every rendered breadcrumb), and `Props` carries the `= 'nav'` default type parameter from `plans/README.md` §5c.
+
+  **The probe earned its keep.** It initially reported *seven* errors where six were intended, and the extra was `<Breadcrumbs as="div">` — a valid call — failing with `Type '"div"' is not assignable to type '"nav"'`. Cause: a `>` inside this file's own JSDoc, in the line describing `li > *`. Rewritten without it, the probe reports exactly the six intended errors. Rule and evidence in `plans/README.md` §5c.
+- [x] **Step 4: done.** `Breadcrumbs.stories.ts`, 8 stories per §5, reproducing the doc page's inner markup verbatim.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: items sit on one horizontal row with chevrons between them; the first has no leading chevron and every later one does (§3d); `OrderedList` looks identical to `Default` (§3c); `MaxWidth` scrolls sideways rather than wrapping, and check §3f.3 while there; `CurrentPage`'s marked item shows a default cursor and no hover underline while the plain span still shows a pointer (§3e); `WithIcons` spaces icon from text via daisyUI's own gap; flip the canvas to RTL if the toolbar offers it and confirm the chevrons reverse with no code change (§3d).
+- [x] **Step 6: done — forwarding confirmed and §3f.1 settled.** `Passthrough` renders `<nav aria-label="You are here" id="crumbs-1" data-test="yes" style="letter-spacing:2px" class="breadcrumbs mine text-sm">` — the `aria-label` default overridden rather than duplicated. Full output in §8.
+- [x] **Step 7: done — the `Breadcrumbs` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] The single daisyUI class is applied to the root, and no others exist to expose (§1).
-- [ ] No invented axis — no `size`, no `color`, no `separator` prop (§3d), no `items` prop (§2).
-- [ ] The list element is always rendered, so `.breadcrumbs > ul` matches — verified in rendered HTML, not by eye (§3a, §3f.1).
-- [ ] `class` merges onto the root, and there is deliberately no `listClass` (§3a).
-- [ ] Root defaults to `nav` with `aria-label="Breadcrumb"`, both overridable, and the deviation from daisyUI's `div` is documented in the JSDoc (§3b).
-- [ ] `listAs` renders `ul`/`ol`/`menu`, defaulting to `ul` (§3c).
-- [ ] `aria-current` is documented as the caller's responsibility and shown in `CurrentPage` (§3b).
-- [ ] `type Props` precedes every `const`, destructure annotated `as Props<HTMLTag>`, and the probe confirms props are actually accepted.
-- [ ] `Playground` exposes every prop as a control.
-- [ ] One story per doc-page example, reproducing that example's inner markup and copy exactly; `AsDiv` covers the root-tag difference.
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] The single daisyUI class is applied to the root, and no others exist to expose (§1).
+- [x] No invented axis — no `size`, no `color`, no `separator` prop (§3d), no `items` prop (§2).
+- [x] The list element is always rendered, so `.breadcrumbs > ul` matches — verified in rendered HTML, not by eye (§3a, §3f.1).
+- [x] `class` merges onto the root, and there is deliberately no `listClass` (§3a).
+- [x] Root defaults to `nav` with `aria-label="Breadcrumb"`, both overridable, and the deviation from daisyUI's `div` is documented in the JSDoc (§3b).
+- [x] `listAs` renders `ul`/`ol`/`menu`, defaulting to `ul` (§3c).
+- [x] `aria-current` is documented as the caller's responsibility and shown in `CurrentPage` (§3b).
+- [x] `type Props` precedes every `const`, destructure annotated `as Props<HTMLTag>`, and the probe confirms props are actually accepted.
+- [x] `Playground` exposes every prop as a control.
+- [x] One story per doc-page example, reproducing that example's inner markup and copy exactly; `AsDiv` covers the root-tag difference.
+- [x] Every box in §4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default      → <nav aria-label="Breadcrumb" class="breadcrumbs text-sm"><ul>
+                 <li><a>Home</a></li><li><a>Documents</a></li><li>Add Document</li></ul></nav>
+OrderedList  → …<ol><li><a>Home</a></li>…</ol>…                     same markup, ol instead of ul
+AsDiv        → <div aria-label="Breadcrumb" class="breadcrumbs text-sm"><ul>…    daisyUI's literal root
+WithIcons    → <li><a><svg … class="h-4 w-4 stroke-current">…</svg>Home</a></li> …
+MaxWidth     → <nav … class="breadcrumbs max-w-xs text-sm"><ul><li>Long text 1</li>…
+CurrentPage  → …<li><span aria-current="page" class="cursor-default no-underline hover:no-underline">
+                 Add Document</span></li><li><span>looks clickable, is not</span></li>…
+Passthrough  → <nav aria-label="You are here" id="crumbs-1" data-test="yes"
+                 style="letter-spacing:2px" class="breadcrumbs mine text-sm">…
+```
+
+What this settles:
+
+- **§3f.1, the blocking one.** `class="…breadcrumbs…"><ul><li` matches **8 of 8** breadcrumbs across the stories: the list is a direct child of the root and the items are direct children of the list, so `.breadcrumbs > ul` and `& > li` both match and nothing is injected in between.
+- The `nav` root and the `aria-label` default are emitted, and `Passthrough` overrides the label rather than duplicating it — the destructure-with-default mechanism working as intended (§3b).
+- `listAs` swaps the element with no other change (§3c), and `AsDiv` reproduces the doc page's root exactly for comparison.
+- Inline SVG survives into the items (§3f.2).
+
+Not settled here: the chevrons, the pointer-cursor quirk and the horizontal scroll are all visual. Step 5.

@@ -18,7 +18,10 @@
 import Avatar from './components/Avatar/Avatar.astro';
 import AvatarGroup from './components/Avatar/AvatarGroup.astro';
 import Badge from './components/Badge/Badge.astro';
+import Breadcrumbs from './components/Breadcrumbs/Breadcrumbs.astro';
 import Button from './components/Button/Button.astro';
+import Countdown from './components/Countdown/Countdown.astro';
+import CountdownValue from './components/Countdown/CountdownValue.astro';
 import Divider from './components/Divider/Divider.astro';
 import Progress from './components/Progress/Progress.astro';
 import RadialProgress from './components/RadialProgress/RadialProgress.astro';
@@ -47,6 +50,12 @@ import Status from './components/Status/Status.astro';
 <Mask shape="squircle" src="/a.webp" alt="A" class="w-40 h-40" />
 <Mask shape="star" half="1" class="w-20 h-40" src="/a.webp" alt="A" />
 <Mask as="div" shape="heart" class="w-24">ok</Mask>
+
+<Breadcrumbs><li>Home</li></Breadcrumbs>
+<Breadcrumbs as="div" listAs="ol" class="text-sm" aria-label="You are here" id="bc" data-test="y"><li>Home</li></Breadcrumbs>
+
+<Countdown class="font-mono text-2xl"><CountdownValue value={59} /></Countdown>
+<CountdownValue value={24} digits={2} class="mine" style="color:red" id="cv" data-test="y" />
 
 <Divider>OR</Divider>
 <Divider />

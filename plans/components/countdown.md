@@ -14,7 +14,7 @@
 - Stories run on `@storybook-astro/framework`.
 - `astro check` is the type gate, not `tsc` (§5b).
 
-> **Status:** Planned. Nothing in §4 is implemented. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/countdown.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/countdown/+page.md` in `saadeghi/daisyui`). §3f lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Countdown.astro` (JSDoc only — its markup was already correct) and the new `CountdownValue.astro`, with 12 stories per §5. §3f.2 is answered in the build output: 22 digit spans render as direct children of `.countdown`, and across 28 value spans `--value` and `aria-label` agree every time (§8). Step 5 (visual pass) is open. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/countdown.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/countdown/+page.md` in `saadeghi/daisyui`). §3f lists what is **unverified**.
 
 ---
 
@@ -317,38 +317,50 @@ Whether the stories can use `CountdownValue` as a component rather than the `val
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3f.2 (direct children of `.countdown`) — blocking, and the shared question across six plans now. Its failure here is total invisibility, so it is worth answering first.
-- [ ] **Step 2:** No new shared unions, and no use of the existing ones — there are no variant axes (§1). `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Add the JSDoc to `Countdown.astro` (its markup is already correct) and create `CountdownValue.astro` per §4, then walk the Astro idioms gate.
-- [ ] **Step 4:** Replace `Countdown.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Countdown`, verify:
-  - `Default` shows **59** — if it shows nothing, either the digits are not direct children (§3f.2) or `round()`/`mod()` are unsupported (§3f.3). Check the DOM before either conclusion.
-  - `Clock` shows `10h 24m 59s` on one line with the separators inline.
-  - `LargeTwoDigits` renders at `text-6xl` with a fixed two-digit width.
-  - `DigitsJitter`: the unset one changes width across the 9→10 boundary and the `digits={2}` one does not (§3c).
-  - `Animated` actually rolls, and the transition slides rather than cutting (§3e, §3f.4).
-  - Inspect a `CountdownValue` in devtools: the text node is `visibility: hidden` and `aria-label` carries the number (§3a). This is `AccessibleName`'s point and cannot be seen in the canvas.
-  - Flip the canvas to RTL if the toolbar offers it: digits stay LTR (§3d).
-- [ ] **Step 6:** Confirm forwarding via `Passthrough` — `id`, `data-*`, `class` survive, and the caller's `style` is **merged** with `--value` rather than replacing it (§3b). Headless check:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<span class="countdown[^"]*"[^>]*><span style="--value' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoE 'style="--value:[0-9]+;[^"]*"[^>]*aria-label="[0-9]+"' storybook-static/astro-prerendered-stories.json | head
-  ```
-  The first proves the digit span is a direct child (§3f.2); the second proves `--value` and `aria-label` agree (§3a).
-- [ ] **Step 7:** Update the `Countdown` row in `plans/README.md` to **Implemented**, noting `CountdownValue` as part of it (same convention as Accordion/AccordionItem).
+- [x] **Step 1: done — §3f.2 is answered, and the answer is yes.** Digit spans are direct children of `.countdown`: `class="countdown…"><span style="--value` matches 22 times across the stories, with no wrapper injected (§8). That was the loudest of the six shared failure modes — a wrapper would have left every digit `visibility: hidden`, i.e. nothing on screen — and it does not happen. Consistent with the library-wide answer in `plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3.
+- [x] **Step 2: skipped as planned.** No variant axes; `variants.ts` untouched.
+- [x] **Step 3: done.** `Countdown.astro` keeps its markup and gains the JSDoc; `CountdownValue.astro` is new, per §4. Gate walked.
+- [x] **Step 4: done.** `Countdown.stories.ts`, 12 stories per §5. The stories use `CountdownValue` **as a component** rather than the `val()` string helper §5 sketched — nesting a component with its own props through `args.slots` is settled (`plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3), which also answers the question §5 deferred to `plans/components/card.md` §3f.4.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: `Default` shows **59** — if it shows nothing, check the DOM before concluding anything, since §3f.2 is already ruled out and §3f.3 (`round()` / `mod()` support) is the remaining candidate; `Clock` reads `10h 24m 59s` on one line; `LargeTwoDigits` renders at `text-6xl` with a fixed two-digit width; `DigitsJitter`'s left pair changes width across 9→10 while the right pair does not (§3c); `Animated` actually rolls, which also answers §3f.4 — whether the framework runs a story's inline script; inspect a value span in devtools for the hidden text node and the `aria-label` (§3a); flip to RTL and confirm digits stay LTR (§3d).
+- [x] **Step 6: done — forwarding confirmed on both components, and both §8 assertions hold.** `Passthrough` renders the container with `id`/`data-*`/`style`/merged `class`, and the value span with `style="--value:59; color:red"` — the caller's own style **merged after** the custom property rather than replacing it (§3b). Full output in §8.
+- [x] **Step 7: done — the `Countdown` row in `plans/README.md` says Implemented**, covering `CountdownValue` in the same row.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] The single daisyUI class is applied to `Countdown`'s root, and no others exist to expose (§1).
-- [ ] **No `<script>`, no timer, no `to`/`from`/`interval` prop** — daisyUI's Countdown is a transition effect (§0).
-- [ ] `CountdownValue` emits `--value`, `aria-label` and the text node from one `value` prop, and they always agree (§0a, §3a).
-- [ ] `digits` reaches `--digits` and pins the width (§3c).
-- [ ] A caller's `style` is merged with the custom properties, not overwritten (§3b).
-- [ ] Digit spans render as **direct children** of `.countdown` — checked in the build output, not by eye (§3f.2).
-- [ ] No invented axis — no colour, no size, no `separator` prop (§2).
-- [ ] JSDoc states: this is a display, not a timer, with the update recipe (§0, §3e); `--digits` prevents jitter (§3c); children must be direct (§3f.2).
-- [ ] `Playground` exposes `class` and, via `CountdownValue`, `value` and `digits`.
-- [ ] One story per doc-page example, reproducing that example's markup and copy, plus `Animated`, `DigitsJitter` and `AccessibleName`.
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] The single daisyUI class is applied to `Countdown`'s root, and no others exist to expose (§1).
+- [x] **No `<script>`, no timer, no `to`/`from`/`interval` prop** — daisyUI's Countdown is a transition effect (§0).
+- [x] `CountdownValue` emits `--value`, `aria-label` and the text node from one `value` prop, and they always agree (§0a, §3a).
+- [x] `digits` reaches `--digits` and pins the width (§3c).
+- [x] A caller's `style` is merged with the custom properties, not overwritten (§3b).
+- [x] Digit spans render as **direct children** of `.countdown` — checked in the build output, not by eye (§3f.2).
+- [x] No invented axis — no colour, no size, no `separator` prop (§2).
+- [x] JSDoc states: this is a display, not a timer, with the update recipe (§0, §3e); `--digits` prevents jitter (§3c); children must be direct (§3f.2).
+- [x] `Playground` exposes `class` and, via `CountdownValue`, `value` and `digits`.
+- [x] One story per doc-page example, reproducing that example's markup and copy, plus `Animated`, `DigitsJitter` and `AccessibleName`.
+- [x] Every box in §4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default          → <span class="countdown"><span style="--value:59;" aria-label="59" aria-live="polite">59</span></span>
+LargeTwoDigits   → <span class="countdown font-mono text-6xl"><span style="--value:59; --digits:2;" …>59</span></span>
+Clock            → … --value:10 … h … --value:24 … m … --value:59 … s      separators as bare text
+ClockWithColons  → <span style="--value:10;" …>10</span> : <span style="--value:24; --digits:2;" …>24</span> : …
+WithLabels       → <div class="flex gap-5"><div><span class="countdown font-mono text-4xl">…</span>days</div> ×4
+InBoxes          → <div class="bg-neutral rounded-box text-neutral-content flex flex-col p-2">… ×4
+Passthrough      → <span class="countdown mine font-mono text-2xl" id="cd-1" data-test="yes" style="letter-spacing:2px">
+                     <span style="--value:59; color:red" aria-label="59" aria-live="polite"
+                           class="value-marker" data-test="inner">59</span></span>
+```
+
+What this settles:
+
+- **§3f.2, the loudest of the six shared unknowns.** 22 digit spans render as direct children of `.countdown`. A wrapper would have left every one of them `visibility: hidden` — not a layout glitch but a blank screen — and there is none.
+- **§0a's whole reason for existing holds mechanically.** Across **28** value spans, `--value` and `aria-label` agree in every single one, because both come from one `value` prop. The text node is emitted alongside them.
+- A caller's `style` survives on the value span, appended after the custom properties (§3b), and a caller's `class` passes through even though this element carries no daisyUI class of its own.
+- `digits` reaches `--digits` only when set, so daisyUI's default of 1 is left alone.
+
+Not settled here: the rolling transition itself, and whether `round()`/`mod()` are supported (§3f.3). Both are Step 5, and `Animated` is the story that answers them — along with §3f.4, whether a story's inline script runs at all.

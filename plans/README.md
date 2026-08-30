@@ -240,17 +240,21 @@ const { as: Tag = 'button', color, ...rest } = Astro.props as Props<HTMLTag>;
 
 **Two more ways `Props` inference dies silently**, both found on 2026-08-30 while building Mask and Status, and both with the same symptom as the `const` rule above — the component renders fine while every call site errors with "not assignable to `IntrinsicAttributes`" (or, worse, accepts anything at all):
 
-1. **A less-than sign anywhere in the frontmatter — comments included — truncates the TypeScript parse.** Astro's compiler treats it as the start of the template, so everything after it, `type Props` included, stops being TypeScript. Bisected on 2026-08-30 against a generic component:
+1. **An angle bracket anywhere in the frontmatter — either direction, comments included — breaks `Props` inference.** A `<` reads as the start of the template, so everything after it, `type Props` included, stops being TypeScript. A bare `>` breaks it too, in a subtler way: the type survives but its generic parameter stops being inferred from `as`, so `<Breadcrumbs as="div">` fails with `Type '"div"' is not assignable to type '"nav"'` — the *default* type argument wins. Found first as `<`, on 2026-08-30; the `>` half surfaced the same day when a JSDoc line reading ``the rules all target `li > *` `` made exactly one call site fail. Bisected against a generic component:
 
    | Comment content above `type Props` | Result |
    |---|---|
    | plain prose, or `as="div"` in backticks | inference works |
    | `a < b and c > d` | **broken** — and accepts *anything*, no errors at all |
+   | `a < b` alone | **broken**, same way |
+   | `a > b` alone | **broken** — `as` no longer narrows `Tag` |
    | `Defaults to <img>` | **broken** |
    | ```` ```astro <Status color="info" /> ``` ```` | **broken** |
    | the same JSDoc with the markup line removed | works |
 
-   It is **not** about JSDoc vs `//` — both forms break with a `<` and both work without one. So: **no angle brackets in frontmatter comments.** Write "a native `kbd` element", not `` `<kbd>` ``; put markup examples in the stories, where they are executable anyway. The zero-error variant is the dangerous one: a component that accepts every prop looks perfectly healthy.
+   It is **not** about JSDoc vs `//` — both forms break with an angle bracket and both work without one. So: **no angle brackets in frontmatter comments, in either direction.** Write "a native `kbd` element", not `` `<kbd>` ``, and "child elements of the item" rather than `` `li > *` ``; put markup examples in the stories, where they are executable anyway.
+
+   Two failure shapes, and the quiet ones are worse than the loud one: every call site erroring is easy to spot, a component that silently accepts *every* prop is not, and a single call site failing on `as` looks like a bug in that one usage rather than in the component. `src/_typecheck.astro` catches all three.
 
 2. **A polymorphic `Props` needs a default type parameter, or the default tag's own attributes are rejected.** `type Props<Tag extends HTMLTag> = Polymorphic<{ as: Tag; … }>` only resolves `Tag` when the caller passes `as`. Omit `as` and `Tag` stays unresolved, so `<Button type="submit">`, `<Badge title="t">` and `<Mask src="/a.webp">` are all type errors — ordinary calls, on the component's *own* default element. Declare the default the component actually renders:
 
@@ -339,7 +343,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Carousel | `carousel` | Planned — [`plans/components/carousel.md`](components/carousel.md) (wrapper + `CarouselItem`; current code is a dummy scaffold) |
 | Chat bubble | `chat-bubble` | Planned — [`plans/components/chat-bubble.md`](components/chat-bubble.md) (`Chat`/`ChatBubble`/`ChatHeader`/`ChatFooter`; `chat-image` served by `Avatar`) |
 | Collapse | `collapse` | Planned — [`plans/components/collapse.md`](components/collapse.md) (single impl of the 7 `collapse-*` classes; supersedes `AccordionItem`) |
-| Countdown | `countdown` | Planned — [`plans/components/countdown.md`](components/countdown.md) (wrapper + `CountdownValue`; transition effect, not a timer) |
+| Countdown | `countdown` | **Implemented** — [`plans/components/countdown.md`](components/countdown.md) (`Countdown` + `CountdownValue`, one row for both; 12 stories; visual pass open) |
 | Diff | `diff` | Planned — [`plans/components/diff.md`](components/diff.md) (native CSS `resize`, no JS; narrowest browser support — no drag on iOS Safari) |
 | Hover 3D card | `hover-3d-card` | Planned — [`plans/components/hover-3d-card.md`](components/hover-3d-card.md) (component generates the 8 hover zones; doc examples pending) |
 | Hover Gallery | `hover-gallery` | Planned — [`plans/components/hover-gallery.md`](components/hover-gallery.md) (first child is a resting frame; caps at 10) |
@@ -354,7 +358,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 ### Navigation
 | Component | Slug | Status |
 |---|---|---|
-| Breadcrumbs | `breadcrumbs` | Planned — [`plans/components/breadcrumbs.md`](components/breadcrumbs.md) (current code is a dummy scaffold) |
+| Breadcrumbs | `breadcrumbs` | **Implemented** — [`plans/components/breadcrumbs.md`](components/breadcrumbs.md) (8 stories; `nav` root by default; visual pass open) |
 | Dock | `dock` | Planned — [`plans/components/dock.md`](components/dock.md) (`Dock`/`DockItem`/`DockLabel`; position:fixed is built in) |
 | Link | `link` | **Implemented** — [`plans/components/link.md`](components/link.md) (15 stories; `hover` removes the underline; visual pass open) |
 | Megamenu | `megamenu` | Planned — [`plans/components/megamenu.md`](components/megamenu.md) (Popover API + anchor positioning; max 10 items) |
