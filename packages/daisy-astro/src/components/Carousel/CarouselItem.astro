@@ -1,0 +1,33 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * One slide.
+ *
+ * **No variant props, deliberately.** The snap modifiers live on the parent
+ * `Carousel` and reach items through descendant selectors, so a `snap` prop
+ * here would emit a class nothing targets — it would look applied and do
+ * nothing (plan §3a).
+ *
+ * **Size it yourself.** `flex: none` means the item never grows or shrinks, so
+ * its width is whatever its content or your class says. Every doc example sets
+ * one: `w-full` for a single slide at a time, `w-1/2` for two (plan §3c).
+ *
+ * **It is `box-sizing: content-box`**, against Tailwind's global
+ * `border-box` — the one place daisyUI touches the box model here. Padding and
+ * borders therefore **add** to the width instead of fitting inside it, so
+ * `class="w-full p-4"` is wider than the container and breaks the snap
+ * alignment with no error. That is why the full-bleed example puts its padding
+ * on the container and its rounding on the image (plan §3b).
+ *
+ * Give it an `id` to target from an anchor-link control — that is the whole
+ * API behind daisyUI's interactive examples (plan §2).
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['carousel-item', className]} {...rest}>
+  <slot />
+</div>

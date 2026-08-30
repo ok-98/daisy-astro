@@ -340,7 +340,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Aura | `aura` | Planned — [`plans/components/aura.md`](components/aura.md) (current code is a dummy scaffold) |
 | Badge | `badge` | **Implemented** — [`plans/components/badge.md`](components/badge.md) (16 stories; §3b mechanism corrected; visual pass open) |
 | Card | `card` | Planned — [`plans/components/card.md`](components/card.md) (wrapper + `CardBody`/`CardTitle`/`CardActions`; current code is a dummy scaffold) |
-| Carousel | `carousel` | Planned — [`plans/components/carousel.md`](components/carousel.md) (wrapper + `CarouselItem`; current code is a dummy scaffold) |
+| Carousel | `carousel` | **Implemented** — [`plans/components/carousel.md`](components/carousel.md) (`Carousel` + `CarouselItem`, one row for both; 15 stories; no JS by design; visual pass open) |
 | Chat bubble | `chat-bubble` | Planned — [`plans/components/chat-bubble.md`](components/chat-bubble.md) (`Chat`/`ChatBubble`/`ChatHeader`/`ChatFooter`; `chat-image` served by `Avatar`) |
 | Collapse | `collapse` | Planned — [`plans/components/collapse.md`](components/collapse.md) (single impl of the 7 `collapse-*` classes; supersedes `AccordionItem`) |
 | Countdown | `countdown` | **Implemented** — [`plans/components/countdown.md`](components/countdown.md) (`Countdown` + `CountdownValue`, one row for both; 12 stories; visual pass open) |

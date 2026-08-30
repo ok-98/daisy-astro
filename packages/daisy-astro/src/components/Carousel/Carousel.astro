@@ -1,14 +1,74 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/carousel/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type CarouselSnap = 'start' | 'center' | 'end';
+type CarouselDirection = 'horizontal' | 'vertical';
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A CSS scroll-snap container — **not** a slider widget.
+ *
+ * daisyUI's carousel is seven CSS rules and no JavaScript. Its two
+ * "interactive" doc examples are plain anchor links that let the browser's
+ * fragment navigation do the scrolling. So this component ships no script and
+ * no `autoplay`, `interval` or `activeIndex` prop: anyone who wants a real
+ * slider wants a slider library, and that is not what this is (plan §0).
+ *
+ * **It has no width of its own.** The class is `inline-flex`, so without a
+ * `class="w-96"` (or a height, for `direction="vertical"`) the carousel is
+ * exactly as wide as its content and never scrolls — which reads as the
+ * component doing nothing (plan §3d).
+ *
+ * **The scrollbar is hidden**, in both the standard and WebKit forms. A scroll
+ * container with no focusable content is not keyboard-reachable in Chrome or
+ * Safari, and with the scrollbar gone there is no cue that more content
+ * exists. Two remedies, neither defaulted: give this element `tabindex="0"`
+ * plus an `aria-label` when the items are not independently focusable, or add
+ * anchor-link controls the way daisyUI's own examples do. A `tabindex` here
+ * adds a tab stop with no accessible name, which can be worse than the problem
+ * for a carousel of links — hence the caller's choice (plan §3e).
+ *
+ * Slot content must be the items themselves. This is a flex container and the
+ * items are `flex: none`, so a wrapper element would become the single flex
+ * child and every slide would collapse into one non-snapping column
+ * (plan §3g.1).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * Where items settle when scrolling stops. Goes on the **container**, not
+   * the item: daisyUI reaches the items through descendant selectors like
+   * `.carousel-center .carousel-item`, so this class on an item would match
+   * nothing and be silently ignored (plan §3a). Omitted behaves as `start`.
+   */
+  snap?: CarouselSnap;
+  /**
+   * `vertical` needs a **height** on this element and `h-full` on the items —
+   * an easy pairing to get half right (plan §3d). Note daisyUI does not reset
+   * `overflow-x` for it, so an over-wide item makes a vertical carousel drag
+   * sideways too, with both scrollbars hidden (plan §3f).
+   */
+  direction?: CarouselDirection;
+}
+
+// Full literal class names. NEVER `carousel-${snap}` — an interpolated class
+// gets no CSS from daisyUI (plans/README.md §1b).
+const SNAP: Record<CarouselSnap, string> = {
+  start: 'carousel-start',
+  center: 'carousel-center',
+  end: 'carousel-end',
+};
+
+const DIRECTION: Record<CarouselDirection, string> = {
+  horizontal: 'carousel-horizontal',
+  vertical: 'carousel-vertical',
+};
+
+const { snap, direction, class: className, ...rest } = Astro.props;
 ---
 
-<div class:list={['carousel', className]} {...rest}>
+<div
+  class:list={['carousel', snap && SNAP[snap], direction && DIRECTION[direction], className]}
+  {...rest}
+>
   <slot />
 </div>

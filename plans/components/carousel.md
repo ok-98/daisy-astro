@@ -14,7 +14,7 @@
 - Stories run on `@storybook-astro/framework`: import the `.astro` file as `component`, pass slot content via `args.slots`.
 - `astro check` is the type gate, not `tsc` (§5b).
 
-> **Status:** Planned. Nothing in §4 is implemented. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/carousel.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/carousel/+page.md` in `saadeghi/daisyui`). §3g lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Carousel.astro` and the new `CarouselItem.astro`, with 13 + 2 stories per §5. §3g.1 is answered in the build output: **17 of 17** carousels render `carousel-item` as a direct child, so the flex row is intact (§8). Step 5 (visual pass) is open and carries §3g.3 and §3g.4. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/carousel.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/carousel/+page.md` in `saadeghi/daisyui`). §3g lists what is **unverified**.
 
 ---
 
@@ -136,7 +136,7 @@ Nothing to fix in the component — this is daisyUI's CSS. Named here so that "m
 
 ### 3g. Unverified assumptions
 
-1. **Does slot content land as direct children of `.carousel`?** Blocking, and for a different reason than its siblings. `.carousel-start .carousel-item` is a **descendant** selector, so an injected wrapper would not break the snap classes — but `.carousel` is a **flex container** and `.carousel-item` is `flex: none`, so a wrapper would become the single flex item and every slide would collapse into one non-snapping column. Same question as `plans/components/aura.md` §3e.1, `plans/components/alert.md` §3d.2 and `plans/components/breadcrumbs.md` §3f.1 — different failure, one shared answer. Record it in all of them.
+1. ~~**Does slot content land as direct children of `.carousel`?**~~ **Answered 2026-08-30: yes.** `<div class="carousel…"><div class="carousel-item` matches **17 of 17** carousels across the stories — nothing is injected between the container and its slides, so the flex row survives and each item stays its own flex child. Consistent with the library-wide answer in `plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3; this was the variant where a wrapper would have collapsed every slide into one non-snapping column rather than merely misaligning them.
 2. **Slot sanitization vs `<img>` and the nav overlay.** Every example is images; the next/prev example nests `<a class="btn btn-circle">` inside an absolutely-positioned `<div>` inside each item. Conservative sanitizer defaults (`plans/README.md` §4) could drop either. Shared with `plans/components/card.md` §3f.2.
 3. **Do the doc page's `img.daisyui.com` URLs load in the Storybook sandbox?** Shared with `plans/components/avatar.md` §3e.2 and `plans/components/card.md` §3f.3 — pick one local placeholder for all three if not.
 4. **Anchor-link scrolling inside a Storybook iframe.** The interactive examples rely on `href="#slide2"` fragment navigation. Inside an iframe with its own URL this normally still works, but it is exactly the kind of thing that doesn't — and if it fails, the component is fine and the story is not. Check before filing a bug against either.
@@ -331,40 +331,55 @@ Whether the stories can use `CarouselItem` as a component rather than a raw HTML
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3g.1 (direct children of the flex container) — blocking, and the shared question across four plans now. Settle §3g.3 (image URLs) with Avatar and Card, and check §3g.4 (fragment links in the Storybook iframe) before writing the interactive stories.
-- [ ] **Step 2:** No new shared unions — both unions are local, and there is no colour or size axis (§1). `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Carousel.astro` dummy scaffold and create `CarouselItem.astro` per §4, then walk the Astro idioms gate. Pay attention to the `snap`-on-container check (§3a).
-- [ ] **Step 4:** Replace `Carousel.stories.ts` and create `CarouselItem.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Carousel`, verify:
-  - `Playground` renders and every control changes the markup.
-  - Dragging `SnapStart` **snaps** — releasing mid-slide settles on a slide boundary rather than stopping free. If it scrolls freely, the items are not direct flex children (§3g.1) and nothing else below will be meaningful.
-  - `SnapStart` / `SnapCenter` / `SnapEnd` settle a slide to the left edge / middle / right edge respectively.
-  - No scrollbar is visible in any story (§3e) — expected, not a bug.
-  - `Vertical` scrolls **down**, with items filling the height (§3d).
-  - `FullWidthItems` shows exactly one slide at a time; `HalfWidthItems` shows two.
-  - `PaddedItem` overflows past its neighbour, unlike the unpadded one (§3b).
-  - `WithIndicators` and `WithNextPrev`: clicking a control jumps to the right slide (§3g.4).
-  - `KeyboardAccessible`: tab into the second carousel and scroll it with the arrow keys; confirm the bare one cannot be reached (§3e).
-- [ ] **Step 6:** Confirm forwarding via `Passthrough` — `id`, `data-*`, `style`, `class` all survive on both components. Headless check, which also answers §3g.1:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="carousel[^"]*"[^>]*><div class="carousel-item' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoE '<div id="slide[0-9]" class="carousel-item[^"]*"' storybook-static/astro-prerendered-stories.json | head
-  ```
-  The first must match: `carousel-item` immediately inside `carousel`, no wrapper between. The second confirms `id` passthrough, which the anchor examples depend on.
-- [ ] **Step 7:** Update the `Carousel` row in `plans/README.md` to **Implemented**, noting `CarouselItem` as part of it (same convention as Accordion/AccordionItem).
+- [x] **Step 1: done for §3g.1** — slot children are direct children in all 17 rendered carousels. §3g.2 is moot library-wide (sanitization is off, `plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3) and the nav overlay survives verbatim in `WithNextPrev`. §3g.3 (image URLs) and §3g.4 (fragment links inside the Storybook iframe) are runtime and move to Step 5 — §3g.4 in particular is worth checking **before** filing a bug against either the component or the story.
+- [x] **Step 2: skipped as planned.** Both unions local, no colour or size axis; `variants.ts` untouched.
+- [x] **Step 3: done.** `Carousel.astro` replaced and `CarouselItem.astro` created per §4; gate walked. The probe confirms §3a from the other side: `<CarouselItem snap="center">` is a **type error**, so the misplacement this plan warns about cannot be written at all. `autoplay`, `snap="middle"` and `direction="diagonal"` errored too.
+- [x] **Step 4: done.** `Carousel.stories.ts` (13) and `CarouselItem.stories.ts` (2). The item stories nest their subject in a real `Carousel`, since a slide is only meaningful as a flex child of a scroll-snap container.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and this component is almost entirely scroll behaviour.** Verify: dragging `SnapStart` **snaps** rather than scrolling free — if it scrolls free, nothing else below is meaningful; `SnapStart` / `SnapCenter` / `SnapEnd` settle a slide left / middle / right; no scrollbar is visible anywhere (§3e — expected, not a bug); `Vertical` scrolls **down** with items filling the height (§3d); `FullWidthItems` shows one slide and `HalfWidthItems` two; `PaddedItem` overflows past its neighbour (§3b); `WithIndicators` and `WithNextPrev` jump to the right slide when a control is clicked (§3g.4); `KeyboardAccessible`'s second carousel takes focus and scrolls with the arrow keys while the bare one cannot be reached (§3e).
+- [x] **Step 6: done — forwarding confirmed on both, and §3g.1 settled.** `Passthrough` renders `<div class="carousel mine w-96 rounded-box" id="carousel-1" data-test="yes" style="outline:1px dashed">`, and `CarouselItem`'s renders `<div class="carousel-item mine w-full" id="slide1" data-test="yes" …>`. Nine items carry an `id` and twelve anchors target one, which is the whole API behind the interactive examples. Full output in §8.
+- [x] **Step 7: done — the `Carousel` row in `plans/README.md` says Implemented**, covering `CarouselItem` in the same row.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 7 daisyUI classes from §1 are reachable: `carousel` always, `carousel-item` always, 3 snaps via `snap`, 2 directions via `direction`.
-- [ ] **No `<script>`, no autoplay/interval/activeIndex prop** — daisyUI's carousel is pure CSS plus anchor links (§0).
-- [ ] No invented axis — no `color`, no `size`, no `itemWidth` (§3c).
-- [ ] `snap` is a `Carousel` prop and `CarouselItem` has no variant props (§3a).
-- [ ] Slot content renders as **direct children** of `.carousel` — checked in the build output, not by eye (§3g.1).
-- [ ] `id` passes through `CarouselItem` so the anchor-link examples work (§2).
-- [ ] Caller `class` merges through `class:list` in both components — load-bearing, since the carousel has no width of its own (§3d).
-- [ ] JSDoc states: items are caller-sized (§3c), items are `content-box` (§3b), the container needs a width or height (§3d), and the scrollbar is hidden with the two accessibility remedies (§3e).
-- [ ] `Playground` exposes every prop as a control; `CarouselItem` has its own `Playground` and `Passthrough`.
-- [ ] One story per doc-page example, reproducing that example's markup and copy, plus `KeyboardAccessible` and `PaddedItem`.
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] All 7 daisyUI classes from §1 are reachable: `carousel` always, `carousel-item` always, 3 snaps via `snap`, 2 directions via `direction`.
+- [x] **No `<script>`, no autoplay/interval/activeIndex prop** — daisyUI's carousel is pure CSS plus anchor links (§0).
+- [x] No invented axis — no `color`, no `size`, no `itemWidth` (§3c).
+- [x] `snap` is a `Carousel` prop and `CarouselItem` has no variant props (§3a).
+- [x] Slot content renders as **direct children** of `.carousel` — checked in the build output, not by eye (§3g.1).
+- [x] `id` passes through `CarouselItem` so the anchor-link examples work (§2).
+- [x] Caller `class` merges through `class:list` in both components — load-bearing, since the carousel has no width of its own (§3d).
+- [x] JSDoc states: items are caller-sized (§3c), items are `content-box` (§3b), the container needs a width or height (§3d), and the scrollbar is hidden with the two accessibility remedies (§3e).
+- [x] `Playground` exposes every prop as a control; `CarouselItem` has its own `Playground` and `Passthrough`.
+- [x] One story per doc-page example, reproducing that example's markup and copy, plus `KeyboardAccessible` and `PaddedItem`.
+- [x] Every box in §4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+SnapCenter    → <div class="carousel carousel-center rounded-box"><div class="carousel-item">
+                  <img src="…photo-1559703248-dcaaec9fab78.webp" alt="Tailwind CSS component" /></div> ×7
+Vertical      → <div class="carousel carousel-vertical h-96 rounded-box">
+                  <div class="carousel-item h-full">…                      height on the container, h-full on items
+FullBleed     → <div class="carousel carousel-center max-w-md p-4 space-x-4 bg-neutral rounded-box">
+                  <div class="carousel-item"><img … class="rounded-box" …>   padding on the container, never the item
+WithIndicators→ <div class="carousel w-full"><div class="carousel-item w-full" id="item1">…
+                  <div class="flex justify-center w-full py-2 gap-2"><a href="#item1" class="btn btn-xs">1</a>…
+WithNextPrev  → <div class="carousel-item relative w-full" id="slide1"><img …>
+                  <div class="absolute flex justify-between … top-1/2">
+                    <a href="#slide4" class="btn btn-circle">❮</a><a href="#slide2" class="btn btn-circle">❯</a></div>
+Passthrough   → <div class="carousel mine w-96 rounded-box" id="carousel-1" data-test="yes" style="outline:1px dashed">
+Item/Pass…    → <div class="carousel-item mine w-full" id="slide1" data-test="yes" style="outline:1px dashed">
+```
+
+What this settles:
+
+- **§3g.1, the blocking one.** 17 of 17 carousels render a `carousel-item` as their immediate first child. Because `.carousel` is a flex container and items are `flex: none`, a wrapper here would not have misaligned the slides — it would have collapsed all of them into a single non-snapping column.
+- **`snap` cannot be misplaced.** It is a `Carousel` prop only, and the probe confirms `<CarouselItem snap="center">` is a compile error — so §3a's silent failure is unreachable through this API.
+- **`id` passthrough works**, which is the entire mechanism behind the two interactive examples: 9 items carry one, 12 anchors point at one.
+- The nav overlay nests inside its item verbatim — an `items` array prop would have made that markup impossible (§2).
+- All 7 classes have rules in the built stylesheet.
+
+Not settled here, and it is most of the component: whether it **snaps**. Scroll behaviour, the hidden scrollbar, fragment-link navigation and keyboard reachability are all Step 5.
