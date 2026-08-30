@@ -24,6 +24,7 @@ import Carousel from './components/Carousel/Carousel.astro';
 import CarouselItem from './components/Carousel/CarouselItem.astro';
 import Countdown from './components/Countdown/Countdown.astro';
 import CountdownValue from './components/Countdown/CountdownValue.astro';
+import Diff from './components/Diff/Diff.astro';
 import Divider from './components/Divider/Divider.astro';
 import Otp from './components/Otp/Otp.astro';
 import Progress from './components/Progress/Progress.astro';
@@ -67,6 +68,8 @@ import Steps from './components/Steps/Steps.astro';
 
 <Countdown class="font-mono text-2xl"><CountdownValue value={59} /></Countdown>
 <CountdownValue value={24} digits={2} class="mine" style="color:red" id="cv" data-test="y" />
+
+<Diff class="aspect-16/9 rounded-field" item1Label="After" item2Label="Before" id="df" data-test="y" tabindex="-1">x</Diff>
 
 <Divider>OR</Divider>
 <Divider />

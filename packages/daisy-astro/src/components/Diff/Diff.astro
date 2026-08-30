@@ -1,14 +1,82 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/diff/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'figure'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+/**
+ * Side-by-side comparison with a draggable divider.
+ *
+ * **The slider is native CSS `resize`, not JavaScript.** The resizer is an
+ * invisible, scaled-up browser resize grip, and the split width lives in the
+ * browser's own resize handling — it cannot be read or set from markup. So
+ * there is no `position`, `value` or `onChange` prop, and no script (plan §0).
+ *
+ * **Give it an aspect ratio or a height** — `class="aspect-16/9"`, as both doc
+ * examples do. The class sets a width but no height, and its grid rows are
+ * `1fr 1.8rem 1fr`; with nothing to distribute, both `1fr` rows collapse to
+ * zero and all that renders is a thin strip. That looks broken while being
+ * perfectly correct (plan §3c).
+ *
+ * `item1` is the **clipped overlay** and `item2` the full-width base beneath
+ * it: dragging shrinks item 1 to reveal item 2. The slots are named after
+ * daisyUI's classes rather than before/after, because which one reads as
+ * "before" depends entirely on the content (plan §3a).
+ *
+ * **Content inside either item is `pointer-events: none`** — the whole surface
+ * is a drag target, so links and buttons in there are inert (plan §3a).
+ *
+ * **Keyboard is a two-position toggle, not a slider**: focusing the figure
+ * snaps the split to 95%, focusing the first item snaps it to 5%. There are no
+ * arrow-key controls, and both tabindex values are required for it to work at
+ * all (plan §3d).
+ *
+ * **Not supported on iOS Safari.** daisyUI ships a dedicated branch there that
+ * removes the drag handle and leaves only the focus toggle, so a component
+ * whose whole purpose is dragging does not drag on iPhones (plan §3f). Chrome
+ * 105, Firefox 110 and Safari 16 are the desktop floors.
+ */
+interface Props extends HTMLAttributes<'figure'> {
+  /**
+   * `aria-label` for the first item. daisyUI marks both items `role="img"` and
+   * gives neither a name — and item 1 is focusable, so an unnamed one is worse
+   * than an unnamed static image. The inner image's own `alt` does not help:
+   * it names the image, not the labelled-as-image wrapper. Nothing is
+   * defaulted, because "Item 1" would be a worse name than none (plan §3e).
+   */
+  item1Label?: string;
+  /** `aria-label` for the second item — same reasoning. */
+  item2Label?: string;
+}
 
-const { class: className, ...rest } = Astro.props;
+// No variant class map: daisyUI defines one component class and three part
+// classes here, and no modifiers at all (plan §1).
+
+const {
+  item1Label,
+  item2Label,
+  // Required for the keyboard affordance (plan §3d). Defaulted so it stays
+  // overridable — the mechanism from plans/components/alert.md §3b. Item 1's
+  // own tabindex is emitted unconditionally, since removing it would silently
+  // delete half the keyboard behaviour.
+  tabindex = '0',
+  class: className,
+  ...rest
+} = Astro.props;
+
+// Slot content must be the DIRECT child of each item wrapper: daisyUI's child
+// selectors are what apply the absolute positioning and `object-fit: cover`
+// that keep the two halves aligned. An element in between would take those
+// rules itself and leave the real content at its natural size (plan §3g.1).
+//
+// The resizer below is always empty — it is the native resize grip, made
+// invisible and stretched (plan §0).
 ---
 
-<figure class:list={['diff', className]} {...rest}>
-  <slot />
+<figure class:list={['diff', className]} tabindex={tabindex} {...rest}>
+  <div class="diff-item-1" role="img" tabindex="0" aria-label={item1Label}>
+    <slot name="item1" />
+  </div>
+  <div class="diff-item-2" role="img" aria-label={item2Label}>
+    <slot name="item2" />
+  </div>
+  <div class="diff-resizer"></div>
 </figure>

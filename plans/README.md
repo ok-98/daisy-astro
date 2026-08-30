@@ -344,7 +344,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Chat bubble | `chat-bubble` | Planned — [`plans/components/chat-bubble.md`](components/chat-bubble.md) (`Chat`/`ChatBubble`/`ChatHeader`/`ChatFooter`; `chat-image` served by `Avatar`) |
 | Collapse | `collapse` | Planned — [`plans/components/collapse.md`](components/collapse.md) (single impl of the 7 `collapse-*` classes; supersedes `AccordionItem`) |
 | Countdown | `countdown` | **Implemented** — [`plans/components/countdown.md`](components/countdown.md) (`Countdown` + `CountdownValue`, one row for both; 12 stories; visual pass open) |
-| Diff | `diff` | Planned — [`plans/components/diff.md`](components/diff.md) (native CSS `resize`, no JS; narrowest browser support — no drag on iOS Safari) |
+| Diff | `diff` | **Implemented** — [`plans/components/diff.md`](components/diff.md) (7 stories; native CSS `resize`, no JS; **no drag on iOS Safari**; visual pass open) |
 | Hover 3D card | `hover-3d-card` | Planned — [`plans/components/hover-3d-card.md`](components/hover-3d-card.md) (component generates the 8 hover zones; doc examples pending) |
 | Hover Gallery | `hover-gallery` | Planned — [`plans/components/hover-gallery.md`](components/hover-gallery.md) (first child is a resting frame; caps at 10) |
 | Kbd | `kbd` | **Implemented** — [`plans/components/kbd.md`](components/kbd.md) (10 stories; no `as`, no `keys` prop; visual pass open) |
