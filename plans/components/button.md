@@ -328,6 +328,8 @@ export const Responsive = {
 
 - [x] **Step 4: done — `LoginButtons` ships three providers** (GitHub, Google, Apple), the §5 recommendation, with a comment pointing at the doc page for the other 15.
 
+- [x] **Amendment, 2026-08-30 — the `WithLoadingSpinner` fallback is cleared.** That story used a hardcoded `<span class="loading loading-spinner">` while Loading was unimplemented, marked with `TODO(daisy-astro)` per `plans/IMPLEMENTATION-ORDER.md` §5.2. Loading landed the same day and the story now composes the real component, with no colour class — the spinner inherits the button's foreground through `currentColor`.
+
 - [x] **Step 5: done — every remaining doc-example story is written.** 21 stories: `Playground`, `Default`, `Sizes`, `Responsive`, `Colors`, `Soft`, `Outline`, `Dash`, `Active`, `GhostAndLink`, `Wide`, `Block`, `AnyHtmlTag`, `Disabled`, `DisabledLink`, `Shapes`, `WithIcon`, `WithLoadingSpinner`, `LoginButtons`, `Variants`, `Passthrough`.
 
   The multi-variant sweeps (`Sizes`, `Colors`, `Soft`, `Outline`, `Dash`, `Active`, …) use the framework's own slot values rather than any DOM helper: a story may `render: () => [...]` a list mixing HTML strings with configured-component descriptors (`{ component, props, slots }`), so the sweep is `row(...)` + `btn(...)` — two arrow functions, six lines, in the story file. See `plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3 for the shape.

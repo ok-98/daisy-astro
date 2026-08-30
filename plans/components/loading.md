@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): props extend `HTMLAttributes<'span'>`; `class:list` for merging; variant classes are literals in a `Record` map (§1b); **uses `DaisySize`, not `DaisyColor`** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/loading.css` and the doc page source. §3e lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Loading.astro` and 12 stories are in the repo per §4/§5; markup, type probe and CSS coverage verified (§8). Step 5 (visual pass) is open, and it carries the one question that matters most here — whether the SMIL masks actually animate (§3e.1). Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/loading.css` and the doc page source. §3e lists what is **unverified**.
 
 ---
 
@@ -166,26 +166,47 @@ Plus `Playground` and `Passthrough`. Three beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Nothing to re-read. Check §3e (SMIL and `mask-image`) before judging any story.
-- [ ] **Step 2:** No new shared unions — `DaisySize` reused unchanged. `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, then walk the gate.
-- [ ] **Step 4:** Replace `Loading.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: all six variants **animate** — a static shape means §3e.1; five distinct sizes per variant; `Colors` shows eight hues; `DefaultIsSpinner` is indistinguishable (§3b); `InButton` matches the button's text colour; then enable "reduce motion" in the browser and confirm the spinner **slows rather than stops** (§3c).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<span class="loading[^"]*"[^>]*></span>' storybook-static/astro-prerendered-stories.json | head
-  ```
-  Every rendered indicator must be empty (§2).
-- [ ] **Step 7:** Update the `Loading` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done at the markup level.** All 12 `loading-*` rules are in the built stylesheet. SMIL support (§3e.1) is a runtime question and moves to Step 5 — a static shape there means that, not the component.
+- [x] **Step 2: skipped as planned.** `DaisySize` reused unchanged; `variants.ts` untouched.
+- [x] **Step 3: done.** Scaffold replaced per §4 and the gate walked. Two probe lines from §4's listing were dropped as unachievable: `color="primary"` cannot error on any component (`plans/components/avatar.md` §3e.3), and passing children to a slotless component is not a type error either (`plans/components/status.md` §3e.4). The remaining lines — `variant="pulse"`, `size="2xl"` — errored as intended.
+- [x] **Step 4: done.** `Loading.stories.ts`, 12 stories per §5. `InButton` composes the real `Button`.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: all six variants **animate** — a static shape is §3e.1, the single most likely cause; five distinct sizes per variant; `Colors` shows eight hues; `DefaultIsSpinner` is indistinguishable (§3b); `InButton` matches the button's foreground with no colour class; then enable reduce-motion in the browser and confirm the spinner **slows rather than stops** (§3c).
+- [x] **Step 6: done — forwarding confirmed and the empty-element rule asserted.** `Passthrough` renders `<span class="loading loading-ring loading-lg text-primary mine" id="loading-1" data-test="yes" style="opacity:.9" aria-label="Loading"></span>`, and no rendered `.loading` element in any story contains content (§2, checked across all twelve). Full output in §8.
+- [x] **Step 7: done — the `Loading` row in `plans/README.md` says Implemented.** Landing this also cleared the `TODO(daisy-astro)` in `Button.stories.ts`: `WithLoadingSpinner` now composes the real component instead of a hardcoded span (`plans/IMPLEMENTATION-ORDER.md` §5.2).
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 12 daisyUI classes reachable: base, 6 variants, 5 sizes.
-- [ ] `size` uses `DaisySize`, imported, not redeclared.
-- [ ] No slot, and every rendered element is empty (§2).
-- [ ] No invented axis — **no `color` prop** (§3a), no motion prop (§3c), no ARIA defaults (§3d).
-- [ ] JSDoc states: colour via `text-*` (§3a), the base class is already a spinner (§3b), reduced motion slows rather than stops (§3c), and it is decorative until labelled (§3d).
-- [ ] One story per doc-page example, plus `DefaultIsSpinner`, `InButton` and `WithAccessibleName`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 12 daisyUI classes reachable: base, 6 variants, 5 sizes.
+- [x] `size` uses `DaisySize`, imported, not redeclared.
+- [x] No slot, and every rendered element is empty (§2).
+- [x] No invented axis — **no `color` prop** (§3a), no motion prop (§3c), no ARIA defaults (§3d).
+- [x] JSDoc states: colour via `text-*` (§3a), the base class is already a spinner (§3b), reduced motion slows rather than stops (§3c), and it is decorative until labelled (§3d).
+- [x] One story per doc-page example, plus `DefaultIsSpinner`, `InButton` and `WithAccessibleName`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Spinner…Infinity → <span class="loading loading-spinner loading-xs"></span> … loading-xl   (one row per variant)
+Colors           → <span class="loading loading-spinner text-primary"></span> ×8   ← Tailwind utilities, not daisyUI classes
+DefaultIsSpinner → <span class="loading"></span><span class="loading loading-spinner"></span>
+InButton         → <button class="btn btn-primary"><span class="loading loading-spinner"></span>Loading</button>
+                   <button class="btn btn-primary btn-square"><span class="loading loading-spinner"></span></button>
+WithAccessible…  → <span class="loading loading-bars"></span>
+                   <span class="loading loading-bars" aria-label="Loading"></span>
+Passthrough      → <span class="loading loading-ring loading-lg text-primary mine" id="loading-1"
+                     data-test="yes" style="opacity:.9" aria-label="Loading"></span>
+```
+
+What this settles:
+
+- **Every rendered `.loading` element is empty**, across all twelve stories (§2).
+- `DefaultIsSpinner` shows the bare `loading` class alongside the explicit one — confirming §3b's claim at the markup level, though whether they *look* identical is Step 5.
+- Colour is a `text-*` class in the class list, never a `loading-*` one, so §3a's "no colour prop" decision is visible in the output.
+- `InButton` carries no colour class at all, which is the point: the spinner inherits through `currentColor`.
+- All 12 classes have rules in the built stylesheet.
+
+Not settled here, and it is the whole component: **whether any of it moves.** The animation is SMIL inside a mask data-URI, so it cannot be verified from markup or from the stylesheet. Step 5.

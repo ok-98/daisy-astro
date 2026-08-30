@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): props forward every native attribute for the rendered element; `class:list` for merging; variant classes are literals in a `Record` map (§1b); **uses `DaisyColor` unchanged** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/link.css` and the doc page source. §3d lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-30). `Link.astro` and 15 stories are in the repo per §4/§5; markup, type probe and CSS coverage verified (§8). Two deviations from §4's listing, both from `plans/README.md` §5c: the frontmatter comment carries no angle brackets, and `Props` takes the `= 'a'` default type parameter. Step 5 (visual pass) is open — every claim in §3b and §3c is a hover state, which markup cannot show. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/link.css` and the doc page source. §3d lists what is **unverified**.
 
 ---
 
@@ -166,26 +166,45 @@ Plus `Playground` and `Passthrough`. Three beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Nothing to re-read. Note §3d.1 removes the slot-wrapping unknown.
-- [ ] **Step 2:** No new shared unions — `DaisyColor` reused unchanged. `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, then walk the gate. **Run the probe** — the generic failure is silent.
-- [ ] **Step 4:** Replace `Link.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` is underlined and inherits the surrounding colour; `Colors` shows eight distinct hues that **darken** on hover (§3c); `LinkHover` has no underline until hovered (§3b); `AsButton` renders a `<button>` that looks identical; tabbing shows a focus ring, clicking does not (§3c). Check §3d.3 if `LinkHover` looks inert.
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<(a|button)[^>]*class="link[^"]*"' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Link` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done.** §3d.1 holds — no structural risk, and the slot-wrapping question is settled library-wide anyway (`plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3).
+- [x] **Step 2: skipped as planned.** `DaisyColor` reused unchanged; `variants.ts` untouched.
+- [x] **Step 3: done.** Scaffold replaced per §4 and the gate walked. The probe errored on exactly three lines — `href` with `as="button"`, `color="banana"`, `size="lg"` — and passed every valid one, including native attributes with no `as`.
+- [x] **Step 4: done.** `Link.stories.ts`, 15 stories per §5, markup copied from the doc page.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and this component needs them more than most: every remaining claim is a hover or focus state.** Verify: `Default` is underlined and inherits the surrounding colour; `Colors` shows eight distinct hues that **darken** on hover, including on a dark theme (§3c); `LinkHover` has no underline until hovered (§3b); `AsButton`'s two rows look identical; tabbing shows a focus ring while clicking does not (§3c). If `LinkHover` looks inert, check §3d.3 — Storybook's device emulation can turn off `@media (hover: hover)` — before reporting a bug.
+- [x] **Step 6: done — forwarding confirmed.** `Passthrough` renders `href`, `target`, `rel`, `id`, `data-*` and `style` on the anchor with `class` merged as `link link-accent link-hover mine`. Full output in §8.
+- [x] **Step 7: done — the `Link` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 10 daisyUI classes reachable: base, `hover`, 8 colours.
-- [ ] `color` uses `DaisyColor`, imported, not redeclared.
-- [ ] Default root is `a`; `as="button"` works and narrows `href` away; probe passes (§3a).
-- [ ] `hover`'s JSDoc states that it **removes** the underline and is hover-media gated (§3b).
-- [ ] JSDoc notes the hover darkening across themes (§3c).
-- [ ] No invented axis — no size, no `href` prop.
-- [ ] One story per doc-page example, plus `Colors`, `AsButton` and `HoverInText`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 10 daisyUI classes reachable: base, `hover`, 8 colours.
+- [x] `color` uses `DaisyColor`, imported, not redeclared.
+- [x] Default root is `a`; `as="button"` works and narrows `href` away; probe passes (§3a).
+- [x] `hover`'s JSDoc states that it **removes** the underline and is hover-media gated (§3b).
+- [x] JSDoc notes the hover darkening across themes (§3c).
+- [x] No invented axis — no size, no `href` prop.
+- [x] One story per doc-page example, plus `Colors`, `AsButton` and `HoverInText`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-30). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default      → <a href="#" class="link">Click me</a>
+InParagraph  → <p>Tailwind CSS resets the style of links by default.<br />Add "link" class to make it
+               look like a <a href="#" class="link">normal link</a> again.</p>
+Primary…Error → <a href="#" class="link link-primary">Click me</a>  … one per colour example
+LinkHover    → <a href="#" class="link link-hover">Click me</a>
+Colors       → all eight, neutral included — the page shows seven, one at a time
+AsButton     → <a href="#" class="link link-primary">Anchor</a>
+               <button type="button" class="link link-primary">Button</button>
+HoverInText  → <p>A plain <a href="#" class="link">link</a> is underlined at rest. A
+               <a href="#" class="link link-hover">hover link</a> is not…</p>
+Passthrough  → <a href="https://example.com" target="_blank" rel="noreferrer" id="link-1"
+               data-test="yes" style="letter-spacing:2px" class="link link-accent link-hover mine">
+```
+
+What this settles: the anchor default holds and `as="button"` produces a real `button` with `type` narrowed to it; `href`, `target` and `rel` ride `...rest` rather than being props; all 10 classes have rules in the built stylesheet.
+
+Not settled here, and it is most of the component: the underline behaviour of `hover`, the hover darkening, and the focus ring are all states no static markup can show. Step 5.

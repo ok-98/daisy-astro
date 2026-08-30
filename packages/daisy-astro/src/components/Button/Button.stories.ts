@@ -1,4 +1,5 @@
 import Button from './Button.astro';
+import Loading from '../Loading/Loading.astro';
 
 // No Meta/StoryObj annotations: Storybook 10 ships those types from framework
 // packages (@storybook/react etc.) and @storybook-astro doesn't provide an
@@ -200,19 +201,20 @@ export const WithIcon = {
     ),
 };
 
-// 17. Button with loading spinner.
-// TODO(daisy-astro): compose <Loading> here once it is implemented — see plans/components/button.md §5
+// 17. Button with loading spinner — the real <Loading>, not a hardcoded
+// `loading loading-spinner` span. The spinner takes no colour class: it is a
+// mask over currentColor, so it inherits the button's foreground.
 export const WithLoadingSpinner = {
   render: () =>
     row(
       {
         component: Button,
         props: { shape: 'square' },
-        slots: { default: '<span class="loading loading-spinner"></span>' },
+        slots: { default: { component: Loading, props: { variant: 'spinner' } } },
       },
       {
         component: Button,
-        slots: { default: ['<span class="loading loading-spinner"></span>', 'loading'] },
+        slots: { default: [{ component: Loading, props: { variant: 'spinner' } }, 'loading'] },
       },
     ),
 };

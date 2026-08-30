@@ -356,7 +356,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 |---|---|---|
 | Breadcrumbs | `breadcrumbs` | Planned — [`plans/components/breadcrumbs.md`](components/breadcrumbs.md) (current code is a dummy scaffold) |
 | Dock | `dock` | Planned — [`plans/components/dock.md`](components/dock.md) (`Dock`/`DockItem`/`DockLabel`; position:fixed is built in) |
-| Link | `link` | Planned — [`plans/components/link.md`](components/link.md) (`link-hover` removes the underline rather than adding an effect) |
+| Link | `link` | **Implemented** — [`plans/components/link.md`](components/link.md) (15 stories; `hover` removes the underline; visual pass open) |
 | Megamenu | `megamenu` | Planned — [`plans/components/megamenu.md`](components/megamenu.md) (Popover API + anchor positioning; max 10 items) |
 | Menu | `menu` | Planned — [`plans/components/menu.md`](components/menu.md) (16 classes, 5 as props; items are bare `<li><a>`) |
 | Navbar | `navbar` | Planned — [`plans/components/navbar.md`](components/navbar.md) (`Navbar`+start/center/end; 50%/50% halves) |
@@ -368,7 +368,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Component | Slug | Status |
 |---|---|---|
 | Alert | `alert` | Planned — [`plans/components/alert.md`](components/alert.md) (current code is a dummy scaffold) |
-| Loading | `loading` | Planned — [`plans/components/loading.md`](components/loading.md) (SVG mask over currentColor; no colour prop) |
+| Loading | `loading` | **Implemented** — [`plans/components/loading.md`](components/loading.md) (12 stories; no colour prop, no slot; animation unverified until the visual pass) |
 | Progress | `progress` | Planned — [`plans/components/progress.md`](components/progress.md) (omit `value` for indeterminate; no size axis) |
 | Radial progress | `radial-progress` | Planned — [`plans/components/radial-progress.md`](components/radial-progress.md) (API is 3 custom properties; `value` required) |
 | Skeleton | `skeleton` | Planned — [`plans/components/skeleton.md`](components/skeleton.md) (no size of its own; `text` mode shimmers glyphs) |

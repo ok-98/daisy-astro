@@ -20,6 +20,8 @@ import AvatarGroup from './components/Avatar/AvatarGroup.astro';
 import Badge from './components/Badge/Badge.astro';
 import Button from './components/Button/Button.astro';
 import Kbd from './components/Kbd/Kbd.astro';
+import Link from './components/Link/Link.astro';
+import Loading from './components/Loading/Loading.astro';
 import Mask from './components/Mask/Mask.astro';
 import Status from './components/Status/Status.astro';
 ---
@@ -44,6 +46,14 @@ import Status from './components/Status/Status.astro';
 
 <Kbd>K</Kbd>
 <Kbd size="lg" id="k" data-test="y" class="mx-1">K</Kbd>
+
+<Link href="/docs">ok</Link>
+<Link color="primary" hover class="text-lg" id="l" data-test="y" target="_blank">ok</Link>
+<Link as="button" type="button">ok</Link>
+
+<Loading />
+<Loading variant="bars" size="lg" class="text-primary" aria-label="Loading" />
+<Loading id="ld" data-test="y" title="t" />
 
 <Status />
 <Status color="success" size="lg" aria-label="Online" />

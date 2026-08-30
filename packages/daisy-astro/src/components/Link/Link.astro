@@ -1,14 +1,64 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/link/
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
+import type { DaisyColor } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'a'> {}
+// Restores the underline Tailwind's preflight removes from anchors — which is
+// the whole component. It sets no layout, no size and no parts.
+//
+// Defaults to an anchor root. Pass `as="button"` for a link-styled control that
+// acts rather than navigates (plan §3a); the doc page's own demos are buttons,
+// even though its code blocks are anchors. `.link` sets only cursor, text
+// decoration and colour, so a button root keeps the browser's default padding
+// and background unless something resets them — Tailwind's preflight already
+// does, so this only matters outside a Tailwind project.
+//
+// Colours darken on hover, which inverts on dark themes: a dark-theme primary
+// link goes darker, not lighter. That is daisyUI's CSS across all eight
+// colours (plan §3c).
+//
+// NOTE: no angle brackets in this comment, deliberately. A less-than sign
+// anywhere in the frontmatter — comments included — truncates Astro's
+// TypeScript parse, and Props silently stops being inferred
+// (plans/README.md §5c). The `= 'a'` default type parameter is that same
+// section's second rule.
+type Props<Tag extends HTMLTag = 'a'> = Polymorphic<{
+  as: Tag;
+  color?: DaisyColor;
+  /**
+   * **Removes** the underline and shows it on hover only — it does not add an
+   * extra hover effect, which is the reverse of what the name suggests
+   * (plan §3b).
+   *
+   * Gated behind `@media (hover: hover)`, so on a touch device the underline
+   * never appears at all. With no `color` as well, the link is visually
+   * identical to the surrounding text at rest: fine in a footer, where every
+   * daisyUI example pairs the two, risky in body copy.
+   */
+  hover?: boolean;
+}>;
 
-const { class: className, ...rest } = Astro.props;
+// Full literal class names. NEVER `link-${color}` (plans/README.md §1b).
+const COLOR: Record<DaisyColor, string> = {
+  primary: 'link-primary',
+  secondary: 'link-secondary',
+  accent: 'link-accent',
+  neutral: 'link-neutral',
+  info: 'link-info',
+  success: 'link-success',
+  warning: 'link-warning',
+  error: 'link-error',
+};
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const {
+  as: Tag = 'a',
+  color,
+  hover = false,
+  class: className,
+  ...rest
+} = Astro.props as Props<HTMLTag>;
 ---
 
-<a class:list={['link', className]} {...rest}>
+<Tag class:list={['link', color && COLOR[color], { 'link-hover': hover }, className]} {...rest}>
   <slot />
-</a>
+</Tag>
