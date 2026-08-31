@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/filter.css` and `components/button.css`, and the doc page source. §3e lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-08-31). `Filter.astro` and 7 stories, with the options composing the real `Button` as `as="input"`. §3c's cross-plan action is done: `plans/components/button.md` now carries the `aria-label`-as-visible-text rule as its §3c. Step 5 (visual pass) is open, and it carries the collapse behaviour, which is the whole component.
 ---
 
 ## 0. Two classes, and the items are Buttons
@@ -204,27 +206,47 @@ Every story needs distinct radio `name` values — a shared `name` across storie
 
 ## 6. Steps
 
-- [ ] **Step 1:** Settle §3e.3 (`autocomplete="off"` in stories) and record it.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4 — the `<form>` root is already right, the `as` prop and JSDoc are the work — then walk the gate. **Run the probe**; the generic failure is silent.
-- [ ] **Step 4:** Replace `Filter.stories.ts` per §5, with distinct `name` values.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` starts with the reset **hidden**; choosing an option collapses the others and reveals the `×`; clicking `×` restores all; `WithoutForm` behaves the same via the `filter-reset` radio, which draws its own `×` (§3b); `Checkboxes` keeps every option visible and allows several (§3d); `KeyboardReveal` un-collapses on focus; `MissingAriaLabel` shows an empty pill (§3c).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<(form|div) class="filter[^"]*"[^>]*><input' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Filter` row in `plans/README.md` to **Implemented**. **Amend `plans/components/button.md`** with §3c: `as="input"` has no slot, and `aria-label` is the only way to give it visible text.
+- [x] **Step 1: done.** §3e.1 holds and was the weakest instance of the shared question, as predicted: daisyUI's spacing rule already anticipates one level of wrapping, and the collapse rules are descendant selectors. The build shows 9 inputs as direct children anyway.
+- [x] **Step 2: skipped as planned.** No variant axes; `variants.ts` untouched.
+- [x] **Step 3: done.** Component written per §4. §3e.3 is decided in favour of the rendered examples: every story sets `autocomplete="off"`, which stops the browser restoring a stale filter selection on reload.
+
+  **The probe caught a real mistake in my own first draft.** The JSDoc contained a markup example, and the angle brackets in it broke `Props` inference on this generic component — exactly the failure `plans/README.md` §5c documents. Two valid probe lines failed alongside the two intended ones; rewriting the comment without markup fixed it. `src/_typecheck.astro` would have caught the same thing once Filter was added to it, which is what that file is for.
+- [x] **Step 4: done.** `Filter.stories.ts`, 7 stories, options composing the real `Button`.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and the collapse is the component.** Verify: choosing a radio in `WithForm` **collapses every other option to nothing** and reveals the reset; the reset restores them; `WithoutForm` behaves the same with its `filter-reset` radio; **`WithCheckboxes` does not collapse**, which is the deliberate exemption (§3d); tabbing through a collapsed filter still reaches the hidden options, since they use `visibility` rather than `display` (§3d); `MissingAriaLabel`'s first row is three empty pills (§3c); and `ResetMismatch`'s first reset is labelled "Reset" by the browser (§3b).
+- [x] **Step 6: done — forwarding confirmed.** `Passthrough` renders `<div id="filter-1" data-test="yes" style="letter-spacing:1px" class="filter mine">`. Full output in §8.
+- [x] **Step 7: done.** The `Filter` row in `plans/README.md` says Implemented, and **the §3c action item is complete**: `plans/components/button.md` §3c now documents that `as="input"` has no slot and takes its visible text from `aria-label`.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] Both daisyUI classes reachable; `filter-reset` documented as caller-applied (§2, §3b).
-- [ ] Root defaults to `form` and accepts `as="div"`, with the matching reset mechanism documented for each (§3a).
-- [ ] `type Props` precedes every `const`, destructure annotated, probe passes (§3a).
-- [ ] No invented axis — no colour, size, `options` prop, or reset prop (§1, §2).
-- [ ] JSDoc states: options are `Button as="input"` and need `aria-label` for visible text (§3c); checkboxes do not collapse (§3d).
-- [ ] `plans/components/button.md` is amended per §3c (§6 Step 7).
-- [ ] Stories use distinct radio `name` values (§5).
-- [ ] One story per doc-page example, plus `MissingAriaLabel` and `KeyboardReveal`.
-- [ ] Every box in §4's gate ticked.
+- [x] Both daisyUI classes reachable; `filter-reset` documented as caller-applied (§2, §3b).
+- [x] Root defaults to `form` and accepts `as="div"`, with the matching reset mechanism documented for each (§3a).
+- [x] `type Props` precedes every `const`, destructure annotated, probe passes (§3a).
+- [x] No invented axis — no colour, size, `options` prop, or reset prop (§1, §2).
+- [x] JSDoc states: options are `Button as="input"` and need `aria-label` for visible text (§3c); checkboxes do not collapse (§3d).
+- [x] `plans/components/button.md` is amended per §3c (§6 Step 7).
+- [x] Stories use distinct radio `name` values (§5).
+- [x] One story per doc-page example, plus `MissingAriaLabel` and `KeyboardReveal`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31). `astro check`: 145 files, 0 errors, 0 warnings, 0 hints.
+
+```
+WithForm       → <form class="filter"><input type="reset" value="×" class="btn btn-square"/>
+                   <input type="radio" name="frameworks-1" autocomplete="off" aria-label="Svelte" class="btn"/> …
+WithoutForm    → <div class="filter"><input type="radio" name="metaframeworks-2" autocomplete="off"
+                   aria-label="All" class="btn filter-reset"/> …
+WithCheckboxes → <form class="filter"><input type="checkbox" … class="btn"/> ×3, then the reset
+Passthrough    → <div id="filter-1" data-test="yes" style="letter-spacing:1px" class="filter mine">…
+```
+
+What this settles:
+
+- **Both roots render with their matching reset control**: 5 `form` roots carrying a `type="reset"` input with `value="×"` (4 of them), and 3 `div` roots, 2 of which carry a `filter-reset` radio. The two mechanisms are not interchangeable and the stories keep them paired (§3a, §3b).
+- **26 options carry an `aria-label`** — the exception being `MissingAriaLabel`'s deliberately unlabelled row. That attribute is the button's *visible text* for an input root, which is now documented in `plans/components/button.md` §3c rather than only here (§3c).
+- **The options are real `Button` components**, rendered as `input.btn` — daisyUI's own markup, reached through composition rather than reproduced by hand.
+- Both classes have rules in the built stylesheet.
+
+Not settled here: the collapse, the reset, and the checkbox exemption. All Step 5.

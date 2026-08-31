@@ -200,6 +200,37 @@ const a11y =
 
 Typing verified with a throwaway probe (`astro check`): `color="primary"`, `as="a" href="/ok"`, and arbitrary passthrough attributes all pass; `color="banana"` and a bare `href` without `as="a"` both error.
 
+### 3c. `as="input"` has no slot, and `aria-label` is the visible text
+
+**Added 2026-08-31, while implementing Filter** — this plan's §2 said an
+icon-plus-label button is served by the default slot, which is true for a
+`<button>` root and **false for `as="input"`**, where there is no slot at all.
+
+daisyUI covers that case with a pseudo-element **[verified in `button.css`]**:
+
+```css
+.btn:is([type=checkbox], [type=radio]) {
+  appearance: none;
+  &[aria-label]:after { --tw-content: attr(aria-label); content: var(--tw-content) }
+}
+```
+
+So for a checkbox- or radio-rooted Button, **`aria-label` is the button's
+visible text**, not accessibility polish on top of it. Omit it and the button
+renders as an empty, zero-width pill with no error — which is the entire label
+mechanism for every option in every Filter example
+(`plans/components/filter.md` §3c).
+
+Two consequences for this component:
+
+- The `AnyHtmlTag` story's `as="input"` radio and checkbox already pass
+  `aria-label`, which read as accessibility hygiene when it was written and is
+  in fact load-bearing.
+- `value` is the visible text for `type="submit"`, `type="reset"` and
+  `type="button"` inputs, where `aria-label` would only add a name. The two
+  mechanisms do not overlap: `value` renders nothing on a radio, and
+  `aria-label` renders nothing on a reset.
+
 ### Two things deliberately *not* done
 
 **No responsive size API.** daisyUI's "Responsive button" example is `class="btn btn-xs sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl"` — five breakpoint-prefixed size classes at once. A single `size` union cannot express that, and widening the prop into an object (`size={{ base: 'xs', md: 'lg' }}`) would be a bespoke mini-API reimplementing Tailwind's prefixes. The `class` passthrough already covers it, verified working:

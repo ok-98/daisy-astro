@@ -1,14 +1,53 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/filter/
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
 
-interface Props extends HTMLAttributes<'form'> {}
+// A row of mutually exclusive filter options. Two classes, no JavaScript, and
+// no item class of its own — every option is a Button with as="input", which is
+// why this component is a thin container plus a documented composition: put a
+// reset control and one Button per option in the slot, each Button rendered as
+// an input. See the stories for the markup, which cannot be written here — see
+// the NOTE below.
+//
+// EVERY OPTION NEEDS AN aria-label. An input cannot have children, so daisyUI
+// renders the button's visible text from that attribute through a pseudo-
+// element. Without it the option renders as an empty zero-width pill, with no
+// error — the label is the content, not accessibility polish (plan §3c).
+//
+// TWO ROOTS, AND THEY ARE NOT INTERCHANGEABLE (plan §3a):
+//
+//   form (default)  reset with an input of type reset, carrying value="x" —
+//                   real browser reset behaviour, for free
+//   as="div"        reset with a radio carrying class="filter-reset", which
+//                   draws its own x from CSS and needs no value; daisyUI
+//                   describes this as the fallback for when a form is not
+//                   possible
+//
+// Getting those backwards fails quietly: a value on a filter-reset radio does
+// nothing, and a reset input without one is labelled "Reset" by the browser
+// (plan §3b).
+//
+// CHECKBOXES ARE DELIBERATELY EXEMPT from the collapse. Choosing a radio hides
+// every unchosen sibling; checking a checkbox does not, which is what lets the
+// same container serve single- and multi-select filters with no prop (plan
+// §3d). The collapse is also suspended while anything inside has focus, so
+// keyboard users can still tab through — that is why the hidden options use
+// visibility rather than display, and it should not be "optimised".
+//
+// NOTE: no angle brackets in this comment, deliberately — this component has a
+// generic Props type (plans/README.md §5c). The `= 'form'` default type
+// parameter is that same section's second rule.
+type Props<Tag extends HTMLTag = 'form'> = Polymorphic<{
+  as: Tag;
+}>;
 
-const { class: className, ...rest } = Astro.props;
+// No variant class map: daisyUI defines one component class and one part class
+// here, and no modifiers at all (plan §1). Colour and size come from the Button
+// classes on the items.
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const { as: Tag = 'form', class: className, ...rest } = Astro.props as Props<HTMLTag>;
 ---
 
-<form class:list={['filter', className]} {...rest}>
+<Tag class:list={['filter', className]} {...rest}>
   <slot />
-</form>
+</Tag>
