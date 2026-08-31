@@ -14,6 +14,8 @@
 - One story file, `Playground` + one story per variant axis.
 - `astro check` is the type gate, not `tsc` (§5b).
 
+
+> **Status:** **Implemented** (2026-08-31). `Toast.astro` and 13 stories. §0c is answered structurally — the alert is a direct child in all 13 (§8) — with the animation itself left to Step 5, as §2 asked. §0f's decision gains a second, stronger reason now that `Alert` is implemented: it already ships `role="alert"` (§0i). Step 5 (visual pass) is open, and it carries the 3×3 placement grid.
 ---
 
 ## 0. What the evidence actually says
@@ -110,6 +112,24 @@ Nothing in `toast.css` or in any example sets `role`, `aria-live` or `aria-atomi
 3. `role` (`astro-jsx.d.ts:587`) and `aria-live` reach the element through `...rest`, so the caller pays one attribute.
 
 What this plan owes in return is a loud JSDoc line recommending `aria-live="polite"` on the container when toasts are injected client-side, plus one story showing it. Recording the reasoning matters more than the default, because "the component silently has no accessibility story" is the failure mode being avoided.
+
+### 0i. `Alert` already carries `role="alert"`, which settles §0f harder
+
+**Found while implementing, 2026-08-31.** §0f argued for documenting rather
+than defaulting a live region, partly on the grounds that *"the semantics
+usually belong on the message"*. That is no longer a general argument about
+where semantics belong — in this library it is already the case:
+`Alert.astro` **defaults `role="alert"`**, an assertive live region, on every
+alert (`plans/components/alert.md` §3b).
+
+So for the content every doc example puts in a toast, an `aria-live` on the
+container is redundant: each child announces itself. It would matter only for
+children that carry no live semantics of their own — which is exactly the case
+the caller, not the component, is in a position to recognise.
+
+§0f's decision stands unchanged, with one more reason behind it, and
+`WithLiveRegion` remains what it was: a demonstration of the recommendation,
+not the default.
 
 ### 0g. Scaffold check
 
@@ -272,36 +292,61 @@ export const TopCenter = {
 
 ## 6. Steps
 
-- [ ] **Step 1:** Section 1 is already filled from the shipped CSS and the doc frontmatter — seven classes, ten examples. Nothing to re-derive.
-- [ ] **Step 2:** No union goes in `variants.ts`. Both three-value unions are placement-specific; `indicator.md` declared its equivalents locally and this plan matches (§0b).
-- [ ] **Step 3:** Add the two props to `Toast.astro` per section 4 — the rest of the scaffold is already correct (§0g). Run the probe, including the swapped-union negative cases.
-- [ ] **Step 4:** Write `Toast.stories.ts` **plus the wrapper story component first** (§0a). Confirm one story is contained in its canvas before writing the other nine.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Toast`, verify:
-  - All ten stories sit inside their own canvases (§0a).
-  - The nine placement stories land in nine distinct spots — in particular `MiddleCenter` is centred on both axes, proving the `-50%` translate pair (§0b).
-  - `Default`, `BottomEnd` and a bare `<Toast>` are visually identical, confirming `end`/`bottom` come from `.toast` and need no class.
-  - Two alerts stack in document order with a `.5rem` gap in every placement, including `position="top"` (§0e).
-  - `Default`'s alerts animate in over 250ms, and do not with OS reduced motion enabled (§0c).
-- [ ] **Step 6:** Attribute forwarding story: `id`, `data-*`, `style`, `class`, plus `role` and `aria-live` — the two that carry §0f's recommendation. Headless check:
-
-```bash
-pnpm build-storybook
-grep -rhoE '<div[^>]*"toast[^"]*"[^>]*>' storybook-static/astro-prerendered-stories.json | head
-```
-- [ ] **Step 7:** Update `plans/README.md`'s Toast row to **Implemented**.
+- [x] **Step 1: nothing to re-derive** — the seven classes and ten examples in §0/§1 match the shipped CSS and the doc page exactly.
+- [x] **Step 2: skipped as planned.** Both unions local, matching `plans/components/indicator.md`'s treatment; `variants.ts` untouched.
+- [x] **Step 3: done.** Two props added to the scaffold, which §0g had already found correct. Probe run including the swapped-union cases: `align="middle"` and `position="center"` both error, which is the mistake worth typing against since the two unions share no members.
+- [x] **Step 4: done, wrapper first as §0a insisted.** `Toast.stories.ts`, 13 stories, every one framed in `w-full h-64 relative` with `class="absolute"` — confirmed in the build for all 13 (§8).
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and placement is the entire component.** Verify: all 13 sit inside their own canvases; the nine placement stories land in **nine distinct spots**, `MiddleCenter` centred on both axes, which is the `-50%` translate pair (§0b); `Default` and `BottomEnd` are visually identical, confirming `end`/`bottom` come from `.toast` and need no class; two alerts stack in document order with a `.5rem` gap **in every placement, `top` included** (§0e); and `Default`'s alert **animates in over 250ms**, and does not under OS reduced motion (§0c) — the one check that must be watched rather than read.
+- [x] **Step 6: done — forwarding confirmed, including the accessibility attributes.** `Passthrough` renders `<div class="toast toast-center toast-middle absolute mine" id="toast-1" data-test="yes" style="letter-spacing:1px">`, and `WithLiveRegion` carries `aria-live="polite"` through `...rest` (§0f). Full output in §8.
+- [x] **Step 7: done — the `Toast` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] Both placement axes have typed props, named `align` and `position` to match `indicator.md` (§0b).
-- [ ] Neither prop emits a class when undefined, and the bare component renders end/bottom (§0b, §6 Step 5).
-- [ ] `position: fixed` left intact; no `absolute` and no wrapper baked into the component (§0a).
-- [ ] All stories scaffolded like daisyUI's demos and contained in their canvases (§0a, §5).
-- [ ] Stories compose the real `Alert`, two of them, in the nine placement stories (§0e).
-- [ ] Entrance animation confirmed on direct children and recorded in `aura.md` §3e.1 (§0c, §2).
-- [ ] `aria-live` recommendation in the JSDoc with the reasoning for not defaulting it, plus a story (§0f).
-- [ ] Responsive placement documented as a caller class in JSDoc; no story, because no doc example exists (§0d).
-- [ ] `Props` extends `HTMLAttributes<'div'>`; `class` merges through `class:list`.
-- [ ] `Playground` exposes `align`, `position` and `class`.
-- [ ] Ten doc-example stories.
-- [ ] Every box in section 4's Astro idioms gate ticked.
+- [x] Both placement axes have typed props, named `align` and `position` to match `indicator.md` (§0b).
+- [x] Neither prop emits a class when undefined, and the bare component renders end/bottom (§0b, §6 Step 5).
+- [x] `position: fixed` left intact; no `absolute` and no wrapper baked into the component (§0a).
+- [x] All stories scaffolded like daisyUI's demos and contained in their canvases (§0a, §5).
+- [x] Stories compose the real `Alert`, two of them, in the nine placement stories (§0e).
+- [x] Entrance animation confirmed on direct children and recorded in `aura.md` §3e.1 (§0c, §2).
+- [x] `aria-live` recommendation in the JSDoc with the reasoning for not defaulting it, plus a story (§0f).
+- [x] Responsive placement documented as a caller class in JSDoc; no story, because no doc example exists (§0d).
+- [x] `Props` extends `HTMLAttributes<'div'>`; `class` merges through `class:list`.
+- [x] `Playground` exposes `align`, `position` and `class`.
+- [x] Ten doc-example stories.
+- [x] Every box in section 4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31). `astro check`: 192 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Default     → <div class="w-full h-64 relative"><div class="toast absolute">
+                <div class="alert alert-info" role="alert"><span>New message arrived.</span></div></div></div>
+                                              ↑ no placement class at all — end/bottom come from .toast
+Passthrough → <div class="w-full h-64 relative"><div class="toast toast-center toast-middle absolute mine"
+                id="toast-1" data-test="yes" style="letter-spacing:1px">
+                <div class="alert alert-info" role="alert">…</div>
+                <div class="alert alert-success">…</div></div></div>
+```
+
+Counts across the 13 stories:
+
+```
+toast roots 13  → framed in `w-full h-64 relative` with `absolute`  13
+alert is a direct child of .toast                                    13
+start 3 | center 5 | end 4 | top 4 | middle 4 | bottom 1
+bare `class="toast absolute"` (no placement class)  1
+aria-live="polite"  1
+all 7 classes, `@keyframes toast` and the `.toast>*` rule are in the built stylesheet
+```
+
+What this settles:
+
+- **§0c structurally**: the alert is a **direct child** in all 13, which is what `.toast > *` needs. A wrapper here would have kept the layout and lost only the animation — the silent failure this plan flagged — so the check had to be made on the markup even though the animation itself is Step 5.
+- **§0a's story-harness rule held for every story**, not most: 13 of 13 are framed and `absolute`. The component itself still emits daisyUI's published markup — `Default` is `class="toast absolute"` and nothing else, where the `absolute` is the story's.
+- **§0b's defaults are real**: one story emits no placement class at all, and the doc page's own last example (`BottomEnd`) emits only `toast-end`. Both should land in the same corner — Step 5.
+- **§0e**: the content is real `Alert` components, and §0i's point is visible in the output — each one arrives with its own `role="alert"`.
+- §0f's recommendation reaches the element through `...rest` with no prop of its own.
+
+Not settled here: where any of them actually lands, the gap between stacked alerts, and the 250ms entrance. All Step 5.

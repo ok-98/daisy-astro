@@ -62,6 +62,7 @@ import Mask from './components/Mask/Mask.astro';
 import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
 import PhoneMockupCamera from './components/PhoneMockup/PhoneMockupCamera.astro';
 import PhoneMockupDisplay from './components/PhoneMockup/PhoneMockupDisplay.astro';
+import Toast from './components/Toast/Toast.astro';
 import Accordion from './components/Accordion/Accordion.astro';
 import Collapse from './components/Collapse/Collapse.astro';
 import Chat from './components/ChatBubble/Chat.astro';
@@ -252,3 +253,5 @@ import Steps from './components/Steps/Steps.astro';
   <Collapse trigger="details" name="faq" force="close" class="join-item" id="c2">ok</Collapse>
   <Collapse trigger="checkbox" tabindex="-1" data-test="y">ok</Collapse>
 </Accordion>
+<Toast align="center" position="middle" class="absolute" id="tst" data-test="y" title="t">msg</Toast>
+<Toast aria-live="polite" role="status">msg</Toast>

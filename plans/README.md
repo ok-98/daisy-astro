@@ -378,7 +378,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Progress | `progress` | **Implemented** — [`plans/components/progress.md`](components/progress.md) (15 stories; indeterminate asserted in the build; visual pass open) |
 | Radial progress | `radial-progress` | **Implemented** — [`plans/components/radial-progress.md`](components/radial-progress.md) (10 stories; `value` required; aria derived from it; visual pass open) |
 | Skeleton | `skeleton` | **Implemented** — [`plans/components/skeleton.md`](components/skeleton.md) (9 stories; no size of its own; visual pass open) |
-| Toast | `toast` | Planned — [`plans/components/toast.md`](components/toast.md) (position:fixed escapes the Storybook canvas; align/position naming shared with Indicator) |
+| Toast | `toast` | **Implemented** — [`plans/components/toast.md`](components/toast.md) (13 stories, all framed — position:fixed escapes the canvas; align/position naming shared with Indicator; visual pass open) |
 | Tooltip | `tooltip` | **Implemented** — [`plans/components/tooltip.md`](components/tooltip.md) (13 stories; seven colours via `Exclude<DaisyColor, 'neutral'>`; `align` swaps axis on left/right; visual pass open) |
 
 ### Data Input

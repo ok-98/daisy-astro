@@ -1,14 +1,67 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/toast/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type ToastAlign = 'start' | 'center' | 'end';
+type ToastPosition = 'top' | 'middle' | 'bottom';
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A positioner that stacks messages in a corner of the **viewport** — daisyUI
+ * gives it `position: fixed`, no background of its own, and a `.5rem` flex
+ * column gap. Everything visible comes from the children, which in every doc
+ * example are `Alert`s (plan §0a, §0e).
+ *
+ * `fixed` means it ignores its parent. To contain one — a demo, a story, a
+ * card — pass `class="absolute"` and give an ancestor `relative`, which is
+ * what daisyUI's own live demos do while their copyable markup stays bare.
+ *
+ * Responsive placement is a caller class: `class="toast-bottom md:toast-middle"`
+ * (plan §0d).
+ *
+ * **Accessibility:** daisyUI ships no live region here and neither does this
+ * component. When toasts are **injected client-side**, pass
+ * `aria-live="polite"` (or `role="status"`) so the insertion is announced — a
+ * live region only announces changes made after it exists, so hard-coding one
+ * on a server-rendered container that is already full would announce nothing
+ * (plan §0f).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * Horizontal placement. daisyUI's default is `end`, set on `.toast` itself
+   * rather than by a class, so leaving this undefined emits nothing and lands
+   * in the same place as `align="end"` (plan §0b).
+   */
+  align?: ToastAlign;
+  /** Vertical placement. Default `bottom`, same treatment. */
+  position?: ToastPosition;
+}
+
+// Full literal class names. NEVER `toast-${align}` — an interpolated class gets
+// no CSS from daisyUI (plans/README.md §1b).
+const ALIGN: Record<ToastAlign, string> = {
+  start: 'toast-start',
+  center: 'toast-center',
+  end: 'toast-end',
+};
+
+const POSITION: Record<ToastPosition, string> = {
+  top: 'toast-top',
+  middle: 'toast-middle',
+  bottom: 'toast-bottom',
+};
+
+const { align, position, class: className, ...rest } = Astro.props;
+
+// The two axes are independent: each class sets only its own `--toast-x` /
+// `--toast-y` and inset, and `.toast`'s `translate` combines them. `center` and
+// `middle` are the -50% half of the usual centring trick, which is why they
+// cannot collapse into one nine-value enum (plan §0b).
+//
+// The entrance animation is `.toast > *` — direct children only. A wrapper
+// around the slot would keep the layout and silently lose the animation
+// (plan §0c).
 ---
 
-<div class:list={['toast', className]} {...rest}>
+<div class:list={['toast', align && ALIGN[align], position && POSITION[position], className]} {...rest}>
   <slot />
 </div>
