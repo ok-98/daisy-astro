@@ -1,0 +1,26 @@
+---
+import type { HTMLTag, Polymorphic } from 'astro/types';
+
+// A label inside a menu, in either of daisyUI's two shapes (plan §3c):
+//
+//   as="li" (default)  a standalone label row
+//   as="h2"            a heading for a nested group, inside its own list item
+//
+// daisyUI treats this class as "the thing that is not an item" — it appears as
+// an exclusion in every item selector — so both shapes work without further
+// markup.
+//
+// NOTE: no angle brackets in this comment, deliberately — this component has a
+// generic Props type (plans/README.md §5c). The `= 'li'` default type parameter
+// is that same section's second rule.
+type Props<Tag extends HTMLTag = 'li'> = Polymorphic<{
+  as: Tag;
+}>;
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const { as: Tag = 'li', class: className, ...rest } = Astro.props as Props<HTMLTag>;
+---
+
+<Tag class:list={['menu-title', className]} {...rest}>
+  <slot />
+</Tag>

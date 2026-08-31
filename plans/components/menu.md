@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/menu.css` and the doc page source. §3f lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-08-31). `Menu.astro` and `MenuTitle.astro`, with 20 stories. **§3f.2 is settled against the shipped CSS — `menu-disabled` belongs on the `<li>`, and the doc page is right where the frontmatter is wrong** (see §3b). §3f.1 is answered: 24 menus render `<li>` as a direct child (§8). Step 5 (visual pass) is open.
 ---
 
 ## 0. Sixteen classes, but only four belong on components
@@ -251,27 +253,50 @@ Two beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3f.1 (item is a direct child of `<li>`) — blocking. Settle §3f.2 (`menu-disabled` placement) by reading the full CSS block; the docs contradict themselves.
-- [ ] **Step 2:** No new shared unions — `DaisySize` reused unchanged. `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Menu.astro` scaffold and create `MenuTitle.astro` per §4, then walk the gate. **Run the probe** on `MenuTitle`.
-- [ ] **Step 4:** Replace `Menu.stories.ts` and create `MenuTitle.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: rows have the rounded hover background; `Sizes` changes padding and font across five; `Submenu` indents with a hairline rule and no class (§3a); `CollapsibleSubmenu` animates open with a rotating chevron and **no disclosure triangle**; `Paged` shows one level and turns the summary into a back button; `ActiveItem` highlights with the neutral pair; `DisabledItems` is dimmed and truly non-interactive; `ButtonInItem` keeps its button styling (§3a); `Responsive` flips at `lg`; `FileTree` nests three levels.
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<ul class="menu[^"]*"[^>]*><li' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoE '<li class="menu-title"' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Menu` row in `plans/README.md` to **Implemented**, noting `MenuTitle` as part of it.
+- [x] **Step 1: done, and §3f.2 is the substantive result.** `menu-disabled` belongs on the `<li>` — settled by resolving the nesting in the shipped CSS, and recorded in §3b along with two details it turned up: `[disabled]` on any descendant dims for free, and the `.disabled` in the hover selectors is a separate undocumented class rather than a typo. §3f.1 is answered in the build output. §3f.3 (`interpolate-size`) is runtime and moves to Step 5; §3f.4 is moot, since sanitization is off library-wide.
+- [x] **Step 2: skipped as planned.** `DaisySize` reused unchanged, no colour axis; `variants.ts` untouched.
+- [x] **Step 3: done.** Two files per §4 — no `MenuItem`, because an item carries no class at all and a component would mean two imports to write two tags (§2). Gate walked; the probe errored on all three achievable intended lines.
+- [x] **Step 4: done.** `Menu.stories.ts` (17) and `MenuTitle.stories.ts` (3), composing the real `Badge` and `Button`.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: items are laid out as rows with icons and badges aligned by daisyUI's own grid; `Submenu` indents with a hairline rule and no class; **`CollapsibleSubmenu` animates open**, which is where `interpolate-size` support shows (§3f.3); `Paged` shows one level at a time with the summary acting as a back button; `DisabledItems` dims and is unclickable; `ActiveItem` highlights exactly one row; **`ButtonIsExempt` keeps its Button looking like a Button** rather than a flattened row (§3a); `Responsive` spreads above `lg` — resize rather than screenshot; and `NoPaddingNoRadius` squares off the rows.
+- [x] **Step 6: done — forwarding confirmed and both structural rules asserted.** `Passthrough` renders `<ul class="menu menu-vertical menu-lg mine bg-base-200 w-56 rounded-box" id="menu-1" data-test="yes" style="letter-spacing:1px">`. Full output in §8.
+- [x] **Step 7: done — the `Menu` row in `plans/README.md` says Implemented**, covering `MenuTitle`.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 16 daisyUI classes reachable: 5 as props, the rest documented as caller classes (§0).
-- [ ] No `MenuItem` component; items are bare `<li><a>` (§2, §3a).
-- [ ] `MenuTitle` defaults to `li` and accepts `as="h2"`; probe passes (§3c).
-- [ ] §3f.2 resolved and `menu-disabled`'s placement documented from evidence.
-- [ ] JSDoc reproduces daisyUI's disabled-vs-looks-disabled note (§3b), recommends `<details>` over the JS dropdown classes (§3d), and points at `class="lg:menu-horizontal"` and `w-56` (§3e).
-- [ ] No invented axis — no colour, no `active`/`disabled` props, no script (§3b, §3d).
-- [ ] One story per doc-page example, plus `ButtonInItem` and `WrappedItem`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 16 daisyUI classes reachable: 5 as props, the rest documented as caller classes (§0).
+- [x] No `MenuItem` component; items are bare `<li><a>` (§2, §3a).
+- [x] `MenuTitle` defaults to `li` and accepts `as="h2"`; probe passes (§3c).
+- [x] §3f.2 resolved and `menu-disabled`'s placement documented from evidence.
+- [x] JSDoc reproduces daisyUI's disabled-vs-looks-disabled note (§3b), recommends `<details>` over the JS dropdown classes (§3d), and points at `class="lg:menu-horizontal"` and `w-56` (§3e).
+- [x] No invented axis — no colour, no `active`/`disabled` props, no script (§3b, §3d).
+- [x] One story per doc-page example, plus `ButtonInItem` and `WrappedItem`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31), SVG elided. `astro check`: 145 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Default          → <ul class="menu bg-base-200 w-56 rounded-box"><li><button>Item 1</button></li>…
+DisabledItems    → <li class="menu-disabled"><button disabled>disabled item</button></li>
+                                ↑ the class on the li, the attribute on the button
+ActiveItem       → <li><button class="menu-active">Item 2</button></li>
+                                ↑ the opposite: this one goes on the inner element
+TitleAsParent    → <li><h2 class="menu-title">Title</h2><ul><li><button>Item 1</button></li>…</ul></li>
+CollapsibleSub…  → <li><details open><summary>Parent</summary><ul>…</ul></details></li>
+ButtonIsExempt   → <li><button>a plain item</button></li>
+                   <li><button class="btn btn-primary btn-sm">a real Button</button></li>
+Passthrough      → <ul class="menu menu-vertical menu-lg mine bg-base-200 w-56 rounded-box" id="menu-1"
+                     data-test="yes" style="letter-spacing:1px">…
+```
+
+What this settles:
+
+- **§3f.1**: 24 menus render `<li>` as a direct child. The item selectors are descendant from `.menu` but **child** from the `<li>`, so this is the level that matters — a wrapper *inside* an item would have unstyled it.
+- **§3b, in both directions**: 2 items carry `menu-disabled` on the `<li>` and **0** carry it on the inner element, while `menu-active` appears once on an inner element and never on an `<li>`. The two state classes genuinely go to different places, which is the kind of asymmetry that gets "corrected" by someone tidying up.
+- **Both `menu-title` shapes render**: 2 as `<li>` and 2 as `<h2>`, from the same component through `as`.
+- **Items carry no class at all** — every one is a bare `<button>` inside a bare `<li>`, which is the evidence for there being no `MenuItem` component (§2).
+- All 16 classes have rules in the built stylesheet.
+
+Not settled here: the submenu animation, the paged back-button behaviour, and the responsive spread. All Step 5.

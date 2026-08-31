@@ -1,14 +1,84 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/menu/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisySize } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'ul'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type MenuDirection = 'horizontal' | 'vertical';
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A list of navigation items.
+ *
+ * **Items are styled by shape, not by class**, which is why there is no
+ * `MenuItem` component: an item is whatever single element sits inside an
+ * `<li>` — an `<a>`, `<button>`, `<span>` or `<div>` all work, with no class at
+ * all. daisyUI's rendered examples use buttons while its copy-paste HTML uses
+ * anchors (plan §3a):
+ *
+ *     <Menu class="w-56">
+ *       <li><a>Item 1</a></li>
+ *       <li><a>Item 2</a></li>
+ *     </Menu>
+ *
+ * Four shapes are excluded from that styling and behave specially: a nested
+ * `<ul>` becomes an indented submenu with a hairline rule, a `<details>` becomes
+ * the collapsible form with a chevron, a `menu-title` is a label rather than an
+ * item, and **a `.btn` is deliberately exempt** so a Button inside a menu keeps
+ * its own styling instead of being flattened into a row.
+ *
+ * **It is `width: fit-content`**, so a menu with no width shrinks to its longest
+ * item — nearly every doc example adds `w-56` (plan §3e).
+ *
+ * The three state classes are caller classes on the item, not props, since the
+ * item is markup you write: `menu-active` and `menu-focus` go on the inner
+ * element, and `menu-disabled` goes on the **`<li>`** (plan §3b). daisyUI's own
+ * note is worth repeating: the visual class is not the accessible state — to
+ * disable a button add the `disabled` attribute, and to disable a link remove
+ * its `href` and add `role="link" aria-disabled="true"`.
+ *
+ * The `menu-dropdown` trio is daisyUI's escape hatch for frameworks that manage
+ * open state themselves, so those stay caller classes too — there is no state
+ * for a prop to express at render time, and this library adds no script. The
+ * `<details>` form is the no-JS alternative and is the one to reach for
+ * (plan §3d).
+ */
+interface Props extends HTMLAttributes<'ul'> {
+  /**
+   * `vertical` is daisyUI's default. The genuinely common case is responsive —
+   * stacked on mobile, spread on desktop — which is a caller class:
+   * `class="lg:menu-horizontal"` (plan §3e).
+   */
+  direction?: MenuDirection;
+  size?: DaisySize;
+  /** Shows one level at a time, turning an open summary into a back button. */
+  paged?: boolean;
+}
+
+// Full literal class names. NEVER `menu-${size}` (plans/README.md §1b).
+const DIRECTION: Record<MenuDirection, string> = {
+  horizontal: 'menu-horizontal',
+  vertical: 'menu-vertical',
+};
+
+const SIZE: Record<DaisySize, string> = {
+  xs: 'menu-xs',
+  sm: 'menu-sm',
+  md: 'menu-md',
+  lg: 'menu-lg',
+  xl: 'menu-xl',
+};
+
+const { direction, size, paged = false, class: className, ...rest } = Astro.props;
 ---
 
-<ul class:list={['menu', className]} {...rest}>
+<ul
+  class:list={[
+    'menu',
+    direction && DIRECTION[direction],
+    size && SIZE[size],
+    { 'menu-paged': paged },
+    className,
+  ]}
+  {...rest}
+>
   <slot />
 </ul>

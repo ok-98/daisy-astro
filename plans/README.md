@@ -364,7 +364,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Dock | `dock` | **Implemented** — [`plans/components/dock.md`](components/dock.md) (`Dock`/`DockItem`/`DockLabel`, one row for all three; 16 stories; `position: fixed` is built in; visual pass open) |
 | Link | `link` | **Implemented** — [`plans/components/link.md`](components/link.md) (15 stories; `hover` removes the underline; visual pass open) |
 | Megamenu | `megamenu` | Planned — [`plans/components/megamenu.md`](components/megamenu.md) (Popover API + anchor positioning; max 10 items) |
-| Menu | `menu` | Planned — [`plans/components/menu.md`](components/menu.md) (16 classes, 5 as props; items are bare `<li><a>`) |
+| Menu | `menu` | **Implemented** — [`plans/components/menu.md`](components/menu.md) (`Menu`+`MenuTitle`, one row for both; 20 stories; items are bare `<li>` with no class; visual pass open) |
 | Navbar | `navbar` | Planned — [`plans/components/navbar.md`](components/navbar.md) (`Navbar`+start/center/end; 50%/50% halves) |
 | Pagination | `pagination` | Planned — [`plans/components/pagination.md`](components/pagination.md) (**no component**: daisyUI has no pagination class; served by `Join` + `Button`) |
 | Steps | `steps` | **Implemented** — [`plans/components/steps.md`](components/steps.md) (`Steps`+`Step`+`StepIcon`, one row for all three; 18 stories; visual pass open) |
