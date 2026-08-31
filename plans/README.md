@@ -330,7 +330,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Button | `button` | **Implemented** — [`plans/components/button.md`](components/button.md) (21 stories; Step 6, the visual pass, still open) |
 | Dropdown | `dropdown` | Planned — [`plans/components/dropdown.md`](components/dropdown.md) (3 methods; component covers 2, popover is composition) |
 | FAB / Speed Dial | `fab` | Planned — [`plans/components/fab.md`](components/fab.md) (focus-driven, :nth-child-ordered, flower caps at 4 actions) |
-| Modal | `modal` | Planned — [`plans/components/modal.md`](components/modal.md) (4 methods, one component; `open` is not the same as modal) |
+| Modal | `modal` | **Implemented** — [`plans/components/modal.md`](components/modal.md) (`Modal`/`ModalBox`/`ModalAction`, one row for all three; 12 stories; 4 methods, one component; `open` is not the same as modal; visual pass open) |
 | Swap | `swap` | **Implemented** — [`plans/components/swap.md`](components/swap.md) (`Swap`+on/off/indeterminate, one row for all four; 17 stories; two drivers, don't combine; visual pass open) |
 | Theme Controller | `theme-controller` | Planned — [`plans/components/theme-controller.md`](components/theme-controller.md) (no .theme-controller rule exists; class is a selector hook inside all 35 theme files) |
 

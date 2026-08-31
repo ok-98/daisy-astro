@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/modal.css` and the doc page source. §3f lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-08-31). `Modal.astro`, `ModalBox.astro` and `ModalAction.astro`, with 12 stories covering all four of daisyUI's methods. §3a's role rule is asserted in the build output — **7 dialog roots carry no role and all 8 div roots carry `role="dialog"`** — and §3f.1's blocking question is answered: 15 boxes render as direct children (§8). Step 5 (visual pass) is open.
 ---
 
 ## 0. Four methods, ranked by daisyUI itself
@@ -262,29 +264,54 @@ Three beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3f.1 (box is a direct child) — blocking, and it makes the modal open to an empty dimmed screen. Confirm §3f.2 (`showModal()` in the canvas) before writing the stories.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Modal.astro` scaffold and create `ModalBox.astro` and `ModalAction.astro` per §4, then walk the gate. **Run the probe**.
-- [ ] **Step 4:** Replace `Modal.stories.ts` and add the two sub-component story files per §5, with unique ids.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Dialog` opens on click, dims the background, closes on `Esc` **and** on the form button (§3c); `DialogCloseOutside` closes on a backdrop click; `DialogCustomWidth` is wider — with the class on the **box** (§3e); `Placements` puts the box where each combination says (§3d); `Popover` opens but leaves the background focusable (§0); `Checkbox` and `AnchorLink` open without JS and do **not** close on `Esc`; `OpenIsNotModal` shows the §3b difference.
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<dialog[^>]*class="modal[^"]*"[^>]*><div class="modal-box' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoE '<div[^>]*class="modal[^"]*"[^>]*role="dialog"' storybook-static/astro-prerendered-stories.json | head
-  ```
-  The first proves the box is a direct child (§3f.1); the second that `role` is added only for `div` roots (§3a).
-- [ ] **Step 7:** Update the `Modal` row in `plans/README.md` to **Implemented**, noting `ModalBox`/`ModalAction` as part of it. Confirm the `scrollbar-gutter` note is already in the package README from `plans/components/drawer.md` §3g rather than adding a second copy (§3e).
+- [x] **Step 1: done — §3f.1 is answered.** 15 `modal-box` elements render as direct children of their modal. This was one of the loudest variants of that shared question: the reveal rule is a child selector, so a wrapper would have left every box transparent and scaled down, and the modal would open to an empty dimmed screen. §3f.2 (`showModal()` inside the canvas iframe) and §3f.3 (`@starting-style`) are runtime and move to Step 5.
+- [x] **Step 2: skipped as planned.** No shared unions; `variants.ts` untouched.
+- [x] **Step 3: done.** Three files per §4. The role default is conditional on the root, which §3a implies but does not spell out: a `dialog` element announces itself, so defaulting `role="dialog"` there would be redundant markup. Gate walked; the probe errored on all four intended lines, including `<ModalBox open>` — the modifier cannot be put on the box.
+- [x] **Step 4: done.** `Modal.stories.ts`, 12 stories covering all four methods. §3f.4's raw-markup caveat is obsolete: `Button` is implemented, so the stories compose it — except where daisyUI's own markup is a `label`, an `a` or a form-submitting button, which are the method's mechanism rather than a button component.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and opening is the whole component.** Verify: `DialogModal`'s trigger opens it and **Esc closes it**, which is what method 1 buys (§3f.2); `DialogClickOutside` closes on a backdrop click; `DialogCornerClose`'s ✕ closes it, all three through `<form method="dialog">` with no JavaScript (§3c); `PopoverModal` opens and hides through the popover attributes; `CheckboxModal` and `AnchorModal` still work as the legacy methods; `CustomWidth` is wider, from a class on the **box** (§3e); `Responsive` sits at the bottom below `sm` — resize rather than screenshot; and **`OpenIsNotModal` shows the distinction that matters**: the class-forced dialog is visible but does not trap focus or lock the background, while the `showModal()` one does (§3b).
+- [x] **Step 6: done — forwarding confirmed at three levels, and both structural rules asserted.** `Passthrough` renders `<div role="dialog" id="modal-1" data-test="yes" style="letter-spacing:1px" class="modal modal-top modal-end modal-open mine">` containing a marked box and a marked action row. Full output in §8.
+- [x] **Step 7: done — the `Modal` row in `plans/README.md` says Implemented**, covering all three components.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 11 daisyUI classes reachable; `modal-backdrop` and `modal-toggle` documented as caller markup (§2).
-- [ ] Default root is `dialog`; `as="div"` works and gets `role="dialog"`; probe passes (§3a).
-- [ ] `position` and `align` are independent and all six combinations render (§3d).
-- [ ] `ModalBox` is a direct child of `.modal` — checked in the build output (§3f.1).
-- [ ] JSDoc states: `open` is not "modal" (§3b), `<form method="dialog">` closes without JS (§3c), width goes on the box (§3e), and the backdrop is a sibling (§3c).
-- [ ] No invented axis — no colour, no size, no `closeOnOutsideClick`, no `showModal` helper (§2, §3b).
-- [ ] Stories use globally unique ids and their own trigger buttons (§5).
-- [ ] One story per doc-page example, plus `Placements`, `OpenIsNotModal` and `WrappedBox`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 11 daisyUI classes reachable; `modal-backdrop` and `modal-toggle` documented as caller markup (§2).
+- [x] Default root is `dialog`; `as="div"` works and gets `role="dialog"`; probe passes (§3a).
+- [x] `position` and `align` are independent and all six combinations render (§3d).
+- [x] `ModalBox` is a direct child of `.modal` — checked in the build output (§3f.1).
+- [x] JSDoc states: `open` is not "modal" (§3b), `<form method="dialog">` closes without JS (§3c), width goes on the box (§3e), and the backdrop is a sibling (§3c).
+- [x] No invented axis — no colour, no size, no `closeOnOutsideClick`, no `showModal` helper (§2, §3b).
+- [x] Stories use globally unique ids and their own trigger buttons (§5).
+- [x] One story per doc-page example, plus `Placements`, `OpenIsNotModal` and `WrappedBox`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+DialogModal        → <button class="btn" onclick="my_modal_1.showModal()">open modal</button>
+                     <dialog id="my_modal_1" class="modal"><div class="modal-box">…
+                       <div class="modal-action"><form method="dialog"><button class="btn">Close</button></form>…
+DialogClickOutside → …</div><form method="dialog" class="modal-backdrop"><button>close</button></form></dialog>
+                                    ↑ backdrop is a SIBLING of the box, not a wrapper
+PopoverModal       → <button class="btn" popovertarget="my-modal-6">Open</button>
+                     <div role="dialog" id="my-modal-6" popover class="modal">…
+CheckboxModal      → <input type="checkbox" id="my_modal_8" class="modal-toggle" />
+                     <div role="dialog" class="modal">…
+CustomWidth        → <div class="modal-box w-11/12 max-w-5xl">…        the width is on the BOX
+Passthrough        → <div role="dialog" id="modal-1" data-test="yes" style="letter-spacing:1px"
+                       class="modal modal-top modal-end modal-open mine">
+                       <div class="modal-box box-marker" id="modal-box-1" data-test="box">…
+                       <div class="modal-action action-marker" id="modal-action-1" data-test="action">…
+```
+
+What this settles:
+
+- **§3a's role rule, in both directions**: **7 dialog roots carry no `role`** — the element already announces itself — and **all 8 div roots carry `role="dialog"`**, which they need because a div has no dialog semantics. The default is conditional on the root rather than blanket, and stays overridable.
+- **§3f.1**: 15 boxes render as direct children of their modal. A wrapper would have left every one transparent and scaled down behind a dimmed screen — the loudest failure of that shared question so far.
+- **One component really does cover four methods.** The dialog, popover, checkbox and anchor stories differ only in the root element and in caller markup: `onclick="…showModal()"`, `popovertarget`, a preceding `input.modal-toggle`, or an `href` fragment.
+- The backdrop renders as a **sibling** of the box, which is what its `z-index: -1` and stretched grid placement require — and why no boolean prop could have produced it, since its element differs per method.
+- All 11 classes have rules in the built stylesheet.
+
+Not settled here: whether anything opens. Esc handling, focus trapping, the popover and legacy mechanisms, and §3b's visible-but-not-modal distinction are all Step 5.

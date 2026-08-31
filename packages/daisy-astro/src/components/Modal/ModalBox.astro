@@ -1,0 +1,23 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The content panel of a `Modal`.
+ *
+ * **Must be a direct child of the modal** — the rule that reveals it is a child
+ * selector, so a wrapper leaves the box permanently transparent and scaled
+ * down, and the modal opens to an empty dimmed screen (plan §3f.1).
+ *
+ * **The box owns the width**, not the modal: it is about 92% wide with a 32rem
+ * cap, so a wider modal is `class="w-11/12 max-w-5xl"` **here**, which is where
+ * daisyUI's own custom-width example puts it. There is no size prop
+ * (plan §3e).
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['modal-box', className]} {...rest}>
+  <slot />
+</div>

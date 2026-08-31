@@ -37,6 +37,9 @@ import Divider from './components/Divider/Divider.astro';
 import Dock from './components/Dock/Dock.astro';
 import DockItem from './components/Dock/DockItem.astro';
 import DockLabel from './components/Dock/DockLabel.astro';
+import Modal from './components/Modal/Modal.astro';
+import ModalAction from './components/Modal/ModalAction.astro';
+import ModalBox from './components/Modal/ModalBox.astro';
 import Otp from './components/Otp/Otp.astro';
 import Progress from './components/Progress/Progress.astro';
 import Radio from './components/Radio/Radio.astro';
@@ -116,6 +119,11 @@ import Steps from './components/Steps/Steps.astro';
 
 <RadialProgress value={70}>70%</RadialProgress>
 <RadialProgress value={70} size="12rem" thickness="2px" class="text-primary" style="opacity:.5" id="r" data-test="y" />
+
+<Modal id="m1" position="bottom" align="end" open class="sm:modal-middle" data-test="y">
+  <ModalBox class="w-11/12" id="mb"><ModalAction id="ma">x</ModalAction></ModalBox>
+</Modal>
+<Modal as="div" popover id="m2">x</Modal>
 
 <Otp color="primary" size="lg" joined id="ot" data-test="y" class="mine">boxes and input go here</Otp>
 

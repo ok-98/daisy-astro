@@ -1,14 +1,97 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/modal/
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
 
-interface Props extends HTMLAttributes<'dialog'> {}
+// A modal dialog. ONE COMPONENT COVERS ALL FOUR OF daisyUI'S METHODS, because
+// they share the same markup and differ only in the root element and in how the
+// caller opens them (plan §0):
+//
+//   dialog     as="dialog" (the default, and daisyUI's recommendation) with an
+//              id, opened by your own showModal() call. The only method that
+//              closes on Esc AND locks the background.
+//   popover    as="div" plus a `popover` attribute and an id, opened by a
+//              button carrying popovertarget.
+//   checkbox   as="div", preceded by your own hidden input.modal-toggle
+//              (legacy).
+//   anchor     as="div" with an id, opened by a link to that fragment (legacy).
+//
+// role="dialog" is defaulted for the div-rooted methods, since a div has no
+// implicit semantics and every such daisyUI example carries it. A dialog root
+// needs none, and the default stays overridable (plan §3a).
+//
+// `open` IS NOT "the modal is open". It forces visibility from CSS, for
+// frameworks driving state themselves — a dialog element that was never
+// showModal()ed is then VISIBLE BUT NOT MODAL: no top layer, no focus trap, no
+// inert background. Use it with a div root, or for a dialog whose state your
+// framework already manages; for a real dialog, call showModal() (plan §3b).
+//
+// CLOSING IS CALLER MARKUP, and daisyUI's trick is worth knowing because it
+// looks like a mistake: a form with method="dialog" wrapping a single button
+// closes the dialog with no JavaScript at all. The popover equivalent is
+// popovertargetaction="hide"; the checkbox one is another label (plan §3c).
+//
+// The backdrop is caller markup too, and must be a SIBLING of the box rather
+// than a wrapper — it sits behind the box in the same grid cell. Its element
+// differs per method, which is why no component or boolean can render it
+// (plan §2, §3c).
+//
+// NOTE: no angle brackets in this comment, deliberately — this component has a
+// generic Props type (plans/README.md §5c). The `= 'dialog'` default type
+// parameter is that same section's second rule.
+type ModalPosition = 'top' | 'middle' | 'bottom';
+type ModalAlign = 'start' | 'end';
 
-const { class: className, ...rest } = Astro.props;
+type Props<Tag extends HTMLTag = 'dialog'> = Polymorphic<{
+  as: Tag;
+  /** Forces visibility from CSS. Read the note above before using it. */
+  open?: boolean;
+  /** Vertical placement. `middle` is daisyUI's default. */
+  position?: ModalPosition;
+  /**
+   * Horizontal placement, **independent of `position`** — the two compose, so
+   * they are two props rather than one five-value union (plan §3d). The doc
+   * page's responsive example is a caller class: `class="sm:modal-middle"`.
+   */
+  align?: ModalAlign;
+}>;
+
+// Full literal class names. NEVER `modal-${position}` (plans/README.md §1b).
+const POSITION: Record<ModalPosition, string> = {
+  top: 'modal-top',
+  middle: 'modal-middle',
+  bottom: 'modal-bottom',
+};
+
+const ALIGN: Record<ModalAlign, string> = {
+  start: 'modal-start',
+  end: 'modal-end',
+};
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const {
+  as: Tag = 'dialog',
+  open = false,
+  position,
+  align,
+  role,
+  class: className,
+  ...rest
+} = Astro.props as Props<HTMLTag>;
+
+// A dialog element announces itself; a div does not, so the role is defaulted
+// only for the other three methods (plan §3a).
+const resolvedRole = role ?? (Tag === 'dialog' ? undefined : 'dialog');
 ---
 
-<dialog class:list={['modal', className]} {...rest}>
+<Tag
+  class:list={[
+    'modal',
+    position && POSITION[position],
+    align && ALIGN[align],
+    { 'modal-open': open },
+    className,
+  ]}
+  role={resolvedRole}
+  {...rest}
+>
   <slot />
-</dialog>
+</Tag>
