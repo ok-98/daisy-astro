@@ -351,7 +351,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Hover Gallery | `hover-gallery` | **Implemented** — [`plans/components/hover-gallery.md`](components/hover-gallery.md) (6 stories; first child is a resting frame; caps at 10; visual pass open) |
 | Kbd | `kbd` | **Implemented** — [`plans/components/kbd.md`](components/kbd.md) (10 stories; no `as`, no `keys` prop; visual pass open) |
 | List | `list` | **Implemented** — [`plans/components/list.md`](components/list.md) (`List`+`ListRow`, one row for both; 10 stories; second child grows by default; visual pass open) |
-| Stat | `stat` | Planned — [`plans/components/stat.md`](components/stat.md) (`stats` is the component; 7 files — most in the library) |
+| Stat | `stat` | **Implemented** — [`plans/components/stat.md`](components/stat.md) (`stats` is the component, `stat` a part; 7 files — most in the library; 12 stories in one; visual pass open) |
 | Status | `status` | **Implemented** — [`plans/components/status.md`](components/status.md) (10 stories; no slot; uneven size steps; visual pass open) |
 | Table | `table` | Planned — [`plans/components/table.md`](components/table.md) (one class, no parts; ships in the utilities layer so daisyUI emits responsive variants) |
 | Text Rotate | `text-rotate` | **Implemented** — [`plans/components/text-rotate.md`](components/text-rotate.md) (8 stories; generated inner track, 6-item ceiling; visual pass open) |

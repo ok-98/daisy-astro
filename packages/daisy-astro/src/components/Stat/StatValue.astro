@@ -1,0 +1,17 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The large bold number. Colour is a caller class — `class="text-primary"` —
+ * since daisyUI gives this component no colour axis at all (plan §1).
+ *
+ * `white-space: nowrap` (plan §3f).
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['stat-value', className]} {...rest}>
+  <slot />
+</div>

@@ -1,0 +1,42 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type StatsDirection = 'horizontal' | 'vertical';
+
+/**
+ * Container for one or more `Stat` blocks. daisyUI calls **this** the
+ * component; `stat` is one of its parts, which is the reverse of what the doc
+ * page's name suggests (plan §0).
+ *
+ * Unframed by default: daisyUI gives it a border radius and nothing else, so
+ * every doc example adds `class="shadow"` or
+ * `class="bg-base-100 border border-base-300"` (plan §3c).
+ *
+ * It is an `inline-grid` that scrolls rather than wraps, so a row too wide for
+ * its container gets a scrollbar. For the usual dashboard layout use the
+ * responsive class rather than the prop:
+ * `class="stats-vertical lg:stats-horizontal"` (plan §3d).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * Also decides which edge the dashed divider between blocks is drawn on —
+   * trailing when horizontal, bottom when vertical. Horizontal is the default
+   * and still emittable (plan §3c).
+   */
+  direction?: StatsDirection;
+}
+
+// Full literal class names. NEVER `stats-${direction}` — an interpolated class
+// gets no CSS from daisyUI (plans/README.md §1b).
+const DIRECTION: Record<StatsDirection, string> = {
+  horizontal: 'stats-horizontal',
+  vertical: 'stats-vertical',
+};
+
+const { direction, class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['stats', direction && DIRECTION[direction], className]} {...rest}>
+  <slot />
+</div>

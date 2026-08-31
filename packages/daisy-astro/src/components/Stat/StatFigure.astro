@@ -1,0 +1,23 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * An icon or image beside the numbers. **Position is fixed regardless of where
+ * you write it**: `grid-column-start: 2` with `grid-row: 1 / span 3` puts it at
+ * the trailing edge, vertically centred, whether it comes first (as the doc
+ * examples write it) or last (plan §3a).
+ *
+ * Colour is a caller class — `class="text-primary"` — and the icon inside
+ * usually carries `stroke-current` to pick it up.
+ *
+ * A `Stat` declares only one grid column, so adding a figure is what creates
+ * the second one and widens the block (plan §3a).
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['stat-figure', className]} {...rest}>
+  <slot />
+</div>

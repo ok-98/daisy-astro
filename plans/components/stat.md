@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/stat.css` and the doc page source. §3e lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-08-31). Seven components — the most in the library — and 12 stories in **one** file rather than §5's seven (§3g). §3e.1 is answered at both levels (§8). One behaviour §3 missed is recorded as §3f, and §4's probe carried a line that cannot error (§3g). Step 5 (visual pass) is open.
 ---
 
 ## 0. The component is `stats`; `stat` is a part
@@ -106,6 +108,45 @@ The dashed divider is `.stat:not(:last-child) { border-inline-end: … dashed }`
 The page's last direction example is `stats-vertical lg:stats-horizontal` **[verified]** — vertical on mobile, horizontal on desktop, which is the layout most dashboards want given §3c's horizontal scrolling.
 
 Caller class, the library's standing answer (`plans/components/card.md` §3e), and the fourth component where the prop is the less useful form after `plans/components/footer.md` §3b, `plans/components/drawer.md` §3d and `plans/components/menu.md` §3e.
+
+### 3f. Every text part is `white-space: nowrap`
+
+**Found while implementing, 2026-08-31**, and missed by §3a's listing, which
+quoted the grid properties and dropped this one:
+
+```css
+.stat-title, .stat-value, .stat-desc, .stat-actions { white-space: nowrap }
+```
+
+**[verified]** in `stat.css`. Four of the six parts — everything except
+`stat-figure` and the `stat` block itself. So a long title does not wrap onto a
+second line: it widens the block, and since `.stats` is
+`overflow-x: auto` (§3c) a row of them starts **scrolling** rather than
+reflowing. That is the mechanism behind the horizontal-scroll behaviour §3c
+describes, and the reason the vertical direction exists.
+
+Nothing to do about it in the components — it is daisyUI's intent, and
+`class="whitespace-normal"` overrides it per part. Recorded because "my stat
+title is cut off" and "my dashboard scrolls sideways" are the same fact.
+
+### 3g. Two corrections to §4 and §5
+
+**Found while implementing, 2026-08-31.**
+
+1. **§4's probe line `<Stats color="primary">` cannot error.** `color` is a
+   native HTML attribute, so it is in `HTMLAttributes<'div'>` and every
+   component in this library accepts it — which `plans/README.md` §5c already
+   records as a trap, and this plan walked straight into it. The probe used
+   `direction="sideways"` (rejected by the union) and an invented prop name
+   instead; both errored, so the two things the line was meant to prove are
+   proven.
+2. **§5's seven story files are one.** The six parts are one-class wrappers
+   with no props of their own, so a `Playground` + `Passthrough` each would be
+   six files of boilerplate asserting what one nested `Passthrough` asserts
+   better. Same call Card made against the same instruction in its own §5
+   (`plans/components/card.md` §5 asks for per-part files; `Card.stories.ts` is
+   the only file that exists), and for the same reason. `Passthrough` here
+   forwards through the container, the block and all five parts at once (§8).
 
 ### 3e. Unverified assumptions
 
@@ -219,27 +260,60 @@ Three beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3e.1 — blocking at both levels. Settle §3e.4 (image URLs) with the nine other plans.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Rename/replace the scaffold: `Stat.astro` becomes the **part**, and `Stats.astro` is new (§0). Create the five part components per §4, then walk the gate.
-- [ ] **Step 4:** Replace `Stat.stories.ts` with `Stats.stories.ts` and add the six sub-component story files per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` is a rounded, shadowed block with a small dimmed title, a large bold value and a dimmed desc; `ThreeStats` shows **dashed vertical dividers** between blocks but not after the last (§3c); `WithIconsOrImage` puts every icon at the trailing edge, vertically centred (§3a); `FigureLast` is identical (§3a); `Vertical` moves the dividers to horizontal (§3c); `Responsive` flips at `lg`; a narrow canvas makes the horizontal version **scroll** rather than wrap (§3c); `Unframed` has no shadow.
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="stats[^"]*"[^>]*><div class="stat[ "]' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoE '<div class="stat"[^>]*><div class="stat-' storybook-static/astro-prerendered-stories.json | head
-  ```
-  Both must match — direct children at each level (§3e.1).
-- [ ] **Step 7:** Update the `Stat` row in `plans/README.md` to **Implemented**, noting all seven components and the `stats`-is-the-component naming (§0).
+- [x] **Step 1: done for §3e.1, which was blocking at both levels.** The build shows `.stats > .stat` in all 12 stories and `.stat > .stat-*` in all 27 blocks — a wrapper at either level would have cost every dashed divider or every column assignment. §3e.2 is discharged by composing the real `Avatar` and `Button`; §3e.3 is moot (sanitization off library-wide, and the six icons render); §3e.4 stays with the other plans.
+- [x] **Step 2: skipped as planned.** `direction` is local to this component; `variants.ts` untouched.
+- [x] **Step 3: done.** The scaffold's single file became seven per §0a, with `Stats.astro` new. Gate walked — see §3g.1 for the one probe line that had to be rewritten before it could prove anything.
+- [x] **Step 4: done, in one file rather than seven** (§3g.2). `Stats.stories.ts`, 12 stories, composing the real `Avatar` and `Button`.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: `Default` is a rounded shadowed block, small dimmed title, large bold value, dimmed desc; `ThreeStats` shows **dashed vertical dividers between blocks and none after the last** (§3c); every icon sits at the trailing edge, vertically centred (§3a); **`FigureLast`'s two blocks are identical** despite the source order differing (§3a); `ValueBeforeTitle`'s two differ (§3b); `Vertical` moves the dividers to horizontal; `Responsive` flips at `lg`; a narrow canvas makes a horizontal row **scroll rather than wrap** (§3c, §3f); and `Unframed` has no shadow at all.
+- [x] **Step 6: done — forwarding confirmed at three levels in one story.** `Passthrough` renders `<div class="stats stats-horizontal mine shadow" id="stats-1" data-test="yes" style="letter-spacing:1px">` around a marked `stat` around five marked parts. Full output in §8.
+- [x] **Step 7: done — the `Stat` row in `plans/README.md` says Implemented**, noting all seven components and the naming inversion.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 9 daisyUI classes reachable across seven components (§0a).
-- [ ] The scaffold's `stat`-as-container mistake is corrected (§0).
-- [ ] Both nesting levels render as direct children (§3e.1) — checked in the build output.
-- [ ] No invented axis — no colour, size, or content props (§1, §2).
-- [ ] JSDoc states: `stats` is the container (§0), the figure is column 2 wherever written (§3a), title/value/desc follow source order (§3b), the container is unframed by default and scrolls (§3c), and the responsive form is a class (§3d).
-- [ ] One story per doc-page example, plus `FigureLast`, `ValueBeforeTitle` and `Unframed`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 9 daisyUI classes reachable across seven components (§0a).
+- [x] The scaffold's `stat`-as-container mistake is corrected (§0).
+- [x] Both nesting levels render as direct children (§3e.1) — checked in the build output.
+- [x] No invented axis — no colour, size, or content props (§1, §2).
+- [x] JSDoc states: `stats` is the container (§0), the figure is column 2 wherever written (§3a), title/value/desc follow source order (§3b), the container is unframed by default and scrolls (§3c), and the responsive form is a class (§3d).
+- [x] One story per doc-page example, plus `FigureLast`, `ValueBeforeTitle` and `Unframed`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31), SVG elided. `astro check`: 187 files, 0 errors, 0 warnings, 0 hints.
+
+```
+FigureLast  → <div class="stats shadow">
+                <div class="stat"><div class="stat-figure text-primary">SVG</div>
+                  <div class="stat-title">Figure first</div>…</div>
+                <div class="stat"><div class="stat-title">Figure last</div>
+                  <div class="stat-value text-primary">25.6K</div>
+                  <div class="stat-desc">…</div>
+                  <div class="stat-figure text-primary">SVG</div></div></div>
+                                     ↑ written last, rendered in the same place
+Passthrough → <div class="stats stats-horizontal mine shadow" id="stats-1" data-test="yes"
+                style="letter-spacing:1px"><div class="stat stat-marker" id="stat-1"
+                data-test="block"><div class="stat-figure text-primary figure-marker" id="fig-1">SVG</div>
+                <div class="stat-title title-marker" id="title-1">Passthrough</div>
+                <div class="stat-value value-marker" id="value-1">89,400</div>…
+```
+
+Counts across the 12 stories:
+
+```
+stats containers      12   → .stats > .stat direct child   12
+stat blocks           27   → .stat  > .stat-* direct child 27
+title 27 | value 27 | desc 25 | figure 9 | actions 3
+stats-vertical 2 | stats-horizontal 2 (1 of them lg:)
+```
+
+What this settles:
+
+- **§3e.1, at both levels, which was blocking.** 12 of 12 containers hold a `stat` as a direct child and 27 of 27 blocks hold their parts directly. The dashed divider is `.stat:not(:last-child)` and the parts are placed by `grid-column-start` — one wrapper at the container level would have erased every divider, one inside a block would have dropped the figure out of column 2.
+- **§3a, demonstrably**: `FigureLast`'s second block writes the figure after the desc and renders it in the same position as the first block's. Source order does not move it.
+- **§3b holds in the doc example itself**: the icons story's third block is value → title → desc, which named slots would have silently reordered.
+- **All 9 classes have rules in the built stylesheet** — `.stats`, `.stat`, the five parts and both directions.
+- The figure of the third block is a real `Avatar` (`div.avatar.avatar-online > div.w-16`), and `StatActions` holds real `Button`s — §3e.2's raw-markup fallback is discharged, none left in this component.
+
+Not settled here: the dividers, the trailing-edge centring, the `lg` flip and the horizontal scroll. All Step 5.

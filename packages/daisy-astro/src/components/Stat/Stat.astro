@@ -1,14 +1,23 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/stat/
 import type { HTMLAttributes } from 'astro/types';
 
+/**
+ * One block inside a `Stats`. A two-column grid: `StatFigure` is pinned to
+ * column 2 and centred across the rows, everything else stacks in column 1 **in
+ * source order** — so title / value / desc can be arranged however you like,
+ * and the doc page itself varies the order (plan §3a, §3b).
+ *
+ * The dashed divider between blocks comes from `.stat:not(:last-child)`, so it
+ * needs these to be direct children of the `Stats` (plan §3c).
+ *
+ * `class="place-items-center"` centres the whole block, as the doc page's
+ * centered-items example does.
+ */
 interface Props extends HTMLAttributes<'div'> {}
 
 const { class: className, ...rest } = Astro.props;
 ---
 
-<div class:list={['stats', className]} {...rest}>
+<div class:list={['stat', className]} {...rest}>
   <slot />
 </div>

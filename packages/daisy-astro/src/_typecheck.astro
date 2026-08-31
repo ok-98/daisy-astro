@@ -62,6 +62,13 @@ import Mask from './components/Mask/Mask.astro';
 import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
 import PhoneMockupCamera from './components/PhoneMockup/PhoneMockupCamera.astro';
 import PhoneMockupDisplay from './components/PhoneMockup/PhoneMockupDisplay.astro';
+import Stats from './components/Stat/Stats.astro';
+import Stat from './components/Stat/Stat.astro';
+import StatTitle from './components/Stat/StatTitle.astro';
+import StatValue from './components/Stat/StatValue.astro';
+import StatDesc from './components/Stat/StatDesc.astro';
+import StatFigure from './components/Stat/StatFigure.astro';
+import StatActions from './components/Stat/StatActions.astro';
 import Status from './components/Status/Status.astro';
 import Swap from './components/Swap/Swap.astro';
 import SwapIndeterminate from './components/Swap/SwapIndeterminate.astro';
@@ -212,3 +219,14 @@ import Steps from './components/Steps/Steps.astro';
 <Status color="success" size="lg" aria-label="Online" />
 <Status id="s" data-test="y" title="t" class="animate-bounce" />
 <Status as="div" aria-hidden="true" />
+
+<Stats class="shadow" id="sx" data-test="y" title="t">
+  <Stat class="place-items-center" id="sb">
+    <StatFigure class="text-primary" id="sf">icon</StatFigure>
+    <StatTitle>Total Page Views</StatTitle>
+    <StatValue class="text-primary">89,400</StatValue>
+    <StatDesc>21% more than last month</StatDesc>
+    <StatActions data-test="a">buttons</StatActions>
+  </Stat>
+</Stats>
+<Stats direction="vertical" class="lg:stats-horizontal">ok</Stats>
