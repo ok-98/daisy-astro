@@ -1,14 +1,68 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/rating/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisySize } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'div'> {}
+/**
+ * A star rating — a radio group whose shapes come from `Mask`.
+ *
+ * **The items are yours**, and there is no `value`/`max` API: they are radios
+ * sharing a `name`, each with its own `aria-label`, sometimes its own colour,
+ * and in the half-star form alternating mask classes. Two numbers could not
+ * express any of that, and would block the read-only form outright (plan §2):
+ *
+ *     <Rating>
+ *       <input type="radio" name="rating-1" class="mask mask-star-2" aria-label="1 star" />
+ *       <input type="radio" name="rating-1" class="mask mask-star-2" aria-label="2 star" checked />
+ *     </Rating>
+ *
+ * **`aria-label` is the only accessible name each item has.** The radios are
+ * `appearance: none`, so the mask and the background colour are their entire
+ * appearance — without labels a screen reader announces a row of unlabelled
+ * radios (plan §3a).
+ *
+ * **To let a rating be cleared, put a `rating-hidden` item first.** It is
+ * invisible but still clickable and still in the group, which is the only way
+ * back to "no selection". It must be first, because the fill rule lights up
+ * everything *before* the checked item — a clear-radio in the middle would be
+ * lit by any higher rating — and it needs its own `aria-label` too (plan §3b).
+ *
+ * **Read-only ratings are the same component with different children**: plain
+ * divs carrying `aria-current="true"` instead of radios. There is no `readonly`
+ * prop, though it is the first thing a caller looks for (plan §3e).
+ *
+ * **Colour is a `bg-*` class on each item**, not a prop — daisyUI's own
+ * examples give each star a different colour, which no single prop could
+ * express. The opacity split does the rest: unselected items are the same
+ * colour at 20%, selected ones at full (plan §3d).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * Halves the width of **every** child, so pair it with twice as many items
+   * carrying alternating `mask-half-1` / `mask-half-2` classes — those are the
+   * caller's, and `Mask` documents that they zoom the mask rather than clipping
+   * it, which is exactly why the container has to halve the width too
+   * (plan §3c).
+   *
+   * Setting one without the other fails visibly but confusingly: `half` alone
+   * gives narrow whole stars, and the mask classes alone give full-width boxes
+   * each showing half a star.
+   */
+  half?: boolean;
+  size?: DaisySize;
+}
 
-const { class: className, ...rest } = Astro.props;
+// Full literal class names. NEVER `rating-${size}` (plans/README.md §1b).
+const SIZE: Record<DaisySize, string> = {
+  xs: 'rating-xs',
+  sm: 'rating-sm',
+  md: 'rating-md',
+  lg: 'rating-lg',
+  xl: 'rating-xl',
+};
+
+const { half = false, size, class: className, ...rest } = Astro.props;
 ---
 
-<div class:list={['rating', className]} {...rest}>
+<div class:list={['rating', size && SIZE[size], { 'rating-half': half }, className]} {...rest}>
   <slot />
 </div>

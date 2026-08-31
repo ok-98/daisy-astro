@@ -392,7 +392,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Label | `label` | Planned — [`plans/components/label.md`](components/label.md) (`Label`+`FloatingLabel`; neither is a plain form label) |
 | Radio | `radio` | **Implemented** — [`plans/components/radio.md`](components/radio.md) (15 stories; scaffold's missing `type` fixed; visual pass open) |
 | Range | `range` | **Implemented** — [`plans/components/range.md`](components/range.md) (20 stories; scaffold's missing `type` fixed; visual pass open) |
-| Rating | `rating` | Planned — [`plans/components/rating.md`](components/rating.md) (radio group + Mask shapes; `:has(~ :checked)` fill) |
+| Rating | `rating` | **Implemented** — [`plans/components/rating.md`](components/rating.md) (12 stories; radio group + Mask shapes; no `value`/`readonly` props; visual pass open) |
 | Select | `select` | Planned — [`plans/components/select.md`](components/select.md) (first component where the `size` collision has a real cost) |
 | Text Input | `text-input` | Planned — [`plans/components/text-input.md`](components/text-input.md) (dual root: input or label wrapper; type narrowed to daisyUI documented twelve) |
 | Textarea | `textarea` | Planned — [`plans/components/textarea.md`](components/textarea.md) (scaffold whitespace kills placeholder; sizes change font only) |

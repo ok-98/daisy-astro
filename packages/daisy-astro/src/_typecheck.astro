@@ -45,6 +45,7 @@ import ModalBox from './components/Modal/ModalBox.astro';
 import Otp from './components/Otp/Otp.astro';
 import Progress from './components/Progress/Progress.astro';
 import Radio from './components/Radio/Radio.astro';
+import Rating from './components/Rating/Rating.astro';
 import Range from './components/Range/Range.astro';
 import RadialProgress from './components/RadialProgress/RadialProgress.astro';
 import Skeleton from './components/Skeleton/Skeleton.astro';
@@ -133,6 +134,8 @@ import Steps from './components/Steps/Steps.astro';
 <Modal as="div" popover id="m2">x</Modal>
 
 <Otp color="primary" size="lg" joined id="ot" data-test="y" class="mine">boxes and input go here</Otp>
+
+<Rating half size="lg" class="mine gap-1" id="rt" data-test="y">items</Rating>
 
 <Radio name="plan" value="free" checked />
 <Radio name="plan" color="primary" size="lg" disabled id="rd" data-test="y" class="mine" />

@@ -203,7 +203,7 @@ Plus `Playground` and `Passthrough`. Four beyond the doc page:
 - [x] **Step 4: done.** `Mask.stories.ts`, 21 stories per §5, with the doc page's own `alt` text and photo.
 - [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: all fifteen shapes crop distinctly at `w-40 h-40`; the four triangles point four ways; `star` and `star-2` differ in weight; `hexagon` is vertical and `hexagon-2` horizontal; `Halves` shows left and right halves of the same star; `NonSquare` letterboxes rather than stretching (§3d); RTL swaps the halves with no code change (§3c); the images load at all (§3e.3).
 - [x] **Step 6: done — forwarding confirmed.** `Passthrough` renders `<img src="…" alt="Circle CSS mask" id="mask-1" data-test="yes" style="opacity:.9" class="mask mask-circle w-40 h-40 mine"/>`. Full output in §8.
-- [x] **Step 7: done — the `Mask` row in `plans/README.md` says Implemented.** §3c still needs cross-referencing from `plans/components/rating.md` when Rating is built — that plan exists, so this is a Rating-side task.
+- [x] **Step 7: done — the `Mask` row in `plans/README.md` says Implemented.** §3c's cross-reference is now live in both directions: Rating landed on 2026-08-31, and its §3c explains why the container has to halve the item width when these mask halves are used — the two halves of one behaviour, in two components.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist

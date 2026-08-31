@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/rating.css` and the doc page source. §3f lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-08-31). `Rating.astro` and 12 stories. §3f.1 is answered in the build output — 18 ratings render their items as direct children, which both the sizing rule and the `:has(~ …)` fill rule require (§8). Step 5 (visual pass) is open, and it carries the fill behaviour, which is the whole component.
 ---
 
 ## 0. A radio group where the shapes come from Mask
@@ -199,27 +201,50 @@ Plus `Playground` and `Passthrough`. Three beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3f.1 (direct siblings) — blocking. Check §3f.2 (`:has()`) and §3f.4 (`mask`) before judging any story.
-- [ ] **Step 2:** No new shared unions — `DaisySize` reused unchanged. `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4 — the `div` root is already right, the props and JSDoc are the work — then walk the gate.
-- [ ] **Step 4:** Replace `Rating.stories.ts` per §5, with scoped names.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` shows five stars where clicking the third lights **three** (§0) — only one lighting means §3f.2; `ReadOnly` shows three lit with no interaction (§3e); `HeartMultipleColors` keeps five different hues, dimmed until reached (§3d); `Sizes` shows five diameters; `WithRatingHidden` can be cleared by keyboarding to the first radio (§3b); `HalfStars` gives ten half-width clicks across five stars (§3c); `HalfMismatch` looks wrong as documented; focus scales an item to 1.1 (§0).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="rating[^"]*"[^>]*><input type="radio"' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoc 'aria-label="[0-9.]* star"' storybook-static/astro-prerendered-stories.json
-  ```
-- [ ] **Step 7:** Update the `Rating` row in `plans/README.md` to **Implemented**, and cross-reference §3c from `plans/components/mask.md` §3c as that plan's Step 7 anticipated.
+- [x] **Step 1: done for §3f.1** — 18 ratings render their items as direct children and as siblings of each other, which is what the `:has(~ :checked)` fill rule and the `.rating *` sizing rule both need. §3f.2 (`:has()`) and §3f.4 (`mask`) are runtime and move to Step 5. §3f.3 is handled by construction: every story scopes its `name`.
+- [x] **Step 2: skipped as planned.** `DaisySize` reused unchanged, no colour axis; `variants.ts` untouched.
+- [x] **Step 3: done.** Component written per §4. Gate walked; the probe errored on all three intended lines — `size="2xl"`, and both of the APIs this plan rejects, `value` and `readonly`.
+- [x] **Step 4: done.** `Rating.stories.ts`, 12 stories, each with its own radio-group name.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and the fill is the component.** Verify: **selecting a star lights every star before it**, not just the one clicked — if only the selected star lights, that is `:has()` support rather than a different design (§3f.2); `WithClearItem`'s invisible first item clears the rating when clicked or tabbed to (§3b); `HalfStars` reads as five stars in ten clickable halves, and **`HalfMismatch`'s first row is visibly wrong** (§3c); `MultipleColors` keeps each heart its own colour in both states (§3d); `ReadOnly` shows three filled stars and does not respond to clicks (§3e); and the shapes are masked rather than square (§3f.4).
+- [x] **Step 6: done — forwarding confirmed and §3f.1 asserted.** `Passthrough` renders `<div class="rating rating-lg mine gap-1" id="rating-1" data-test="yes" style="letter-spacing:2px">`. Full output in §8.
+- [x] **Step 7: done — the `Rating` row in `plans/README.md` says Implemented**, and `plans/components/mask.md` §3c's cross-reference is now live in both directions.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 8 daisyUI classes reachable: base, `half`, 5 sizes, plus `rating-hidden` documented as a caller class.
-- [ ] Items render as direct siblings and the `:has(~ :checked)` fill works (§0, §3f.1).
-- [ ] No invented axis — no `value`/`max`, no `readonly`, no `color` (§2, §3d, §3e).
-- [ ] JSDoc states: every item needs `aria-label` (§3a), `rating-hidden` goes first (§3b), `half` pairs with `mask-half-*` (§3c), colour is a per-item `bg-*` (§3d), and read-only uses `aria-current` (§3e).
-- [ ] Stories use scoped `name` values (§3f.3).
-- [ ] The Mask cross-reference is in place, both ways (§3c).
-- [ ] One story per doc-page example, plus `MissingAriaLabel`, `HalfMismatch` and `NoClearOption`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 8 daisyUI classes reachable: base, `half`, 5 sizes, plus `rating-hidden` documented as a caller class.
+- [x] Items render as direct siblings and the `:has(~ :checked)` fill works (§0, §3f.1).
+- [x] No invented axis — no `value`/`max`, no `readonly`, no `color` (§2, §3d, §3e).
+- [x] JSDoc states: every item needs `aria-label` (§3a), `rating-hidden` goes first (§3b), `half` pairs with `mask-half-*` (§3c), colour is a per-item `bg-*` (§3d), and read-only uses `aria-current` (§3e).
+- [x] Stories use scoped `name` values (§3f.3).
+- [x] The Mask cross-reference is in place, both ways (§3c).
+- [x] One story per doc-page example, plus `MissingAriaLabel`, `HalfMismatch` and `NoClearOption`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31). `astro check`: 145 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Default        → <div class="rating"><input type="radio" name="rating-1" class="mask mask-star"
+                   aria-label="1 star" /> … ×5, the second checked
+ReadOnly       → <div class="rating"><div class="mask mask-star" aria-label="1 star"></div> …
+                   <div class="mask mask-star" aria-label="3 star" aria-current="true"></div> …
+WithClearItem  → <div class="rating rating-lg">
+                   <input type="radio" name="rating-7" class="rating-hidden" aria-label="clear" />
+                   … five mask-star-2 items after it
+HalfStars      → <div class="rating rating-lg rating-half">… ten items alternating
+                   mask-half-1 / mask-half-2, each with a half-step aria-label
+Passthrough    → <div class="rating rating-lg mine gap-1" id="rating-1" data-test="yes"
+                   style="letter-spacing:2px">…
+```
+
+What this settles:
+
+- **§3f.1**: 18 ratings hold their items as direct children and as siblings. Both of daisyUI's mechanisms depend on it — `.rating *` for the sizing, and `:has(~ :checked)` for the fill — so a wrapper would have made one item of everything and the fill would never work.
+- **The clear item is first in both ratings that have one**, which is not cosmetic: the fill lights everything *before* the checked item, so a clear-radio placed in the middle would be lit by any higher rating (§3b).
+- **100 items carry an `aria-label`**, the exception being `MissingAriaLabel`'s deliberately unlabelled group. Since the radios are `appearance: none`, that attribute is the only accessible name they have (§3a).
+- **The read-only form is the same component with different children** — divs and one `aria-current="true"`, no `readonly` prop (§3e).
+- All 8 classes have rules in the built stylesheet, and the mask and colour classes on the items come from Mask and Tailwind respectively (§0, §3d).
+
+Not settled here: the fill itself. Step 5.
