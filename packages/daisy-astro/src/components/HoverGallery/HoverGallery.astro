@@ -1,14 +1,51 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/hover-gallery/
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+// Swaps between images as the pointer moves across them. Pure CSS.
+//
+// THE FIRST CHILD IS THE RESTING FRAME, not a hover target: daisyUI removes it
+// the moment the pointer enters, and the remaining children become vertical
+// strips. So an N-child gallery has N-1 hoverable images. Two valid shapes,
+// both worth knowing (plan §3a):
+//
+//   duplicate the first image   [A, A, B, C]  a gallery of A/B/C, resting on A
+//   use a distinct cover        [cover, A, B, C]  a poster frame at rest
+//
+// Passing [A, B, C] and expecting three hover targets gives two, with A
+// unreachable — the most likely first-use mistake.
+//
+// IT CAPS AT TEN CHILDREN. The eleventh is display:none with no error, so a
+// gallery holds a resting frame plus at most nine hoverable images (plan §3b).
+//
+// Children are stretched and cropped rather than letterboxed, which is the
+// point; the root has no height of its own, so give it one (plan §3d).
+//
+// There is no hover-media guard, so on a touchscreen this is a static first
+// image with the strips unreachable (plan §3e.4).
+//
+// NOTE: no angle brackets in this comment, deliberately. An angle bracket
+// anywhere in the frontmatter of a component with a GENERIC Props type breaks
+// inference (plans/README.md §5c). The `= 'div'` default type parameter is that
+// same section's second rule.
+type Props<Tag extends HTMLTag = 'div'> = Polymorphic<{
+  /**
+   * daisyUI writes a `:is(figure)` arm into its own selector, which is this
+   * library's signal for exposing the element choice (plan §3c). `as="figure"`
+   * is the better markup when the gallery is a self-contained illustration —
+   * but put the `figcaption` **outside** the gallery, since anything inside
+   * becomes a hover strip.
+   */
+  as: Tag;
+}>;
 
-const { class: className, ...rest } = Astro.props;
+// No variant class map: daisyUI defines exactly one class here, and `--items`
+// is derived from the child count rather than configured — overriding it would
+// desynchronise the columns from the strips (plan §1).
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const { as: Tag = 'div', class: className, ...rest } = Astro.props as Props<HTMLTag>;
 ---
 
-<div class:list={['hover-gallery', className]} {...rest}>
+<Tag class:list={['hover-gallery', className]} {...rest}>
   <slot />
-</div>
+</Tag>

@@ -252,7 +252,9 @@ const { as: Tag = 'button', color, ...rest } = Astro.props as Props<HTMLTag>;
    | ```` ```astro <Status color="info" /> ``` ```` | **broken** |
    | the same JSDoc with the markup line removed | works |
 
-   It is **not** about JSDoc vs `//` — both forms break with an angle bracket and both work without one. So: **no angle brackets in frontmatter comments, in either direction.** Write "a native `kbd` element", not `` `<kbd>` ``, and "child elements of the item" rather than `` `li > *` ``; put markup examples in the stories, where they are executable anyway.
+   **Scope, narrowed 2026-08-31:** every observed failure was on a **generic** `type Props<Tag extends HTMLTag>`. A **non-generic** `interface Props` tolerates angle brackets in its JSDoc — verified twice, on Kbd and on Aura, both of which document themselves with tags in the comment and infer their props correctly. So the ban is real but scoped: **a component with a generic `Props` must have no angle brackets anywhere in its frontmatter**, and a non-generic one may keep them. When in doubt, write prose — a JSDoc that says "a native `kbd` element" costs nothing.
+
+   It is **not** about JSDoc vs `//` — both forms break with an angle bracket and both work without one. So: **no angle brackets in the frontmatter of a generic component, in either direction.** Write "a native `kbd` element", not `` `<kbd>` ``, and "child elements of the item" rather than `` `li > *` ``; put markup examples in the stories, where they are executable anyway.
 
    Two failure shapes, and the quiet ones are worse than the loud one: every call site erroring is easy to spot, a component that silently accepts *every* prop is not, and a single call site failing on `as` looks like a bug in that one usage rather than in the component. `src/_typecheck.astro` catches all three.
 
@@ -337,7 +339,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 |---|---|---|
 | Accordion | `accordion` | Planned — [`plans/components/accordion.md`](components/accordion.md) (wrapper + `AccordionItem`; current code is a dummy scaffold) |
 | Avatar | `avatar` | **Implemented** — [`plans/components/avatar.md`](components/avatar.md) (`Avatar` + `AvatarGroup`, one row for both; §3e.1 open until the visual pass) |
-| Aura | `aura` | Planned — [`plans/components/aura.md`](components/aura.md) (current code is a dummy scaffold) |
+| Aura | `aura` | **Implemented** — [`plans/components/aura.md`](components/aura.md) (17 stories; wraps a direct child; colour/duration are caller classes; visual pass open) |
 | Badge | `badge` | **Implemented** — [`plans/components/badge.md`](components/badge.md) (16 stories; §3b mechanism corrected; visual pass open) |
 | Card | `card` | Planned — [`plans/components/card.md`](components/card.md) (wrapper + `CardBody`/`CardTitle`/`CardActions`; current code is a dummy scaffold) |
 | Carousel | `carousel` | **Implemented** — [`plans/components/carousel.md`](components/carousel.md) (`Carousel` + `CarouselItem`, one row for both; 15 stories; no JS by design; visual pass open) |
@@ -345,14 +347,14 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Collapse | `collapse` | Planned — [`plans/components/collapse.md`](components/collapse.md) (single impl of the 7 `collapse-*` classes; supersedes `AccordionItem`) |
 | Countdown | `countdown` | **Implemented** — [`plans/components/countdown.md`](components/countdown.md) (`Countdown` + `CountdownValue`, one row for both; 12 stories; visual pass open) |
 | Diff | `diff` | **Implemented** — [`plans/components/diff.md`](components/diff.md) (7 stories; native CSS `resize`, no JS; **no drag on iOS Safari**; visual pass open) |
-| Hover 3D card | `hover-3d-card` | Planned — [`plans/components/hover-3d-card.md`](components/hover-3d-card.md) (component generates the 8 hover zones; doc examples pending) |
-| Hover Gallery | `hover-gallery` | Planned — [`plans/components/hover-gallery.md`](components/hover-gallery.md) (first child is a resting frame; caps at 10) |
+| Hover 3D card | `hover-3d-card` | **Implemented** — [`plans/components/hover-3d-card.md`](components/hover-3d-card.md) (5 stories; generates the 8 hover zones; pass exactly one child; visual pass open) |
+| Hover Gallery | `hover-gallery` | **Implemented** — [`plans/components/hover-gallery.md`](components/hover-gallery.md) (6 stories; first child is a resting frame; caps at 10; visual pass open) |
 | Kbd | `kbd` | **Implemented** — [`plans/components/kbd.md`](components/kbd.md) (10 stories; no `as`, no `keys` prop; visual pass open) |
 | List | `list` | Planned — [`plans/components/list.md`](components/list.md) (`List`+`ListRow`; second child grows by default) |
 | Stat | `stat` | Planned — [`plans/components/stat.md`](components/stat.md) (`stats` is the component; 7 files — most in the library) |
 | Status | `status` | **Implemented** — [`plans/components/status.md`](components/status.md) (10 stories; no slot; uneven size steps; visual pass open) |
 | Table | `table` | Planned — [`plans/components/table.md`](components/table.md) (one class, no parts; ships in the utilities layer so daisyUI emits responsive variants) |
-| Text Rotate | `text-rotate` | Planned — [`plans/components/text-rotate.md`](components/text-rotate.md) (span root, generated inner track, 6-item ceiling; CSS-only — see §254 correction) |
+| Text Rotate | `text-rotate` | **Implemented** — [`plans/components/text-rotate.md`](components/text-rotate.md) (8 stories; generated inner track, 6-item ceiling; visual pass open) |
 | Timeline | `timeline` | **Implemented** — [`plans/components/timeline.md`](components/timeline.md) (five components, one row for all; 16 stories; connector `hr`s generated by `TimelineItem`; visual pass open) |
 
 ### Navigation

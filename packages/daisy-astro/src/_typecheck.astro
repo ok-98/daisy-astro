@@ -15,6 +15,7 @@
 // WITHOUT `as` — that is the case the polymorphic default-type-parameter rule
 // exists for. Lines that must NOT compile belong in a throwaway probe, not
 // here.
+import Aura from './components/Aura/Aura.astro';
 import Avatar from './components/Avatar/Avatar.astro';
 import AvatarGroup from './components/Avatar/AvatarGroup.astro';
 import Badge from './components/Badge/Badge.astro';
@@ -37,6 +38,8 @@ import Radio from './components/Radio/Radio.astro';
 import Range from './components/Range/Range.astro';
 import RadialProgress from './components/RadialProgress/RadialProgress.astro';
 import Skeleton from './components/Skeleton/Skeleton.astro';
+import Hover3dCard from './components/Hover3dCard/Hover3dCard.astro';
+import HoverGallery from './components/HoverGallery/HoverGallery.astro';
 import Kbd from './components/Kbd/Kbd.astro';
 import Link from './components/Link/Link.astro';
 import Loading from './components/Loading/Loading.astro';
@@ -49,6 +52,7 @@ import WindowMockup from './components/WindowMockup/WindowMockup.astro';
 import Tab from './components/Tab/Tab.astro';
 import TabContent from './components/Tab/TabContent.astro';
 import Tabs from './components/Tab/Tabs.astro';
+import TextRotate from './components/TextRotate/TextRotate.astro';
 import Timeline from './components/Timeline/Timeline.astro';
 import TimelineEnd from './components/Timeline/TimelineEnd.astro';
 import TimelineItem from './components/Timeline/TimelineItem.astro';
@@ -114,6 +118,11 @@ import Steps from './components/Steps/Steps.astro';
 <Skeleton class="h-32 w-32" />
 <Skeleton text as="span">ok</Skeleton>
 <Skeleton class="h-16 w-16" id="sk" data-test="y" title="t" />
+
+<Aura variant="rainbow" size="lg" class="text-primary" id="au" data-test="y">child</Aura>
+<Hover3dCard class="mine" id="h3"><div>card</div></Hover3dCard>
+<HoverGallery as="figure" class="h-64" id="hg" data-test="y">imgs</HoverGallery>
+<TextRotate align="center" class="text-7xl" id="tr">items</TextRotate>
 
 <Kbd>K</Kbd>
 <Kbd size="lg" id="k" data-test="y" class="mx-1">K</Kbd>

@@ -1,14 +1,53 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/text-rotate/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type TextRotateAlign = 'start' | 'center' | 'end';
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A vertically rotating list of phrases, animated in pure CSS.
+ *
+ * **The markup is three levels, and this component supplies two of them**: a
+ * clipping viewport one line tall, an animated track inside it, and your items
+ * inside that. So the slot lands two levels deep, and you write only the items
+ * (plan §0b). Dropping items straight into a single-level wrapper would make
+ * each of them its own full-height grid and nothing would animate at all.
+ *
+ * **Six items is a hard ceiling and the seventh breaks it silently.** daisyUI's
+ * rules stop at a sixth child, so a seventh leaves the track sized for six
+ * while holding seven rows: items are clipped and the loop skips. daisyUI's own
+ * description says "up to 6 lines"; nothing enforces it at build time
+ * (plan §0d).
+ *
+ * Speed, font size and line height are **caller classes on this element**:
+ * `class="duration-6000 text-7xl leading-[2]"` (plan §0e).
+ */
+interface Props extends HTMLAttributes<'span'> {
+  /**
+   * Horizontal alignment of the rotating items. It is applied to the
+   * **generated track**, which a caller's `class` cannot reach — which is the
+   * only reason this is a prop at all rather than a class (plan §1). daisyUI's
+   * default is `start`; four of its five examples use `center`.
+   */
+  align?: TextRotateAlign;
+}
+
+// Full literal class names. NEVER `justify-items-${align}` — Tailwind scans
+// source text and finds nothing in an interpolated name (plans/README.md §1b).
+const ALIGN: Record<TextRotateAlign, string> = {
+  start: 'justify-items-start',
+  center: 'justify-items-center',
+  end: 'justify-items-end',
+};
+
+const { align = 'start', class: className, ...rest } = Astro.props;
+
+// The inner span below is the animated track. It is not optional and has no
+// classes of its own beyond the alignment, so it is rendered here rather than
+// being a sub-component with exactly one legal parent and one legal use
+// (plan §0b).
 ---
 
-<div class:list={['text-rotate', className]} {...rest}>
-  <slot />
-</div>
+<span class:list={['text-rotate', className]} {...rest}>
+  <span class:list={[ALIGN[align]]}><slot /></span>
+</span>

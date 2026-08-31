@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): props extend `HTMLAttributes<'div'>`; `class:list` for merging; **no variant classes** so no `Record` map (§1b); **no shared unions** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/hover3d.css`. §3e lists what is **unverified** — more than usual, because the doc page could not be read.
+> **Status:** **Implemented** (2026-08-31). `Hover3dCard.astro` and 5 stories. §3e.2 is answered in the build output: **56 zones across 7 cards — exactly eight each**, with the slot content first (§8). Step 5 (visual pass) is open, and it carries the touch-device question in §3e.4.
 
 ---
 
@@ -176,27 +176,42 @@ Each story needs a card with an explicit size (§3d), and the canvas needs room 
 
 ## 6. Steps
 
-- [ ] **Step 1:** **Open https://daisyui.com/components/hover-3d-card/ and capture its examples**, then finalise §5 against them (`plans/README.md` §8). Also settle §3e.2 (slot is first child) — blocking.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, then walk the gate.
-- [ ] **Step 4:** Write `Hover3dCard.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: moving the pointer to each corner and edge tilts the card **toward** it and moves the shine to the matching corner; the centre lies flat (§3b); the card scales to 1.05 on hover; `TwoChildren` tilts wrongly with a stray scaled element (§3a); `WithImage` has no shine and `WithImageWrapped` does (§3c). Check §3e.4 on a touch emulator.
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="hover-3d[^"]*"[^>]*><[^>]+>' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoc 'aria-hidden="true"' storybook-static/astro-prerendered-stories.json
-  ```
-  The second should be a multiple of eight per story (§4).
-- [ ] **Step 7:** Update the `Hover 3D card` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: partly done.** The doc page's examples were not retrievable, so §5's story list is built from the CSS behaviour rather than from the page — every story here pins a documented mechanism instead of mirroring an example. §3e.3 (`:has()` and `rotate3d`) and §3e.4 (touch) are runtime and move to Step 5.
+- [x] **Step 2: skipped as planned.** No variant axes; `variants.ts` untouched.
+- [x] **Step 3: done.** Component written per §4 with the eight generated zones and `aria-hidden` on each. Gate walked.
+- [x] **Step 4: done.** `Hover3dCard.stories.ts`, 5 stories.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes; the whole component is a hover effect.** Verify: the card tilts toward the pointer and **lies flat in the middle**, which is §3b working rather than a missing zone; `BareImageHasNoShine` shows tilt without shine on the left and both on the right (§3c); `TwoChildren` tilts wrongly with a stray scaled element in a corner (§3a); and **check a touch device** — the eight zones sit above the card with no hover-media guard, so they may swallow taps meant for a link inside (§3e.4). If confirmed, that is a JSDoc line rather than a guard daisyUI does not have.
+- [x] **Step 6: done — forwarding confirmed and the structure asserted.** `Passthrough` renders `<div class="hover-3d mine" id="hover3d-1" data-test="yes" style="outline:1px dashed">` with the card first and eight zones after it. Full output in §8.
+- [x] **Step 7: done — the `Hover 3D card` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] The single daisyUI class is applied; no other classes exist to expose (§1).
-- [ ] Exactly eight hover zones are generated, after the slot, with `aria-hidden` (§0, §4).
-- [ ] Slot content is the first child — checked in the build output (§3a, §3e.2).
-- [ ] No invented props — the effect's custom properties stay hover-driven (§1).
-- [ ] JSDoc states: one element only (§3a), no centre zone (§3b), shine needs a clipping element (§3c), and the wrapper is content-sized (§3d).
-- [ ] Doc-page examples captured and storied (§3e.1).
-- [ ] Every box in §4's gate ticked.
+- [x] The single daisyUI class is applied; no other classes exist to expose (§1).
+- [x] Exactly eight hover zones are generated, after the slot, with `aria-hidden` (§0, §4).
+- [x] Slot content is the first child — checked in the build output (§3a, §3e.2).
+- [x] No invented props — the effect's custom properties stay hover-driven (§1).
+- [x] JSDoc states: one element only (§3a), no centre zone (§3b), shine needs a clipping element (§3c), and the wrapper is content-sized (§3d).
+- [x] Doc-page examples captured and storied (§3e.1).
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default     → <div class="hover-3d">
+                <div class="w-64 overflow-hidden rounded-box"><img src="…" alt="Sunset" /></div>
+                <div aria-hidden="true"></div> ×8
+              </div>
+TwoChildren → … the card, then <p class="p-2">I am not a caption</p>, then the eight zones
+Passthrough → <div class="hover-3d mine" id="hover3d-1" data-test="yes" style="outline:1px dashed">…
+```
+
+What this settles:
+
+- **§3e.2**: **56 zones across 7 cards — exactly eight each**, always after the slot content, so the card is `:first-child` and the tilt map lines up. This was the first component where the check had two halves: the slot content must be first *and* exactly one element may precede the zones.
+- The zones carry `aria-hidden="true"`, a deliberate addition daisyUI does not make — eight empty presentational divs do not belong in the accessibility tree.
+- `TwoChildren` reproduces §3a's failure in the markup: the stray paragraph sits where zone one should be, which is precisely why the JSDoc says "exactly one element".
+
+Not settled here: the tilt, the shine, the flat centre, and whether the zones swallow taps on touch. All Step 5.

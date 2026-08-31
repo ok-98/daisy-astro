@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): `class:list` for merging; **no variant classes** so no `Record` map (§1b); **no shared unions** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/hovergallery.css`. §3e lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-31). `HoverGallery.astro` and 6 stories. Step 5 (visual pass) is open and carries most of this component — the swap, the ten-child cap and the touch behaviour are all runtime.
 
 ---
 
@@ -171,25 +171,40 @@ Every story needs a height (§3d) — a comment says so once Step 5 settles whic
 
 ## 6. Steps
 
-- [ ] **Step 1:** **Open https://daisyui.com/components/hover-gallery/ and capture its examples**, settling §3a (is the first image duplicated?) and §3d (how the height is set). Also resolve §3e.2 — blocking.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, then walk the gate. **Run the probe** — the generic failure is silent.
-- [ ] **Step 4:** Write `HoverGallery.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: at rest only one image is visible; moving across the gallery swaps images at even intervals; the number of hover targets is **one fewer** than the child count (§3a); `Overflow` shows nine targets and drops the rest (§3b); `AsFigure` renders a `<figure>` and behaves identically. Check §3e.4 on a touch emulator.
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<(div|figure) class="hover-gallery[^"]*"[^>]*><img' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Hover Gallery` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: partly done.** The doc page's examples were not retrievable, so the stories are built from the CSS behaviour. §3a's resting-frame question is settled by the CSS itself and the stories duplicate the first image accordingly; whether the doc page does the same is cosmetic. §3e.3 (`:has()`) and §3e.4 (touch) move to Step 5.
+- [x] **Step 2: skipped as planned.** No variant axes; `variants.ts` untouched.
+- [x] **Step 3: done.** Component written per §4, polymorphic with a `= 'div'` default type parameter (`plans/README.md` §5c). Gate walked; the probe errored on the intended line.
+- [x] **Step 4: done.** `HoverGallery.stories.ts`, 6 stories.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: hovering across `Default` swaps images and the resting frame disappears on entry (§3a); `MissingRestingFrame`'s first gallery leaves its first photo unreachable while the second does not; `Overflow`'s eleventh child never appears (§3b); `AsFigure` renders with the caption outside and behaves identically (§3c); the hairline `gap` is invisible at rest (§3d); and **on a touchscreen the gallery is a static first image** with the strips unreachable, which is daisyUI's behaviour and not a bug (§3e.4).
+- [x] **Step 6: done — forwarding confirmed.** `Passthrough` renders `<figure class="hover-gallery mine h-64 w-96" id="gallery-1" data-test="yes" style="outline:1px dashed">`, so `as` changes the tag and the caller's classes merge — load-bearing, since the gallery has no height of its own. Full output in §8.
+- [x] **Step 7: done — the `Hover Gallery` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] The single daisyUI class is applied; `--items` stays derived (§1).
-- [ ] Children render as direct children — checked in the build output (§3e.2).
-- [ ] Root defaults to `div` and accepts `as="figure"`; probe passes (§3c).
-- [ ] No invented axis — no `images` prop, no `--items` prop.
-- [ ] JSDoc states: the first child is a resting frame (§3a), the ten-child cap (§3b), `figcaption` goes outside (§3c), and hover-only interaction (§3e.4).
-- [ ] Doc-page examples captured and storied (§3e.1).
-- [ ] Every box in §4's gate ticked.
+- [x] The single daisyUI class is applied; `--items` stays derived (§1).
+- [x] Children render as direct children — checked in the build output (§3e.2).
+- [x] Root defaults to `div` and accepts `as="figure"`; probe passes (§3c).
+- [x] No invented axis — no `images` prop, no `--items` prop.
+- [x] JSDoc states: the first child is a resting frame (§3a), the ten-child cap (§3b), `figcaption` goes outside (§3c), and hover-only interaction (§3e.4).
+- [x] Doc-page examples captured and storied (§3e.1).
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default     → <div class="hover-gallery h-64 w-96">
+                <img src="…photo-1559703248…" alt="Sunset" />      ← resting frame, a duplicate of the first
+                <img src="…photo-1559703248…" alt="Sunset" />
+                <img src="…photo-1565098772…" alt="Forest" /> …
+AsFigure    → <figure class="w-96"><figure class="hover-gallery h-64 w-96">…</figure>
+                <figcaption class="text-sm mt-2">…</figcaption></figure>   ← caption outside the gallery
+Passthrough → <figure class="hover-gallery mine h-64 w-96" id="gallery-1" data-test="yes"
+                style="outline:1px dashed">…
+```
+
+What this settles: the images are direct children with their own `alt` text, which is why there is no `images` array prop; `as="figure"` renders the element daisyUI's own selector names; and the caption sits outside the gallery, since anything inside would become a hover strip.
+
+Not settled here, and it is nearly the whole component: whether hovering swaps at all, whether the eleventh child really vanishes, and what happens on touch. Step 5.

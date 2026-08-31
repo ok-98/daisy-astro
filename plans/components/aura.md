@@ -14,7 +14,7 @@
 - Stories run on `@storybook-astro/framework`: import the `.astro` file as `component`, pass slot content via `args.slots`.
 - `astro check` is the type gate, not `tsc` (§5b).
 
-> **Status:** Planned. Nothing in §4 is implemented. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/aura.css` and `daisyui.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/aura/+page.md` in `saadeghi/daisyui`). §3e lists what is **unverified** and must be resolved while building.
+> **Status:** **Implemented** (2026-08-31). `Aura.astro` and 17 stories are in the repo per §4/§5. §3b's direct-child requirement is asserted in the build output: **23 auras render their child unwrapped** (§8). §3e.3's `@property --aura-angle` question is answered — the registration reaches the built stylesheet, so a static gradient would be browser support rather than a missing rule. Step 5 (visual pass) is open.
 
 ---
 
@@ -273,39 +273,48 @@ export const Passthrough = {
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3e.1 first — whether a slot value lands as a real direct child. It is blocking (§3b), and it is the same question as `plans/components/alert.md` §3d.2, so record the answer in both plans.
-- [ ] **Step 2:** No new shared unions — `size` reuses `DaisySize`, `AuraVariant` stays local (§1). `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Aura.astro` dummy scaffold per §4, then walk the Astro idioms gate.
-- [ ] **Step 4:** Replace `Aura.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Aura`, verify:
-  - `Playground` renders and every control changes the markup.
-  - **The aura actually rotates.** A static gradient means `--aura-angle` never registered — read §3e.3 before touching the component.
-  - `AroundAButton`: the light follows the button's pill radius, not a large box radius. This is the §3b check — do it on the *button*, not the card, because the card looks right either way.
-  - The wrapped content sits **in front of** the blur, not behind it (§3b, the `z-index` half).
-  - All six style variants differ from each other and from the default.
-  - `Sizes`: ring thickness grows xs → xl while the buttons stay the same size (§1).
-  - `ColorRespect`: `dual` picks up `text-primary`, `gold` does not (§3a).
-  - `CustomDuration` visibly spins faster than `Rainbow` (§1a).
-  - `BlockLayout`: the default is shrink-to-fit, the `block w-full` copy fills the container (§3c).
-- [ ] **Step 6:** Confirm forwarding via `Passthrough` — `id`, `data-*`, `style`, `class` all survive. Headless check:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="aura[^"]*"[^>]*><[^>]*>' storybook-static/astro-prerendered-stories.json | head
-  ```
-  That pattern also answers §3e.1 directly: the element immediately after `div.aura` must be the card/button itself, with no wrapper in between.
-- [ ] **Step 7:** Update the `Aura` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done.** §3e.1 was answered while building Button and holds here too — 23 auras render their child as a direct, unwrapped child, so `.aura > *` and both `:has(> …)` radius rules match.
+- [x] **Step 2: skipped as planned.** `DaisySize` reused unchanged, `AuraVariant` local; `variants.ts` untouched.
+- [x] **Step 3: done.** Scaffold replaced per §4; gate walked. One deviation from §4's listing: the structural note is a frontmatter comment rather than an HTML comment above the element, which would ship into every rendered aura.
+- [x] **Step 4: done.** `Aura.stories.ts`, 17 stories per §5. Buttons compose the real `Button`; cards are still raw markup with a `TODO(daisy-astro)` marker, since `Card` is Stage 2 work.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and almost everything here is motion.** Verify: **the aura actually rotates** — a static gradient means browser support for `@property`, not a missing rule (§3e.3, now settled at the stylesheet level); `AroundAButton`'s light follows the **button's pill radius**, which is the §3b check worth doing on a button rather than a card, since the card looks right either way; the content sits **in front of** the blur; all six variants differ; `Sizes` grows the ring while the buttons stay put; `ColorRespect` shows `dual` tinted and `gold` not (§3a); `CustomDuration` spins faster; `BlockLayout`'s second copy fills the container (§3c).
+- [x] **Step 6: done — forwarding confirmed and §3b's structure asserted.** `Passthrough` renders `<div class="aura mine text-primary" id="aura-1" data-test="yes" style="letter-spacing:2px">`, and across the stories 23 auras hold their child directly. Full output in §8.
+- [x] **Step 7: done — the `Aura` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 12 daisyUI classes from §1 are reachable: `aura` always, 6 styles via `variant`, 5 sizes via `size`.
-- [ ] No invented axis — no `color` prop (§3a), no `duration` prop (§1a), no `animate` prop (§3d).
-- [ ] `Props` extends `HTMLAttributes<'div'>`; non-variant native attributes work without explicit declaration.
-- [ ] Caller `class` merges through `class:list` — load-bearing here, since colour/background/duration all arrive that way.
-- [ ] Slot content renders as the **direct child** of `div.aura`, unwrapped — checked in rendered HTML, not by eye (§3b, §3e.1).
-- [ ] Child radius matches a wrapped `btn`, proving the `:has(> .btn)` selector matches (§3b).
-- [ ] `Playground` exposes every prop as a control.
-- [ ] One story per doc-page example, reproducing that example's markup and copy.
-- [ ] `ColorRespect` and `BlockLayout` exist and demonstrate §3a and §3c.
-- [ ] `variant`'s JSDoc names which variants ignore `text-*` (§3a) and the inline-block caveat is documented (§3c).
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] All 12 daisyUI classes from §1 are reachable: `aura` always, 6 styles via `variant`, 5 sizes via `size`.
+- [x] No invented axis — no `color` prop (§3a), no `duration` prop (§1a), no `animate` prop (§3d).
+- [x] `Props` extends `HTMLAttributes<'div'>`; non-variant native attributes work without explicit declaration.
+- [x] Caller `class` merges through `class:list` — load-bearing here, since colour/background/duration all arrive that way.
+- [x] Slot content renders as the **direct child** of `div.aura`, unwrapped — checked in rendered HTML, not by eye (§3b, §3e.1).
+- [x] Child radius matches a wrapped `btn`, proving the `:has(> .btn)` selector matches (§3b).
+- [x] `Playground` exposes every prop as a control.
+- [x] One story per doc-page example, reproducing that example's markup and copy.
+- [x] `ColorRespect` and `BlockLayout` exist and demonstrate §3a and §3c.
+- [x] `variant`'s JSDoc names which variants ignore `text-*` (§3a) and the inline-block caveat is documented (§3c).
+- [x] Every box in §4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+AroundAButton → <div class="aura"><button class="btn">button with aura</button></div>
+AroundACard   → <div class="aura"><div class="card bg-base-100 "><div class="card-body">…
+Dual…Silver   → <div class="aura aura-dual">… one per variant
+CustomColor   → <div class="aura text-orange-600">…        colour is a text utility, not a prop
+Sizes         → <div class="aura aura-xs">… through … <div class="aura aura-xl">…
+Passthrough   → <div class="aura mine text-primary" id="aura-1" data-test="yes" style="letter-spacing:2px">
+                  <button class="btn">Passthrough</button></div>
+```
+
+What this settles:
+
+- **§3b's requirement**: 23 auras hold their child as a direct, unwrapped child. Both failure modes it warns about — a radius that stops matching, and content rendering *behind* the glow — are cosmetic-looking and would have been easy to miss by eye.
+- Colour, background and animation duration all arrive as caller classes, never as props (§1a).
+- **§3e.3 is settled at the stylesheet level**: `@property --aura-angle` is registered in the built CSS, so the tween is wired and a static gradient at Step 5 would be browser support for `@property` rather than a missing rule. Same answer as `plans/components/radial-progress.md` §3e.1 found for `--radialprogress`.
+- All 12 classes have rules in the built stylesheet.
+
+Not settled here: the rotation, the child radius, the z-order and the four variants that ignore `text-*`. All Step 5.

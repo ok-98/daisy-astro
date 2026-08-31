@@ -1,14 +1,49 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/hover-3d-card/
 import type { HTMLAttributes } from 'astro/types';
 
+/**
+ * Tilts its child toward the pointer, with a moving shine. Pure CSS: the
+ * effect is eight invisible hover zones and a `:has()` rule per zone.
+ *
+ * **Pass exactly one element.** It becomes the card; everything after it is
+ * treated as a hover zone, so a second slotted element silently becomes zone
+ * one — it gains a scale and a corner grid area, the tilt map shifts by one,
+ * and the bottom-right zone goes dead. No error, just a card that tilts wrongly
+ * with a stray scaled element in the corner (plan §3a).
+ *
+ * **There is no centre zone, deliberately.** The grid covers eight of nine
+ * cells, so the card lies flat whenever the pointer is in the middle — which is
+ * what makes this read as a physical tilt rather than a snap between eight
+ * states. "The middle doesn't work" is the effect working (plan §3b).
+ *
+ * **A bare image tilts but does not shine.** The shine is a `::before` on the
+ * card clipped by its own `overflow: hidden`, and an `img` cannot have one —
+ * wrap it in a div, or use a card, when the shine matters. Setting
+ * `overflow: visible` on the card loses the shine and gains a large blurred
+ * blob (plan §3c).
+ *
+ * `inline-grid` with no size of its own, so size the **card**, not this
+ * wrapper. The perspective lives here, which is why the wrapper exists at all
+ * rather than the class going on the card (plan §3d).
+ *
+ * The zones are `scale: 1.2`, so they overrun the card by a fifth and the tilt
+ * starts just before the pointer arrives — do not clip that with an
+ * `overflow: hidden` on this element.
+ */
 interface Props extends HTMLAttributes<'div'> {}
+
+// No variant class map: daisyUI defines exactly one class here (plan §1).
+
+// Eight zones, in daisyUI's order: TL, TC, TR, ML, MR, BL, BC, BR — no centre
+// (plan §3b). `aria-hidden` is an addition daisyUI does not make: they are
+// empty presentational divs, and eight meaningless nodes do not belong in the
+// accessibility tree.
+const ZONES = 8;
 
 const { class: className, ...rest } = Astro.props;
 ---
 
-<div class:list={['hover-3d-card', className]} {...rest}>
+<div class:list={['hover-3d', className]} {...rest}>
   <slot />
+  {Array.from({ length: ZONES }).map(() => <div aria-hidden="true" />)}
 </div>
