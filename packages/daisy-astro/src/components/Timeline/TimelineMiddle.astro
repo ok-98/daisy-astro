@@ -1,0 +1,17 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The middle of a timeline item — the icon slot, in every daisyUI example.
+ *
+ * No `box` prop: daisyUI scopes `timeline-box` to the start and end parts only
+ * (plan §0c).
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['timeline-middle', className]} {...rest}>
+  <slot />
+</div>

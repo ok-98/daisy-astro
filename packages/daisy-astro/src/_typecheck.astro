@@ -43,6 +43,11 @@ import Status from './components/Status/Status.astro';
 import Tab from './components/Tab/Tab.astro';
 import TabContent from './components/Tab/TabContent.astro';
 import Tabs from './components/Tab/Tabs.astro';
+import Timeline from './components/Timeline/Timeline.astro';
+import TimelineEnd from './components/Timeline/TimelineEnd.astro';
+import TimelineItem from './components/Timeline/TimelineItem.astro';
+import TimelineMiddle from './components/Timeline/TimelineMiddle.astro';
+import TimelineStart from './components/Timeline/TimelineStart.astro';
 import Step from './components/Steps/Step.astro';
 import StepIcon from './components/Steps/StepIcon.astro';
 import Steps from './components/Steps/Steps.astro';
@@ -123,6 +128,14 @@ import Steps from './components/Steps/Steps.astro';
 <Tab as="input" type="radio" name="t1" aria-label="Tab 1" />
 <Tab as="label" disabled class="mine">Live</Tab>
 <TabContent class="p-6" id="tc">panel</TabContent>
+
+<Timeline direction="vertical" compact snapIcon class="lg:timeline-horizontal" id="tl" data-test="y">
+  <TimelineItem lineBefore={false} lineAfterClass="bg-primary" class="mine" id="ti">
+    <TimelineStart box>1984</TimelineStart>
+    <TimelineMiddle>icon</TimelineMiddle>
+    <TimelineEnd box>First Macintosh</TimelineEnd>
+  </TimelineItem>
+</Timeline>
 
 <Status />
 <Status color="success" size="lg" aria-label="Online" />

@@ -1,14 +1,58 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/timeline/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'ul'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type TimelineDirection = 'horizontal' | 'vertical';
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A timeline strip.
+ *
+ * Children must be `TimelineItem`s. Every daisyUI selector here goes through
+ * the list item, so an interposed element gets no grid and the whole layout
+ * collapses (plan §0b).
+ *
+ * **Responsive switching is a caller class**, and daisyUI's own examples are
+ * the only documentation of it — both worth copying verbatim (plan §0e):
+ *
+ *   class="lg:timeline-horizontal"        with direction="vertical"
+ *   class="max-md:timeline-compact"       with direction="vertical" and snapIcon
+ *
+ * `compact` and `snapIcon` are **compound with `direction`** rather than
+ * independent: each has a vertical-specific override that collapses a column
+ * where the horizontal one collapses a row, so the three together do more than
+ * the sum of their parts (plan §0f).
+ */
+interface Props extends HTMLAttributes<'ul'> {
+  /**
+   * Layout axis. Horizontal is daisyUI's default, so leaving this undefined
+   * emits no class at all. `'horizontal'` is still in the union because the
+   * responsive pairing needs the class to exist — `lg:timeline-horizontal` is
+   * what undoes `timeline-vertical` above the breakpoint (plan §0d).
+   */
+  direction?: TimelineDirection;
+  /** Folds both sides onto one. Behaves differently with `direction="vertical"`. */
+  compact?: boolean;
+  /** Snaps the middle part to the start edge instead of centring it. */
+  snapIcon?: boolean;
+}
+
+// Full literal class names. NEVER `timeline-${direction}` (plans/README.md §1b).
+const DIRECTION: Record<TimelineDirection, string> = {
+  horizontal: 'timeline-horizontal',
+  vertical: 'timeline-vertical',
+};
+
+const { direction, compact = false, snapIcon = false, class: className, ...rest } = Astro.props;
 ---
 
-<ul class:list={['timeline', className]} {...rest}>
+<ul
+  class:list={[
+    'timeline',
+    direction && DIRECTION[direction],
+    { 'timeline-compact': compact, 'timeline-snap-icon': snapIcon },
+    className,
+  ]}
+  {...rest}
+>
   <slot />
 </ul>

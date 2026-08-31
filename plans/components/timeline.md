@@ -1,5 +1,7 @@
 # Timeline Component Plan
 
+> **Status:** **Implemented** (2026-08-31). All five components plus 16 stories are in the repo per §4/§5. The decisive direct-child question (§2) is answered at both levels in the build output: 16 lists render `li` as a direct child, and **61 items place an `hr` as their literal first child and 61 as their literal last child** (§8). §5's assumption that stories cannot nest these components is obsolete — see the correction there. Step 5 (visual pass) is open.
+
 **daisyUI category:** Data Display
 **daisyUI doc page:** https://daisyui.com/components/timeline/
 **Root element:** `ul` (items are `li` — see §0b)
@@ -411,7 +413,7 @@ No separate variant-axis story is needed: `direction` is covered by the horizont
 
 Four story-writing notes:
 
-- **This is a five-component composition, and `args.slots` is a flat HTML string.** A story cannot nest `TimelineItem` inside `Timeline` through `slots`. Use a wrapper `.astro` story component holding the real composed markup — the same route `text-input.md` §5 and `theme-controller.md` §5 take for their composed examples. Do not flatten to raw `<li><hr/><div class="timeline-start">` markup: that would test daisyUI's CSS while testing none of this plan's components.
+- ~~**This is a five-component composition, and `args.slots` is a flat HTML string.** A story cannot nest `TimelineItem` inside `Timeline` through `slots`.~~ **Corrected 2026-08-31: it can.** A slot value may be a configured-component descriptor with its own props and slots, nested arbitrarily deep, so the stories compose the real five components directly — no wrapper `.astro` story components, and no flattening to raw markup. See `plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3. The same correction applies to `text-input.md` §5 and `theme-controller.md` §5, which prescribed the wrapper route for the same reason.
 - **Twelve of the fourteen examples contain inline `<svg>`.** Same sanitization risk as `text-input.md` §5. Write `WithoutIcons` first — it is the one horizontal example with no SVG at all, so it isolates layout from sanitization.
 - **`ColorfulLines` is the only story that exercises `lineBeforeClass` / `lineAfterClass`**, and it must reproduce the doc's asymmetry faithfully (§0g): first item has no leading line and a `bg-primary` trailing one; the second has a `bg-primary` leading line and a plain trailing one. Normalising that to "all lines primary" would make the story prove nothing.
 - **`Responsive` and `SnapIconCompact` are the only documentation of the responsive classes** (§0e). Both need a description naming the exact class string, since a Storybook canvas at one width shows only half the behaviour.
@@ -443,38 +445,58 @@ export const Responsive = {
 
 ## 6. Steps
 
-- [ ] **Step 1:** Section 1 is already filled from the shipped CSS and the doc frontmatter — nine classes, fourteen examples. Nothing to re-derive.
-- [ ] **Step 2:** No union goes in `variants.ts`; the two-value `direction` union is one-component-specific and stays local, the same carve-out `text-input.md` and `text-rotate.md` used.
-- [ ] **Step 3:** Create the five files per section 4. **Probe the direct-child question first** (§2): render one `Timeline` with two `TimelineItem`s and read the built HTML — `<li>` must be a direct child of `<ul>`, and each `<hr>` must be the literal first/last child of its `<li>`. If anything is interposed, the grid and the connectors both fail and nothing else here is testable. Record the result in `aura.md` §3e.1.
-- [ ] **Step 4:** Write `Timeline.stories.ts` plus the wrapper story components. Start with `WithoutIcons`.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Timeline`, verify:
-  - `BothSides` shows a continuous line with no overhang past the first or last icon — the `lineBefore={false}` / `lineAfter={false}` check (§0a).
-  - The exposed line ends are rounded (`--radius-selector`), proving the edge `:has()` rules matched.
-  - `ColorfulLines` colours exactly the two segments the doc colours (§0g).
-  - `VerticalBothSides` puts start left and end right; `AlternatingSides` alternates.
-  - `Responsive` is vertical below `lg` and horizontal above — resize the canvas, do not trust one width.
-  - `SnapIconCompact` snaps icons to the start edge, and folds to one side below `md`.
-  - Print preview shows the connectors as borders, not blank gaps (§0a).
-- [ ] **Step 6:** Attribute forwarding story: `id`, `data-*`, `style`, `class` on `Timeline`, and separately on `TimelineItem` and `TimelineStart` — three levels, because a spread that works on the container says nothing about the parts. Headless check:
-
-```bash
-pnpm build-storybook
-grep -rhoE '<(ul|li|div)[^>]*timeline[^>]*>' storybook-static/astro-prerendered-stories.json | head -20
-```
-- [ ] **Step 7:** Update `plans/README.md`'s Timeline row to **Implemented**.
+- [x] **Step 1: done.** §1 was already filled from the shipped CSS and the doc frontmatter — nine classes, fourteen examples.
+- [x] **Step 2: done — nothing added to `variants.ts`.** The `direction` union stays local.
+- [x] **Step 3: done — and the probe §2 called decisive came back clean at both levels.** `li` is a direct child of the list 16 times; **61 items place an `hr` as their literal first child and 61 as their literal last child**, so the positional connector rules and the five edge-rounding selectors all have the structure they need (§8). The type probe errored on all four intended lines, including `<TimelineMiddle box>` — so §0c's scoping is enforced by the compiler rather than by discipline.
+- [x] **Step 4: done.** `Timeline.stories.ts`, 16 stories, composing the real sub-components rather than the wrapper components §5 prescribed — see the correction there.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and two of these need the canvas resized rather than screenshotted.** Verify: `BothSides` shows a continuous line with **no overhang** past the first or last icon (§0a — the markup already shows the leading and trailing `hr`s correctly omitted); the exposed line ends are rounded, proving the edge `:has()` rules matched; `ColorfulLines` colours exactly the segments the doc colours (§0g); `VerticalBothSides` puts start left and end right, and `AlternatingSides` alternates; **`Responsive` is vertical below `lg` and horizontal above — resize, do not trust one width**; `SnapIconCompact` snaps icons to the start edge and folds to one side below `md`; and a print preview shows the connectors as borders rather than blank gaps (§0a).
+- [x] **Step 6: done — forwarding confirmed at all three levels**, which is the point of checking it here: `Passthrough` renders `<ul class="timeline mine" id="timeline-1" data-test="yes" style="letter-spacing:2px">` containing `<li class="item-marker" id="timeline-item-1" data-test="item">` containing `<div class="timeline-start timeline-box start-marker" id="timeline-start-1" data-test="start">`. Full output in §8.
+- [x] **Step 7: done — the `Timeline` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All nine daisyUI classes have a home: three on `Timeline`, one on `TimelineStart`/`TimelineEnd`, three as the part components themselves.
-- [ ] `TimelineItem` places `<hr>`s as literal first/last children, and defaults both to present (§0a).
-- [ ] `lineBefore={false}` / `lineAfter={false}` verified to remove the overhang at the strip's ends.
-- [ ] `lineBeforeClass` / `lineAfterClass` reach the generated `<hr>`s, with the doc's asymmetric colouring reproduced (§0g).
-- [ ] `box` exists on `TimelineStart`/`TimelineEnd` and **not** on `TimelineMiddle` (§0c).
-- [ ] `direction` emits no class when undefined, and `'horizontal'` is retained in the union for the responsive pairing (§0d).
-- [ ] Responsive switching documented as caller classes, with both doc class strings quoted in JSDoc and demonstrated in two stories (§0e).
-- [ ] Direct-child structure confirmed at both levels and recorded in `aura.md` §3e.1 (§2).
-- [ ] Each of the five components extends the right `HTMLAttributes` and merges `class` through `class:list`.
-- [ ] `Playground` exposes `direction`, `compact`, `snapIcon` and `class` together (§0f).
-- [ ] Fourteen doc-example stories, composed from the real sub-components rather than raw markup (§5).
-- [ ] Every box in section 4's Astro idioms gate ticked.
+- [x] All nine daisyUI classes have a home: three on `Timeline`, one on `TimelineStart`/`TimelineEnd`, three as the part components themselves.
+- [x] `TimelineItem` places `<hr>`s as literal first/last children, and defaults both to present (§0a).
+- [x] `lineBefore={false}` / `lineAfter={false}` verified in the markup to omit the leading and trailing connectors. That this removes the visible *overhang* is Step 5.
+- [x] `lineBeforeClass` / `lineAfterClass` reach the generated `<hr>`s, with the doc's asymmetric colouring reproduced (§0g).
+- [x] `box` exists on `TimelineStart`/`TimelineEnd` and **not** on `TimelineMiddle` (§0c).
+- [x] `direction` emits no class when undefined, and `'horizontal'` is retained in the union for the responsive pairing (§0d).
+- [x] Responsive switching documented as caller classes, with both doc class strings quoted in JSDoc and demonstrated in two stories (§0e).
+- [x] Direct-child structure confirmed at both levels (§8). The library-wide answer already lives in `plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3, which supersedes the per-plan `aura.md` §3e.1 note.
+- [x] Each of the five components extends the right `HTMLAttributes` and merges `class` through `class:list`.
+- [x] `Playground` exposes `direction`, `compact`, `snapIcon` and `class` together (§0f).
+- [x] Fourteen doc-example stories, composed from the real sub-components rather than raw markup (§5).
+- [x] Every box in section 4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31), SVG icons elided. `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+WithoutIcons  → <ul class="timeline">
+                  <li><div class="timeline-start timeline-box">First Macintosh computer</div><hr></li>
+                  <li><hr><div class="timeline-start timeline-box">iMac</div><hr></li>
+                  …
+                  <li><hr><div class="timeline-start timeline-box">Apple Watch</div></li></ul>
+                                        ↑ first item has no leading hr, last has no trailing one
+ColorfulLines → <li>…<hr class="bg-primary"></li><li><hr class="bg-primary">…<hr class="bg-primary"></li>…
+SnapIcon…     → <ul class="timeline timeline-vertical timeline-snap-icon max-md:timeline-compact">
+                  <li><div class="timeline-middle">SVG</div>
+                      <div class="timeline-start md:text-end mb-10">
+                        <time class="font-mono italic">1984</time>…
+Passthrough   → <ul class="timeline mine" id="timeline-1" data-test="yes" style="letter-spacing:2px">
+                  <li class="item-marker" id="timeline-item-1" data-test="item">
+                    <div class="timeline-start timeline-box start-marker" id="timeline-start-1"
+                         data-test="start">1984</div>…<hr class="bg-primary"></li>…
+```
+
+What this settles:
+
+- **The decisive structural question, at both levels.** 16 lists render `li` as a direct child, and **61 `hr`s are the literal first child of their item, 61 the literal last**. daisyUI reads those connectors purely by position, so nothing else in this component would have worked otherwise.
+- **The end-cap rule holds by construction.** The first item renders with no leading `hr` and the last with no trailing one, because the stories derive both flags from the item's index rather than setting them by hand — which is the error `TimelineItem` exists to prevent (§0a).
+- **`lineBeforeClass` / `lineAfterClass` reach the generated connectors**: 13 coloured `hr`s across the two colourful-lines stories, with the doc's asymmetry intact (§0g).
+- **Forwarding works at three levels**, container, item and part — a spread that works on a `ul` says nothing about a `div` two levels down.
+- All 9 classes have rules in the built stylesheet, **and so do both responsive variants** the doc examples use: `.lg\:timeline-horizontal` and `.max-md\:timeline-compact` are real rules, which is what makes §0e's "responsive is a caller class" answer workable.
+
+Not settled here: every visual claim — the rounded line ends, the alternating sides, and both responsive behaviours, which need the canvas resized rather than screenshotted. Step 5.

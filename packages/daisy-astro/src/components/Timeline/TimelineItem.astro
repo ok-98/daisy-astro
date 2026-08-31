@@ -1,0 +1,50 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+// One timeline entry, and the only sub-component in this library with no
+// daisyUI class of its own. It exists for behaviour rather than for styling.
+//
+// The connector lines ARE hr elements, and daisyUI reads them BY POSITION: the
+// first child is the incoming line, the last child the outgoing one. Five
+// further rules round whichever end is exposed at the edge of the strip. So the
+// caller's real question is "does this item have a line before or after it",
+// not "where do I hand-place two hr siblings" — which is the error this
+// component exists to remove (plan §0a).
+//
+// Both default to true. Set lineBefore false on the first item and lineAfter
+// false on the last, or the strip overhangs its own ends.
+//
+// NOTE: no angle brackets in this comment, deliberately. An angle bracket
+// anywhere in the frontmatter — comments included — breaks Props inference
+// (plans/README.md §5c).
+interface Props extends HTMLAttributes<'li'> {
+  /** Render the incoming connector. Set `false` on the first item. */
+  lineBefore?: boolean;
+  /** Render the outgoing connector. Set `false` on the last item. */
+  lineAfter?: boolean;
+  /**
+   * Classes for the generated connectors — the only route to them, since a
+   * caller's `class` merges onto the list item instead (plan §0g). daisyUI's
+   * base style for them has zero specificity, so a plain `bg-primary` wins
+   * with no `!important`. Separate props per side because daisyUI's own
+   * colourful-lines example genuinely differs between them.
+   */
+  lineBeforeClass?: string;
+  lineAfterClass?: string;
+}
+
+const {
+  lineBefore = true,
+  lineAfter = true,
+  lineBeforeClass,
+  lineAfterClass,
+  class: className,
+  ...rest
+} = Astro.props;
+---
+
+<li class:list={[className]} {...rest}>
+  {lineBefore && <hr class:list={[lineBeforeClass]} />}
+  <slot />
+  {lineAfter && <hr class:list={[lineAfterClass]} />}
+</li>

@@ -1,0 +1,21 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The start side of a timeline item.
+ *
+ * `box` lives here rather than on `TimelineMiddle` because daisyUI scopes it
+ * that way — its own frontmatter says the class applies to the start or end
+ * part, and no example boxes the middle, which holds the icon (plan §0c).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /** Bordered, padded card style. */
+  box?: boolean;
+}
+
+const { box = false, class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['timeline-start', { 'timeline-box': box }, className]} {...rest}>
+  <slot />
+</div>
