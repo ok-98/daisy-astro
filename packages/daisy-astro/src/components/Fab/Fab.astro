@@ -1,14 +1,77 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/fab/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+/**
+ * A floating action button with an optional speed dial.
+ *
+ * **It opens on focus, not on click**, and there is no JavaScript anywhere in
+ * it. That single fact drives everything else (plan §0):
+ *
+ * - **Clicking an action closes the FAB**, because focus leaves. That is
+ *   usually what you want, and it is why `fab-close` is a visual placeholder
+ *   rather than a real control — daisyUI's own comment says it should not be
+ *   focusable, so that clicking it closes the FAB.
+ * - **Anything that steals focus closes it**, including a dialog opened from
+ *   inside.
+ * - Once open, the trigger stops receiving clicks, so a second click lands on
+ *   whatever is underneath it — normally the close or main-action control,
+ *   which sit directly over it (plan §3b).
+ *
+ * There is no `open` prop, because daisyUI ships no class to drive one.
+ *
+ * **The trigger is a `div` with `tabindex` and `role="button"`, deliberately.**
+ * A WebKit bug prevents a real button from taking focus on click in Safari, so
+ * a focus-driven FAB with a button trigger would never open there — and
+ * daisyUI's own selector matches on the `tabindex` attribute, which a button
+ * would not carry. This component renders it, so it cannot be got wrong; do not
+ * "fix" it to a button (plan §3a).
+ *
+ * **`position: fixed` is built in.** To show one inside a box — a demo, a
+ * story — add `class="absolute z-1"`, exactly as daisyUI's own rendered
+ * examples do (plan §0).
+ *
+ * Actions go in the default slot, and **their order matters**: the stagger
+ * delays and the flower angles are keyed to child position. Two caller classes
+ * belong on markup you write there, and daisyUI is explicit that they are
+ * mutually exclusive — use `fab-close` **or** `fab-main-action`, never both.
+ * Both sit over the trigger and make it fade and rotate away when open
+ * (plan §3c).
+ *
+ * The slot is optional: a FAB with no actions is a documented example, and
+ * nothing then depends on focus at all (plan §3e).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * Arranges the actions in a quarter-circle instead of a column.
+   *
+   * **Caps at four action buttons.** daisyUI recomputes the arc angles for each
+   * child count up to six and hides anything past the sixth outright — so with
+   * the trigger and an optional main action, a seventh child vanishes with no
+   * error (plan §3d).
+   */
+  flower?: boolean;
+  /**
+   * Classes for the **trigger element** — where daisyUI's own examples put the
+   * button styling (`"btn btn-lg btn-circle btn-primary"`). `class` goes to the
+   * root instead, alongside every other native attribute.
+   *
+   * This exists because the trigger is component-rendered: it must be a
+   * `tabindex`-carrying element and daisyUI styles *that* element as the
+   * button, so without a second class prop the caller would have to nest a real
+   * button inside it — producing an interactive element inside a
+   * `role="button"`, and markup that differs from every doc example. Same
+   * reasoning, and the same two-class-prop shape, as `Avatar`'s `innerClass`
+   * (`plans/components/avatar.md` §3a).
+   */
+  triggerClass?: string;
+}
 
-const { class: className, ...rest } = Astro.props;
+const { flower = false, triggerClass, class: className, ...rest } = Astro.props;
 ---
 
-<div class:list={['fab', className]} {...rest}>
+<div class:list={['fab', { 'fab-flower': flower }, className]} {...rest}>
+  <div tabindex="0" role="button" class:list={[triggerClass]}>
+    <slot name="trigger" />
+  </div>
   <slot />
 </div>

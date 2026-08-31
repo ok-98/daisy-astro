@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/fab.css` and the doc page source. §3f lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-08-31). `Fab.astro` and 10 stories. **§4's listing was incomplete and is corrected below** — the trigger needs a class prop, or the component cannot reproduce a single doc example (§3g). §3f.1 is answered: the trigger is the first child in all 10 FABs, carrying the button classes itself (§8). Step 5 (visual pass) is open.
 ---
 
 ## 0. Focus-driven, fixed-position, and order-sensitive
@@ -196,26 +198,49 @@ Plus `Playground` and `Passthrough`. Two beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3f.1 (direct children) — blocking, and worse here than usual because every rule is `:nth-child`.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, then walk the gate.
-- [ ] **Step 4:** Replace `Fab.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: focusing the trigger fans the actions out with a visible **stagger**; `WithCloseButton` and `WithMainAction` rotate the trigger away and put their own button in its place; `Flower` arcs into a quarter circle; `FlowerOverflow` shows only six children; `SingleFab` needs no focus; `ClosesOnBlur` behaves as documented; RTL mirrors the arc with no code change.
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="fab[^"]*"[^>]*><div tabindex="0" role="button">' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `FAB / Speed Dial` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done for §3f.1** — the trigger is `[tabindex]:first-child` in all 10 FABs and the actions follow it as direct children, which every `:nth-child` rule here depends on. §3f.2 (`cos()`/`sin()`), §3f.3 (`:focus-within` in the canvas) are runtime and move to Step 5; §3f.4 is moot, sanitization being off library-wide.
+- [x] **Step 2: skipped as planned.** No shared unions; `variants.ts` untouched.
+- [x] **Step 3: done, with one correction to §4** — see §3g. The trigger takes a `triggerClass` prop, without which the component cannot render daisyUI's own markup. Gate walked; the probe errored on all three intended lines, including `open`, which has no class to drive it.
+- [x] **Step 4: done.** `Fab.stories.ts`, 10 stories, each framed in a relative box with `absolute z-1` as daisyUI's rendered examples are.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and opening is focus-driven.** Verify: clicking or tabbing to the trigger **opens the dial**, and clicking away closes it (§3b); `WithClose` and `WithMainAction` both fade and rotate the trigger away while open, each standing in for it (§3c); **`Flower` arranges its actions on an arc**, which is where `cos()`/`sin()` support shows (§3f.2); `FlowerOverflow`'s fifth action never appears (§3d); `SingleFab` has nothing to open; and the stagger delays are visible on the vertical dial.
+- [x] **Step 6: done — forwarding confirmed in both directions.** `Passthrough` renders `<div class="fab absolute z-1 mine" id="fab-1" data-test="yes" style="letter-spacing:1px">` with the trigger carrying `trigger-marker` — native attributes and `class` on the root, `triggerClass` on the trigger, not the other way round. Full output in §8.
+- [x] **Step 7: done — the `FAB / Speed Dial` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 4 daisyUI classes reachable; the two part classes documented as caller-applied (§2).
-- [ ] Trigger renders as `[tabindex]:first-child` with `role="button"`, never a `<button>` (§3a).
-- [ ] Actions are direct children, in order, with the stagger intact (§0, §3f.1).
-- [ ] No `<script>`, no `open` prop — focus is the only mechanism (§3b).
-- [ ] JSDoc states: fixed positioning and the `absolute` demo escape (§0), focus-to-open and close-on-blur (§3b), `fab-close` XOR `fab-main-action` (§3c), and the four-action flower cap (§3d).
-- [ ] No invented axis — no colour, no size, no `actions` prop.
-- [ ] One story per doc-page example, plus `FlowerOverflow` and `ClosesOnBlur`; all contained with `absolute` (§5).
-- [ ] Every box in §4's gate ticked.
+- [x] All 4 daisyUI classes reachable; the two part classes documented as caller-applied (§2).
+- [x] Trigger renders as `[tabindex]:first-child` with `role="button"`, never a `<button>` (§3a).
+- [x] Actions are direct children, in order, with the stagger intact (§0, §3f.1).
+- [x] No `<script>`, no `open` prop — focus is the only mechanism (§3b).
+- [x] JSDoc states: fixed positioning and the `absolute` demo escape (§0), focus-to-open and close-on-blur (§3b), `fab-close` XOR `fab-main-action` (§3c), and the four-action flower cap (§3d).
+- [x] No invented axis — no colour, no size, no `actions` prop.
+- [x] One story per doc-page example, plus `FlowerOverflow` and `ClosesOnBlur`; all contained with `absolute` (§5).
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31). `astro check`: 145 files, 0 errors, 0 warnings, 0 hints.
+
+```
+SpeedDial      → <div class="fab absolute z-1">
+                   <div tabindex="0" role="button" class="btn btn-lg btn-circle btn-primary">F</div>
+                   <button class="btn btn-lg btn-circle">A</button> ×3
+WithLabels     → …<div>Label B <button class="btn btn-lg btn-circle">A</button></div>…
+                            ↑ label and button share one wrapper — one child of the FAB
+WithMainAction → …<div class="fab-main-action">Main Action <button …>M</button></div>…
+SingleFab      → <div class="fab absolute z-1"><div tabindex="0" role="button" class="btn …">F</div></div>
+Flower         → <div class="fab fab-flower absolute z-1">…<button class="fab-main-action btn …">M</button>…
+Passthrough    → <div class="fab absolute z-1 mine" id="fab-1" data-test="yes" style="letter-spacing:1px">
+                   <div tabindex="0" role="button" class="btn btn-lg btn-circle btn-primary trigger-marker">F</div>…
+```
+
+What this settles:
+
+- **§3g's correction works**: **10 of 10 triggers carry their `btn` classes on the `tabindex` element itself**, which is daisyUI's markup. Under §4's original listing they would have been a bare `div` wrapping a real button — an interactive element inside a `role="button"`.
+- **§3f.1**: the trigger is the first child in all 10 FABs and the actions are its siblings. Every rule in this component is `:nth-child`-based, so a wrapper would have collapsed the whole dial into child two — one hidden element instead of a staggered stack.
+- **The exclusivity holds in the stories**: 1 `fab-close` and 3 `fab-main-action` occurrences, never together in one FAB, which is what daisyUI's frontmatter requires (§3c).
+- **Labelled actions are one wrapper each**, holding text and a button — the shape an `actions` array prop would have made impossible (§2).
+- All 4 classes have rules in the built stylesheet.
+
+Not settled here: whether it opens. Focus behaviour, the flower arc, the stagger and the overflow cap are all Step 5.
