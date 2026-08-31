@@ -1,14 +1,67 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/swap/
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
 
-interface Props extends HTMLAttributes<'label'> {}
+// Shows one of two (or three) children at a time, stacked in a single grid cell
+// and chosen by opacity.
+//
+// TWO INDEPENDENT DRIVERS (plan §3a):
+//
+//   checkbox   the default label root plus YOUR OWN hidden checkbox, which must
+//              come FIRST — every state rule is a general-sibling selector, so
+//              the input has to precede the elements it controls and all of
+//              them must be siblings (plan §3d). The label root is what makes
+//              clicking anywhere toggle it.
+//   class      as="div" with `active` toggled by your own code. There is
+//              nothing to toggle, so a div is the honest element.
+//
+// DO NOT COMBINE THEM. The active rule is unconditional, so it overrides
+// whatever the checkbox says and the control stops responding to clicks. The
+// type system does not police this; the failure is silent.
+//
+// The input is caller markup rather than component-rendered, because it
+// carries your `name`, `checked`, `autocomplete` and change handler — rendering
+// it would mean re-exposing all of that (plan §2). daisyUI's rendered examples
+// all set `autocomplete="off"`, which stops the browser restoring a stale
+// toggle state on reload; its copy-paste HTML omits it.
+//
+// A SWAP WANTS A PAIR: the "on" child is hidden by default and revealed by the
+// driver, so a swap holding only an on-state renders empty until toggled, and
+// one holding only an off-state never changes. Both are legal and both look
+// broken (plan §3b).
+//
+// NOTE: no angle brackets in this comment, deliberately — this component has a
+// generic Props type (plans/README.md §5c). The `= 'label'` default type
+// parameter is that same section's second rule.
+type SwapEffect = 'rotate' | 'flip';
 
-const { class: className, ...rest } = Astro.props;
+type Props<Tag extends HTMLTag = 'label'> = Polymorphic<{
+  as: Tag;
+  /** The class driver. Leave it alone when using a checkbox (see above). */
+  active?: boolean;
+  /**
+   * Named `effect`, not `style` — `style` is a native attribute
+   * (plans/components/button.md §3a). Both effects compose with the
+   * indeterminate state as well as the checked one.
+   */
+  effect?: SwapEffect;
+}>;
+
+// Full literal class names. NEVER `swap-${effect}` (plans/README.md §1b).
+const EFFECT: Record<SwapEffect, string> = {
+  rotate: 'swap-rotate',
+  flip: 'swap-flip',
+};
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const {
+  as: Tag = 'label',
+  active = false,
+  effect,
+  class: className,
+  ...rest
+} = Astro.props as Props<HTMLTag>;
 ---
 
-<label class:list={['swap', className]} {...rest}>
+<Tag class:list={['swap', effect && EFFECT[effect], { 'swap-active': active }, className]} {...rest}>
   <slot />
-</label>
+</Tag>

@@ -1,0 +1,23 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The indeterminate state of a `Swap`.
+ *
+ * Must be a **sibling of the checkbox and a direct child of the swap** — the
+ * state selectors are general-sibling, and all the states share one grid cell
+ * (plan §3d).
+ *
+ * **There is no way to reach this state from markup.** `indeterminate` is a DOM
+ * property with no HTML attribute, so it is set in the caller's own code:
+ * `el.indeterminate = true`. daisyUI styles the class but its doc page never
+ * shows it, for exactly that reason (plan §3c).
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['swap-indeterminate', className]} {...rest}>
+  <slot />
+</div>

@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/swap.css` and the doc page source. §3e lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-08-31). `Swap.astro` plus `SwapOn`, `SwapOff` and `SwapIndeterminate`, with 17 stories. §3d's ordering requirement is asserted in the build output — 13 inputs are immediately followed by a state part, all as siblings inside the swap (§8). **§3e's script question is answered: Swap needs none**, which closes the last open item in `plans/README.md` §7. Step 5 (visual pass) is open.
 ---
 
 ## 0. Two states in one grid cell, driven by a hidden checkbox or a class
@@ -236,27 +238,49 @@ Three beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3e.1 (direct siblings in one grid cell) — blocking. Settle §3e.4 (`autocomplete`) and record it.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Swap.astro` scaffold and create the three part components per §4, then walk the gate. **Run the probe** — the generic failure is silent.
-- [ ] **Step 4:** Replace `Swap.stories.ts` and add the three sub-component story files per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `SwapText` toggles ON/OFF on click with the two states occupying the **same spot** (§0); `RotateEffect` spins between icons; `FlipEffect` flips in 3D; `HamburgerButton` works inside a `btn btn-circle`; `ActivateWithClass` shows one swap in each state with **no** click response; `OnlyOnChild` starts empty (§3b); `ActiveAndCheckbox` ignores clicks (§3a); then enable reduced motion and confirm the swap still works, just without the transition.
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<label class="swap[^"]*"[^>]*><input type="checkbox"' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoE '<input type="checkbox"[^>]*/?><div class="swap-on"' storybook-static/astro-prerendered-stories.json | head
-  ```
-  The second proves the input precedes the state elements as siblings (§3d).
-- [ ] **Step 7:** Update the `Swap` row in `plans/README.md` to **Implemented**, noting the three part components.
+- [x] **Step 1: done.** §3e.1 is answered — the state parts render as direct children of the swap and as siblings of the caller's input, which both the general-sibling selectors and the shared grid cell require. §3e.3 is moot (sanitization is off library-wide). §3e.4's `autocomplete="off"` discrepancy is settled in favour of daisyUI's *rendered* examples: every story sets it, and the JSDoc says why.
+- [x] **Step 2: skipped as planned.** No shared unions; `variants.ts` untouched.
+- [x] **Step 3: done.** Four files per §4. Gate walked; the probe errored on both intended lines, including `<SwapOn active>` — so the modifier cannot be put on a part instead of the container.
+- [x] **Step 4: done.** `Swap.stories.ts` (11) plus a `Playground` + `Passthrough` for each of the three parts.
+
+  One deviation from the doc page's markup, recorded because it is visible in a diff: daisyUI writes `swap-on` / `swap-off` **directly on the `<svg>`** in its icon examples, while these stories wrap the icon in `SwapOn` / `SwapOff`. The grid child is then the `div` rather than the `svg`, which behaves identically — and it keeps the story composed from the real components rather than dropping to raw markup for three of the six examples.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and every claim here is a state change.** Verify: clicking `SwapText` swaps ON/OFF; `RotateEffect` rotates rather than cross-fading and `FlipEffect` flips; `HamburgerButton` works as a button, with both class sets on one element; `ActivateWithClass`'s second swap shows its on-state with no input at all; **`ActiveAndCheckbox`'s first control does not respond to clicks** (§3a); `OnlyOnChild` renders empty until toggled (§3b); and `Indeterminate` shows the third state, which also answers whether the framework runs a story's inline script (§3c).
+- [x] **Step 6: done — forwarding confirmed and §3d asserted.** `Passthrough` renders `<div id="swap-1" data-test="yes" style="letter-spacing:2px" class="swap swap-flip swap-active mine text-4xl">`, so `as` changes the tag and the classes merge. Across the stories, 13 inputs are immediately followed by a state part. Full output in §8.
+- [x] **Step 7: done — the `Swap` row in `plans/README.md` says Implemented**, and §7's open question about whether Swap needs a script is closed: it does not.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 7 daisyUI classes reachable across four components.
-- [ ] Default root is `label`; `as="div"` available for the class-driven mode; probe passes (§3a).
-- [ ] The `<input>` stays caller markup and renders **before** the state elements (§2, §3d) — checked in the build output.
-- [ ] No invented axis — no colour, no size, no `indeterminate` prop (§1, §3c).
-- [ ] JSDoc states: the two drivers and why not to combine them (§3a), that `SwapOn` starts hidden (§3b), that indeterminate is JS-only (§3c), and that the input must come first (§3d).
-- [ ] One story per doc-page example, plus `Indeterminate`, `OnlyOnChild` and `ActiveAndCheckbox`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 7 daisyUI classes reachable across four components.
+- [x] Default root is `label`; `as="div"` available for the class-driven mode; probe passes (§3a).
+- [x] The `<input>` stays caller markup and renders **before** the state elements (§2, §3d) — checked in the build output.
+- [x] No invented axis — no colour, no size, no `indeterminate` prop (§1, §3c).
+- [x] JSDoc states: the two drivers and why not to combine them (§3a), that `SwapOn` starts hidden (§3b), that indeterminate is JS-only (§3c), and that the input must come first (§3d).
+- [x] One story per doc-page example, plus `Indeterminate`, `OnlyOnChild` and `ActiveAndCheckbox`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31), SVG elided. `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+SwapText        → <label class="swap"><input type="checkbox" autocomplete="off" />
+                    <div class="swap-on">ON</div><div class="swap-off">OFF</div></label>
+RotateEffect    → <label class="swap swap-rotate"><input … /><div class="swap-on">SVG</div>…
+ActivateWith…   → <label class="swap text-6xl">… and … <label class="swap swap-active text-6xl">…
+                    no input in either
+ActiveAndCheck… → <label class="swap swap-active text-4xl"><input … />…   the combination that breaks
+Passthrough     → <div id="swap-1" data-test="yes" style="letter-spacing:2px"
+                    class="swap swap-flip swap-active mine text-4xl">…
+```
+
+What this settles:
+
+- **§3d's ordering rule**: 13 inputs are immediately followed by a state part, with every part a direct child of the swap. The state selectors are general-sibling combinators, so an input placed after the states — or a wrapper around them — would have broken every rule silently.
+- **Both drivers render as documented**: 19 label roots for the checkbox mode and a `div` for the class mode, chosen by `as` rather than by convention.
+- `SwapIndeterminate` exists as a component even though daisyUI's doc page never shows it, because the class is real — the state is simply unreachable from markup (§3c).
+- All 7 classes have rules in the built stylesheet.
+
+**No script**: this component is a checkbox hack plus a class, and nothing in it needs JavaScript — which closes the last open item in `plans/README.md` §7. The only script anywhere near it is caller-side, in the `Indeterminate` story, setting a DOM property that has no HTML attribute.
+
+Not settled here: every state change. Step 5.

@@ -302,7 +302,7 @@ That list used to name Theme Controller, Swap and Text Rotate. Two of the three 
 
 - **Text Rotate** is pure `@keyframes` plus `:has()` child counting, with no JavaScript at all (`components/text-rotate.md` §0h).
 - **Theme Controller** switches themes entirely in CSS; daisyUI's own docs hand persistence to the application (`components/theme-controller.md` §0h).
-- **Swap** is a checkbox hack and should be re-checked when `components/swap.md` is implemented — on current evidence it is CSS too.
+- **Swap** is a checkbox hack and **was re-checked when it was implemented on 2026-08-31: it needs no script either.** The component is a hidden checkbox plus general-sibling selectors, or a single class; the only JavaScript near it is caller-side, setting the `indeterminate` DOM property that has no HTML attribute (`components/swap.md` §3c). All three examples the old list named are now disproved.
 
 The framework capability is real and worth keeping recorded; the examples were not. Interactivity that genuinely needs script in this library is caller-side (a Theme Controller persisting to `localStorage`, a Toggle's `indeterminate` DOM property, a Validator story's form submit), never inside a component.
 
@@ -331,7 +331,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Dropdown | `dropdown` | Planned — [`plans/components/dropdown.md`](components/dropdown.md) (3 methods; component covers 2, popover is composition) |
 | FAB / Speed Dial | `fab` | Planned — [`plans/components/fab.md`](components/fab.md) (focus-driven, :nth-child-ordered, flower caps at 4 actions) |
 | Modal | `modal` | Planned — [`plans/components/modal.md`](components/modal.md) (4 methods, one component; `open` is not the same as modal) |
-| Swap | `swap` | Planned — [`plans/components/swap.md`](components/swap.md) (`Swap`+on/off/indeterminate; two drivers, don`t combine) |
+| Swap | `swap` | **Implemented** — [`plans/components/swap.md`](components/swap.md) (`Swap`+on/off/indeterminate, one row for all four; 17 stories; two drivers, don't combine; visual pass open) |
 | Theme Controller | `theme-controller` | Planned — [`plans/components/theme-controller.md`](components/theme-controller.md) (no .theme-controller rule exists; class is a selector hook inside all 35 theme files) |
 
 ### Data Display

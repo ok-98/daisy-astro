@@ -53,6 +53,10 @@ import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
 import PhoneMockupCamera from './components/PhoneMockup/PhoneMockupCamera.astro';
 import PhoneMockupDisplay from './components/PhoneMockup/PhoneMockupDisplay.astro';
 import Status from './components/Status/Status.astro';
+import Swap from './components/Swap/Swap.astro';
+import SwapIndeterminate from './components/Swap/SwapIndeterminate.astro';
+import SwapOff from './components/Swap/SwapOff.astro';
+import SwapOn from './components/Swap/SwapOn.astro';
 import WindowMockup from './components/WindowMockup/WindowMockup.astro';
 import Tab from './components/Tab/Tab.astro';
 import TabContent from './components/Tab/TabContent.astro';
@@ -166,6 +170,10 @@ import Steps from './components/Steps/Steps.astro';
 <CodeMockup class="w-full" id="cm">code</CodeMockup>
 <BrowserMockup class="border w-full" id="bm"><div class="input" slot="toolbar">url</div>Hello!</BrowserMockup>
 <PhoneMockup class="w-64" id="pm"><PhoneMockupCamera class="mine" /><PhoneMockupDisplay class="text-white" id="pd">hi</PhoneMockupDisplay></PhoneMockup>
+
+<Swap as="div" active effect="rotate" class="mine" id="sw" data-test="y">
+  <SwapOn id="son">ON</SwapOn><SwapOff id="soff">OFF</SwapOff><SwapIndeterminate>-</SwapIndeterminate>
+</Swap>
 
 <Status />
 <Status color="success" size="lg" aria-label="Online" />

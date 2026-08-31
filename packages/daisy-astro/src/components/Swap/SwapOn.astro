@@ -1,0 +1,18 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The on state of a `Swap`.
+ *
+ * Must be a **sibling of the checkbox and a direct child of the swap** — the
+ * state selectors are general-sibling, and all the states share one grid cell
+ * (plan §3d).
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['swap-on', className]} {...rest}>
+  <slot />
+</div>
