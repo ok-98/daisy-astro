@@ -16,6 +16,8 @@
 
 > **Status:** Planned, and it **supersedes part of `plans/components/accordion.md`** — read §0a first. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/collapse.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/collapse/+page.md` in `saadeghi/daisyui`). §3g lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-08-31). `Collapse.astro` and 16 stories, covering all four triggers. §0a's supersede is executed — there is no `AccordionItem`, and `plans/components/accordion.md` is amended. Two additions to §4 are recorded as §3h (the input carries `peer` and `autocomplete="off"`) and one deletion as §3i (**no `join` prop** — §3c's candidate simplification emits, so the queued Join correction lands early). §3g.1 and §3g.4 are answered (§8). Step 5 (visual pass) is open, and it carries every trigger's behaviour.
 ---
 
 ## 0. Collapse and Accordion are the same seven classes
@@ -148,6 +150,64 @@ The "Collapse with checkbox and close on click outside" example inserts a `<labe
 Named slots leave no place for an arbitrary direct child of `.collapse`, and `peer-checked:` requires that exact sibling position — this is the same shape as the selectable-input problem in `plans/components/card.md` §0a, which Card solved by abandoning named slots. Collapse cannot: §3b needs the component to own the title element.
 
 **So this one example is a documented limitation.** Its story reproduces the doc markup raw, with a comment saying why. An `inputId` prop was considered and rejected — it does not help, because the `<label>` still cannot be placed. If callers need it, the fix is a `before-title` slot rendered as a bare direct child, added deliberately rather than guessed at now.
+
+### 3h. The rendered input carries two things the copy-paste HTML omits
+
+**Found while implementing, 2026-08-31**, and §3g.4 asked for half of it.
+
+daisyUI's *rendered* examples put `autocomplete="off"` on the toggle input;
+its copy-paste HTML does not. **Decision: emit it.** It stops the browser
+restoring a stale checked state on reload, which for a disclosure widget is
+never what you want, and it is invisible otherwise. Same call
+`plans/components/filter.md` §3e.3 made for the same reason.
+
+The second one §4 missed entirely. The **custom-colours-with-checkbox**
+example is:
+
+```html
+<input type="checkbox" autocomplete="off" class="peer" />
+<div class="collapse-title … peer-checked:bg-secondary">…</div>
+```
+
+`peer-checked:` compiles to `.peer:checked ~ &`, so **the input must carry
+`class="peer"`** — and the input is rendered by this component, where a caller
+cannot reach it. Without it `titleClass="peer-checked:bg-secondary"` compiles
+happily and never matches: a `titleClass` that silently does nothing, which is
+worse than a missing prop.
+
+**So the component stamps `class="peer"` on every toggle input it renders.**
+`peer` is a marker with no declarations of its own, so it costs nothing when
+unused, and it makes the whole `peer-*` family available through `titleClass`
+and `contentClass`. An `inputClass` prop was the alternative and is not worth
+it for one always-wanted class — the §3f rejection of `inputId` for the same
+shape of problem stands, since that one genuinely could not be fixed by a
+default.
+
+### 3i. No `join` prop — §3c's candidate simplification does emit
+
+§3c (via `plans/components/accordion.md` §3c) proposed
+`class:list={['join', 'join-vertical', '[&>*]:join-item']}` on the **wrapper**,
+so the child class comes from an arbitrary variant on the parent and the item
+needs no prop — explicitly flagged as **unverified** under Tailwind 4 with this
+`@source` setup, to check in the generated CSS before adopting.
+
+**Checked. It emits** — the built stylesheet contains
+
+```css
+.\[\&\>\*\]\:join-item>*{border-style:solid;border-width:var(--border,1px);
+  border-start-start-radius:var(--join-ss); …}
+.\[\&\>\*\]\:join-item>:not(:first-child,:disabled,[disabled],.btn-disabled){…}
+```
+
+— the full `join-item` declaration block plus its sibling rules, keyed on the
+variant class. So `<Accordion join>` classes its own children and
+**`Collapse` has no `join` prop at all**.
+
+That also lands the correction `plans/IMPLEMENTATION-ORDER.md` §5.4 queued
+against **Join** (*"drop Collapse's `join` boolean in favour of
+`class="join-item"`"*) — early, and for a second reason. Both routes stay open
+for a caller outside an Accordion: `class="join-item"` is the same length as
+`join` and needs no prop.
 
 ### 3g. Unverified assumptions
 
@@ -357,44 +417,67 @@ export const Passthrough = {
 
 ## 6. Steps
 
-- [ ] **Step 1:** Confirm §0a's supersede decision before writing code — it changes `plans/components/accordion.md`. Then settle §3g.4 (`autocomplete="off"` by default) and record the answer here.
-- [ ] **Step 2:** No new shared unions — all three unions are local, no colour or size axis (§1). `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Collapse.astro` dummy scaffold per §4, then walk the Astro idioms gate. Do **not** create `AccordionItem.astro` (§0a).
-- [ ] **Step 4:** Replace `Collapse.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Collapse`, verify:
-  - `Playground` renders and every control changes the markup.
-  - `WithFocus` opens on **tab-in** and closes on **tab-out** — if it never opens, `tabindex` is missing (§3a) and nothing else matters.
-  - `WithCheckbox` opens on click and stays open until clicked again.
-  - `WithDetails` opens natively, has **no** disclosure triangle (daisyUI hides it), and its content is findable with the browser's find-in-page while closed.
-  - `Triggers`: all four behave as their labels say (§3a).
-  - `WithArrowIcon` / `WithPlusIcon`: the icon rotates or switches on open.
-  - `IconAtStart`: the icon is on the leading edge and the padding is mirrored (§3d).
-  - `ForceClose` will not open when clicked; `ForceOpen` will not close.
-  - **`ForceWithDetails`: `force="close"` does nothing** — expected (§3e).
-  - `CustomColorsCheckbox`: title and content both change colour when opened, proving `titleClass`/`contentClass` land (§3d).
-  - Check `plans/components/accordion.md`'s group behaviour still works by rendering two `<Collapse trigger="radio" name="faq">` side by side — opening one closes the other.
-- [ ] **Step 6:** Confirm forwarding via `Passthrough` — `id`, `data-*`, `style`, `class` on the root, and `title-marker`/`content-marker` on the parts. Headless check:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="collapse[^"]*"[^>]*><input[^>]*type="(checkbox|radio)"' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoE '<details class="collapse[^"]*"[^>]*><summary' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoc 'tabindex="0"' storybook-static/astro-prerendered-stories.json
-  ```
-  The first proves the input is a direct child (§3g.1); the third proves focus mode is configured (§3a).
-- [ ] **Step 7:** Update the `Collapse` row in `plans/README.md` to **Implemented**. **Amend `plans/components/accordion.md`** per §0a — drop `AccordionItem.astro`, point its item sections here, and update its README row to say the group wrapper only.
+- [x] **Step 1: done.** §0a's supersede is confirmed and executed — no `AccordionItem` exists and `plans/components/accordion.md` is amended (Step 7). §3g.4 is settled **yes** and recorded in §3h, along with the second input attribute §4 had missed.
+- [x] **Step 2: skipped as planned.** All three unions local; `variants.ts` untouched.
+- [x] **Step 3: done**, with §3h's two additions and §3i's deletion. Gate walked; the probe errored on all four intended lines and left five valid ones clean, `tabindex="-1"` among them — the override §3a's default has to preserve.
+- [x] **Step 4: done.** `Collapse.stories.ts`, 16 stories: 12 doc-page examples plus `Playground`, `Passthrough`, `Triggers` and `ForceWithDetails`.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, since every trigger is behaviour.** Verify: `WithFocus` opens on **tab-in** and closes on **tab-out** (if it never opens, `tabindex` is missing and nothing else matters); `WithCheckbox` stays open until clicked again; `WithDetails` opens natively with **no disclosure triangle** and its content is findable by find-in-page while closed; `Triggers` shows all four behaving as labelled, including the two radios closing each other; the icons rotate or switch; `IconAtStart` puts the icon on the leading edge with mirrored padding; `ForceClose` will not open and `ForceOpen` will not close; **`ForceWithDetails`' second collapse opens anyway** (§3e); and `CustomColorsCheckbox` recolours title *and* content on open, which is §3h's `peer` doing its job.
+- [x] **Step 6: done — forwarding confirmed on the root and both parts.** `Passthrough` renders `<div class="collapse mine bg-base-100 border border-base-300" id="collapse-1" data-test="yes" style="letter-spacing:2px">` with `title-marker` and `content-marker` on their own wrappers. Full output in §8.
+- [x] **Step 7: done.** The `Collapse` row in `plans/README.md` says Implemented, and **`plans/components/accordion.md` is amended per §0a** — no `AccordionItem`, its item sections point here, and its README row says the group wrapper only. `plans/IMPLEMENTATION-ORDER.md` §5.4's Collapse row is discharged, and its Join row with it (§3i).
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 7 daisyUI classes are reachable: `collapse` always, `collapse-title`/`collapse-content` as slot wrappers, `collapse-arrow`/`collapse-plus` via `icon`, `collapse-open`/`collapse-close` via `force`.
-- [ ] All four trigger modes render daisyUI's documented markup, and `tabindex="0"` is emitted for focus mode (§3a).
-- [ ] The title is a `<summary>` when `trigger="details"` and a `<div>` otherwise (§3b) — checked in rendered HTML.
-- [ ] `name` reaches the `<input>` in radio mode and the `<details>` in details mode; `open` produces `checked` / `open` respectively (§3c).
-- [ ] `titleClass` and `contentClass` reach their wrappers, and `class` reaches the root (§3d).
-- [ ] No invented axis — no `color`, no `size`, no `inputId` (§3f).
-- [ ] `force`'s JSDoc states the `details` exclusion (§3e), and `ForceWithDetails` demonstrates it.
-- [ ] §3f's click-outside limitation is documented and its story is raw markup with a comment.
-- [ ] Two `<Collapse trigger="radio">` sharing a `name` are mutually exclusive in the browser (§0a — this is what replaces `AccordionItem`).
-- [ ] `plans/components/accordion.md` and its `plans/README.md` row are amended per §0a.
-- [ ] `Playground` exposes every prop as a control; one story per doc-page example.
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] All 7 daisyUI classes are reachable: `collapse` always, `collapse-title`/`collapse-content` as slot wrappers, `collapse-arrow`/`collapse-plus` via `icon`, `collapse-open`/`collapse-close` via `force`.
+- [x] All four trigger modes render daisyUI's documented markup, and `tabindex="0"` is emitted for focus mode (§3a).
+- [x] The title is a `<summary>` when `trigger="details"` and a `<div>` otherwise (§3b) — checked in rendered HTML.
+- [x] `name` reaches the `<input>` in radio mode and the `<details>` in details mode; `open` produces `checked` / `open` respectively (§3c).
+- [x] `titleClass` and `contentClass` reach their wrappers, and `class` reaches the root (§3d).
+- [x] No invented axis — no `color`, no `size`, no `inputId` (§3f).
+- [x] `force`'s JSDoc states the `details` exclusion (§3e), and `ForceWithDetails` demonstrates it.
+- [x] §3f's click-outside limitation is documented and its story is raw markup with a comment.
+- [x] Two `<Collapse trigger="radio">` sharing a `name` are mutually exclusive in the browser (§0a — this is what replaces `AccordionItem`).
+- [x] `plans/components/accordion.md` and its `plans/README.md` row are amended per §0a.
+- [x] `Playground` exposes every prop as a control; one story per doc-page example.
+- [x] Every box in §4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31). `astro check`: 191 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Passthrough  → <div class="collapse mine bg-base-100 border border-base-300" id="collapse-1"
+                 data-test="yes" style="letter-spacing:2px">
+                 <input type="checkbox" autocomplete="off" class="peer">
+                 <div class="collapse-title title-marker">…</div>
+                 <div class="collapse-content content-marker">…</div></div>
+UsingDetails → <details class="collapse bg-base-100 border border-base-300"
+                 name="my-accordion-det-1" open>
+                 <summary class="collapse-title font-semibold">…</summary>
+                 <div class="collapse-content text-sm">…</div></details>
+WithJoin     → <div class="join join-vertical [&amp;>*]:join-item bg-base-100">
+                 <div class="collapse collapse-arrow border-base-300 border">…
+```
+
+Across the 23 Collapse and Accordion stories, **every story balances**: each
+`.collapse` root is accounted for by exactly one of a toggle input, a
+`<details>`, or `tabindex="0"`.
+
+```
+collapse roots 41 = inputs 25 + details 6 + tabindex="0" 10
+input is a direct child of .collapse   24 of 24 component-rendered
+  (the 25th is CloseOnClickOutside's raw markup, which is raw on purpose — §3f)
+title as <summary> 6 of 6 details roots | as <div> everywhere else
+peer 25 | autocomplete="off" 25   — §3h, one of each per input
+all 7 classes have rules in the built stylesheet
+```
+
+What this settles:
+
+- **§3a's `tabindex` is emitted exactly where it belongs** and nowhere else: 10 focus-mode collapses carry it, and no checkbox, radio or details root does. Without it a focus collapse is a title that does nothing, with no error — so the balance above is the assertion that matters.
+- **§3g.1**: all 24 component-rendered inputs are direct children of `.collapse`, which `&>input:is([type=checkbox],[type=radio])` requires. This component renders its own input, so it was never exposed to the wrapper question the way its siblings are.
+- **§3b's element swap holds**: `<summary class="collapse-title">` in all 6 details roots, `<div class="collapse-title">` in the other 35 — the swap a `CollapseTitle` sub-component could not have made.
+- **§3c**: `name` reaches the `<input>` in radio mode (19 of them) and the `<details>` in details mode (3), never the root `div`.
+- **§3i**: the variant rule `.\[\&\>\*\]\:join-item>*` is in the built CSS with `join-item`'s full declaration block, so the wrapper classes its own children.
+
+Not settled here: whether any of it opens. Focus behaviour, the details animation, the icon rotation, `force`'s two directions and §3e's exclusion are all Step 5.

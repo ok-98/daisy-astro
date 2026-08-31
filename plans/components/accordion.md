@@ -16,6 +16,12 @@
 
 > **Status:** Planned. Nothing in §4 is implemented yet. Facts marked **[verified]** were checked against `daisyui@5.7.22`'s shipped CSS and `astro@7.2.4`'s typings during planning; items in §3d are explicitly **unverified** and are prototype checks for Step 3.
 
+
+> **Status:** **Implemented** (2026-08-31) — **as one thin wrapper, not two components.**
+>
+> `plans/components/collapse.md` §0a supersedes the item half of this plan, and that is now executed: **`AccordionItem.astro` does not exist and will not be built.** §1's variant table, §2's slot table, §3a/§3b's per-item mechanics and §4's `AccordionItem.astro` listing all moved to `plans/components/collapse.md` and are **superseded here** — read them there, where they are implemented and verified. What survives in this plan is what is genuinely about *grouping*: §0a's "the wrapper cannot inject the shared `name`", §3c's join pairing, and the group stories.
+>
+> Two corrections to what survives: **§3c's candidate simplification works**, so the wrapper classes its own children and nothing takes a `join` prop (§3e); and §3d's three unknowns are all answered (§3e). 7 stories. Step 5 (visual pass) is open.
 ---
 
 ## 0. Why this component is two files
@@ -126,6 +132,31 @@ Per §0a the wrapper cannot reach its slotted children, so `<Accordion join>` al
 1. **Slot content with props.** `plans/README.md` §4 records that slot content may be "another Astro component", but the framework's shipped typings do not describe the shape (`slots?: string[]` is the only reference in `dist/*.d.ts` **[verified]**), and passing a component *with its own props and nested slots* is untested here. §5 assumes it does **not** work and uses HTML strings for the group stories; switch them to components if it does.
 2. **Slot sanitization stripping `<input>`.** The framework sanitizes slot HTML with conservative defaults (`plans/README.md` §4). The group stories pass `<input type="radio">` inside slot HTML, which is exactly the kind of element a conservative sanitizer drops — and a dropped input degrades to a permanently-closed collapse that still *looks* right. If group stories render but never open, check the Sanitization guide before touching the component.
 3. **`[&>*]:join-item`** — see §3c.
+
+### 3e. What Step 1 and Step 3 actually found
+
+**2026-08-31**, resolving §3d's three unknowns and §3c's candidate.
+
+1. **`[&>*]:join-item` emits, so §3c's candidate wins.** The built stylesheet
+   contains `.\[\&\>\*\]\:join-item>*{border-style:solid; …}` with
+   `join-item`'s full declaration block and its sibling rules. Tailwind 4
+   composes daisyUI's class under an arbitrary variant with this `@source`
+   setup. So `<Accordion join>` renders
+   `class="join join-vertical [&>*]:join-item"` and classes its own children —
+   **the item needs no `join` prop, and `Collapse` no longer has one**
+   (`plans/components/collapse.md` §3i). §3c's "keep the explicit prop if it
+   doesn't emit" branch is dead.
+2. **Slot content with props works** (§3d.1). The group stories pass real
+   `Collapse` components with their own props *and* named slots, nested inside
+   `Accordion`'s slot. §5's HTML-string fallback is not needed and is not used.
+3. **The sanitizer strips nothing** (§3d.2) — sanitization is disabled
+   library-wide (`.storybook/main.ts`), so `<input type="radio">` reaches the
+   output. The hazard this plan predicted — a stripped input degrading to a
+   permanently-closed collapse that still looks right — cannot occur here.
+
+**What did not change:** §0a's accepted cost. Astro still has no context API,
+so `name` still repeats on every item, and the stories build their items from
+an array precisely because of it.
 
 ## 4. Component implementation
 
@@ -350,34 +381,56 @@ const item = (title: string, body: string, name: string, extra = '', checked = f
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve the three unknowns in §3d — slot-content-with-props, sanitizer behaviour on `<input type="radio">`, and `[&>*]:join-item` emission. Each one changes §5 or §3c; none changes §1 or §2.
-- [ ] **Step 2:** No new shared unions — `variants.ts` is untouched (§1: no color or size axis). Skip.
-- [ ] **Step 3:** In `src/components/Accordion/`, replace the `Accordion.astro` dummy scaffold and create `AccordionItem.astro` per §4, then walk the Astro idioms gate.
-- [ ] **Step 4:** Write both story files per §5, replacing the dummy `Accordion.stories.ts`.
-- [ ] **Step 5:** Run `pnpm storybook` from `packages/daisy-astro/`, open `Components/Accordion` and `Components/AccordionItem`, and verify:
-  - `Playground` renders and every control changes the markup.
-  - In `UsingRadioInputs`, opening the second item **closes the first** — the whole point of the shared `name`, and the one thing that silently fails per §3a.
-  - `UsingDetails` behaves the same, and additionally allows all-closed (§3b).
-  - `ForceState`: `force="close"` stays closed when clicked; `force="open"` stays open.
-  - `WithJoin` shows a single bordered stack, not three separately-rounded boxes.
-- [ ] **Step 6:** Confirm attribute forwarding via the `Passthrough` story — `id`, `data-*`, `style`, `class` all survive. Headless check:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<[^>]*collapse[^>]*>' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Accordion` row in `plans/README.md` to **Implemented**, and add an `AccordionItem` row (the checklist tracks daisyUI's 68 components, so note it as part of Accordion rather than a 69th).
+- [x] **Step 1: done** — all three of §3d's unknowns answered, with §3c's candidate adopted. See §3e.
+- [x] **Step 2: skipped as planned.** No colour or size axis anywhere in this component; `variants.ts` untouched.
+- [x] **Step 3: done, reduced to one file.** `Accordion.astro` replaces the scaffold; **`AccordionItem.astro` was not created** (`plans/components/collapse.md` §0a). The wrapper is three lines of markup and carries §0a's `name` caveat in its JSDoc, where a caller meets it.
+- [x] **Step 4: done.** `Accordion.stories.ts`, 7 stories, composing the real `Collapse` — not the HTML strings §5 fell back to (§3e.2).
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and grouping is the only thing this component does.** Verify: in `UsingRadioInputs`, opening the second item **closes the first** — the whole point of the shared `name`, and the one thing that fails silently; `UsingDetails` does the same and additionally allows **all** closed, which the radio form cannot; and **`WithJoin` is a single bordered stack**, not three separately-rounded boxes, which is §3e.1's variant proving itself in the browser rather than in the stylesheet.
+- [x] **Step 6: done — forwarding confirmed at both levels.** `Passthrough` renders `<div class="join join-vertical [&>*]:join-item mine bg-base-100" id="accordion-1" data-test="yes" style="letter-spacing:1px">` around a marked item. Full output in §8.
+- [x] **Step 7: done.** The `Accordion` row in `plans/README.md` says Implemented and names the wrapper only; there is no `AccordionItem` row, because there is no such component.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 7 daisyUI classes from §1 are reachable: `collapse` always, `collapse-title`/`collapse-content` as slot wrappers, `collapse-arrow`/`collapse-plus` via `icon`, `collapse-open`/`collapse-close` via `force`.
-- [ ] No invented axis — no `color`, no `size` prop (§1).
-- [ ] `Props` extends `HTMLAttributes<'div'>`; non-variant native attributes work without explicit declaration.
-- [ ] Caller `class` merges through `class:list` on both trigger branches.
-- [ ] `name` reaches the `<input>` in the radio branch and the `<details>` in the details branch (§3a) — checked in rendered HTML, not assumed.
-- [ ] `open` produces `checked` on radio and `open` on details (§3b).
-- [ ] `Playground` exposes every prop as a control.
-- [ ] One story per doc-page example, reproducing that example's markup and copy.
-- [ ] `Icons` and `ForceState` render all values of their axis.
-- [ ] Two items sharing a `name` are mutually exclusive in the browser (Step 5).
-- [ ] Every box in §4's Astro idioms gate ticked.
+**Superseded in part.** Every box below about the *item* — the 7 classes, the
+trigger branches, `name`/`open` placement, the probe — belongs to
+`plans/components/collapse.md` §7 and is ticked there. What remains here is the
+group:
+
+- [x] There is **no `AccordionItem.astro`** (`plans/components/collapse.md` §0a).
+- [x] `Accordion` renders a plain `div` without `join`, and `join join-vertical [&>*]:join-item` with it (§3c, §3e.1).
+- [x] The items need no prop to be joined — the wrapper classes them (§3e.1).
+- [x] `class` merges through `class:list`, and native attributes survive (§8).
+- [x] The JSDoc states §0a's accepted cost: `name` repeats per item, because a wrapper cannot reach into its own slot content.
+- [x] One story per doc-page example, reproducing that example's copy, plus `Playground` and `Passthrough`.
+- [ ] Items sharing a `name` are mutually exclusive in the browser (Step 5).
+
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31). `astro check`: 191 files, 0 errors, 0 warnings, 0 hints.
+
+```
+UsingRadioInputs → <div class="flex flex-col gap-2">
+  <div class="collapse bg-base-100 border border-base-300">
+    <input type="radio" name="my-accordion-1" checked autocomplete="off" class="peer">
+    <div class="collapse-title font-semibold">How do I create an account?</div>
+    <div class="collapse-content text-sm">Click the "Sign Up" button…</div></div> ×3
+                                    ↑ one shared name, one checked — §0a
+WithJoin         → <div class="join join-vertical [&amp;>*]:join-item bg-base-100">
+                     <div class="collapse collapse-arrow border-base-300 border">…
+                       ↑ no join prop on the item; the wrapper classes it (§3e.1)
+Passthrough      → <div class="join join-vertical [&amp;>*]:join-item mine bg-base-100"
+                     id="accordion-1" data-test="yes" style="letter-spacing:1px">
+                     <div class="collapse item-marker border-base-300 border" id="item-1"
+                     data-test="item">…
+```
+
+What this settles:
+
+- **§3e.1 in the output as well as the stylesheet**: the wrapper carries the variant class and the items carry nothing extra, which is the shape §3c hoped for and could not confirm at planning time.
+- **§3e.2**: every item is a real `Collapse` component with its own props and two named slots, nested in `Accordion`'s slot. The plan assumed this would not work and wrote an HTML-string helper for it; the helper is unused and unwritten.
+- **§0a's cost is visible**: `name="my-accordion-1"` appears once per item, three times per story. That is the repetition Astro's missing context API forces, not an oversight.
+- Exactly one item per group renders `checked`, so the initial state is one-open, as the doc page shows.
+
+Not settled here: whether opening one closes the others, and whether the joined stack renders as one bordered block. Both Step 5.

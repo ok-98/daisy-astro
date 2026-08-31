@@ -1,14 +1,132 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/collapse/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type CollapseTrigger = 'focus' | 'checkbox' | 'radio' | 'details';
+type CollapseIcon = 'arrow' | 'plus';
+type CollapseForce = 'open' | 'close';
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A disclosure widget, and the item of an Accordion — daisyUI gives both the
+ * same seven classes, so this is the only component that renders them
+ * (plan §0a).
+ *
+ * Title and body are named slots rather than sub-components, because the title
+ * element itself depends on `trigger`: a `summary` for `details`, a `div`
+ * otherwise. A sub-component could not know which to render, and a `div` title
+ * inside a `details` is a collapse that never opens (plan §2).
+ *
+ * Background and border are the caller's — daisyUI ships neither, and every
+ * doc example passes `class="bg-base-100 border border-base-300"` (plan §1).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * `focus` opens while focused and **closes on blur**, so it cannot hold
+   * anything clickable — use `checkbox` for that. `radio` makes a group of
+   * collapses sharing a `name` mutually exclusive, which is what an Accordion
+   * is. `details` renders native `details`/`summary`, whose content the
+   * browser's find-in-page can search while closed (plan §3a).
+   */
+  trigger?: CollapseTrigger;
+  /**
+   * The radio group, or the `details` group for native exclusive behaviour.
+   * Required in practice for `trigger="radio"`: without it the inputs are
+   * unnamed and every item opens independently, which looks correct until you
+   * click a second one (plan §3c).
+   */
+  name?: string;
+  /**
+   * `checked` on the input, `open` on the details. **No effect when
+   * `trigger="focus"`**, where the open state is the browser's focus state and
+   * nothing else (plan §3c).
+   */
+  open?: boolean;
+  icon?: CollapseIcon;
+  /**
+   * Forces the state regardless of the input. **Ignored when
+   * `trigger="details"`** — daisyUI's open rule for that branch is `[open]`
+   * with no `collapse-close` guard, so use `open` instead (plan §3e).
+   */
+  force?: CollapseForce;
+  /**
+   * Classes for `.collapse-title` — the doc page's `font-semibold`, and
+   * `after:start-5 after:end-auto pe-4 ps-12` to move the icon to the leading
+   * edge, which is a title class and nothing else (plan §3d).
+   */
+  titleClass?: string;
+  /** Classes for `.collapse-content` — the doc page's `text-sm` (plan §3d). */
+  contentClass?: string;
+}
+
+// Full literal class names. NEVER `collapse-${icon}` — an interpolated class
+// gets no CSS from daisyUI (plans/README.md §1b).
+const ICON: Record<CollapseIcon, string> = {
+  arrow: 'collapse-arrow',
+  plus: 'collapse-plus',
+};
+
+const FORCE: Record<CollapseForce, string> = {
+  open: 'collapse-open',
+  close: 'collapse-close',
+};
+
+const {
+  trigger = 'focus',
+  name,
+  open = false,
+  icon,
+  force,
+  titleClass,
+  contentClass,
+  // Focus mode is gated on `[tabindex]` in daisyUI's CSS — without it the
+  // element is not focusable and the collapse never opens, with no error
+  // (plan §3a). Defaulted rather than hardcoded, so it stays overridable.
+  tabindex = trigger === 'focus' ? '0' : undefined,
+  class: className,
+  ...rest
+} = Astro.props;
+
+// No `join` prop: inside an `<Accordion join>` the wrapper's `[&>*]:join-item`
+// variant classes the children, and anywhere else `class="join-item"` says the
+// same thing in the same number of characters (plan §3i).
+const classes = ['collapse', icon && ICON[icon], force && FORCE[force], className];
+
+// The toggle input carries what daisyUI's *rendered* examples carry rather
+// than what its copy-paste HTML shows (plan §3h):
+//   autocomplete="off" — stops the browser restoring a stale open state on
+//     reload, which for a disclosure widget is never what you want;
+//   peer — a marker class with no styles of its own, so it costs nothing, and
+//     without it the caller cannot write the `peer-checked:` utilities the
+//     custom-colours example puts on the title and the content.
 ---
 
-<div class:list={['collapse', className]} {...rest}>
-  <slot />
-</div>
+{
+  trigger === 'details' ? (
+    <details class:list={classes} name={name} open={open} {...rest}>
+      <summary class:list={['collapse-title', titleClass]}>
+        <slot name="title" />
+      </summary>
+      <div class:list={['collapse-content', contentClass]}>
+        <slot />
+      </div>
+    </details>
+  ) : (
+    <div class:list={classes} tabindex={tabindex} {...rest}>
+      {trigger !== 'focus' && (
+        <input
+          type={trigger === 'radio' ? 'radio' : 'checkbox'}
+          name={name}
+          checked={open}
+          autocomplete="off"
+          class="peer"
+        />
+      )}
+      <div class:list={['collapse-title', titleClass]}>
+        <slot name="title" />
+      </div>
+      <div class:list={['collapse-content', contentClass]}>
+        <slot />
+      </div>
+    </div>
+  )
+}

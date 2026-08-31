@@ -1,14 +1,36 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/accordion/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+/**
+ * A group of `Collapse`s. daisyUI has **no `accordion` class** — an accordion
+ * is N collapses sharing a radio `name`, and the grouping is emergent rather
+ * than a class (plan §0). So this wrapper is deliberately thin: without `join`
+ * it is a plain `div` that holds the group and carries your own layout classes.
+ *
+ * The shared `name` cannot be injected from here. Astro has no context API and
+ * `Astro.slots.render()` returns already-rendered HTML, so **`name` repeats on
+ * every item** — a known cost of the wrapper+item shape, not an oversight
+ * (plan §0a):
+ *
+ *     <Accordion join>
+ *       <Collapse trigger="radio" name="faq" open>…</Collapse>
+ *       <Collapse trigger="radio" name="faq">…</Collapse>
+ *     </Accordion>
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * Renders the doc page's `join join-vertical` grouping, so the items form
+   * one bordered stack instead of separately-rounded boxes.
+   *
+   * `join-item` on each child comes from the `[&>*]:join-item` variant on this
+   * wrapper, so the items need no prop of their own (plan §3c).
+   */
+  join?: boolean;
+}
 
-const { class: className, ...rest } = Astro.props;
+const { join = false, class: className, ...rest } = Astro.props;
 ---
 
-<div class:list={['collapse', className]} {...rest}>
+<div class:list={[{ 'join join-vertical [&>*]:join-item': join }, className]} {...rest}>
   <slot />
 </div>

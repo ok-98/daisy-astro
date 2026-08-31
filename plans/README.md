@@ -337,14 +337,14 @@ Copy the example markup from the doc page into the story rather than inventing d
 ### Data Display
 | Component | Slug | Status |
 |---|---|---|
-| Accordion | `accordion` | Planned — [`plans/components/accordion.md`](components/accordion.md) (wrapper + `AccordionItem`; current code is a dummy scaffold) |
+| Accordion | `accordion` | **Implemented** — [`plans/components/accordion.md`](components/accordion.md) (**group wrapper only**, 7 stories; items are `Collapse`, there is no `AccordionItem`; visual pass open) |
 | Avatar | `avatar` | **Implemented** — [`plans/components/avatar.md`](components/avatar.md) (`Avatar` + `AvatarGroup`, one row for both; §3e.1 open until the visual pass) |
 | Aura | `aura` | **Implemented** — [`plans/components/aura.md`](components/aura.md) (17 stories; wraps a direct child; colour/duration are caller classes; visual pass open) |
 | Badge | `badge` | **Implemented** — [`plans/components/badge.md`](components/badge.md) (16 stories; §3b mechanism corrected; visual pass open) |
 | Card | `card` | **Implemented** — [`plans/components/card.md`](components/card.md) (`Card`/`CardBody`/`CardTitle`/`CardActions`, one row for all four; 16 stories; no `CardFigure`; visual pass open) |
 | Carousel | `carousel` | **Implemented** — [`plans/components/carousel.md`](components/carousel.md) (`Carousel` + `CarouselItem`, one row for both; 15 stories; no JS by design; visual pass open) |
 | Chat bubble | `chat-bubble` | **Implemented** — [`plans/components/chat-bubble.md`](components/chat-bubble.md) (`Chat`/`ChatBubble`/`ChatHeader`/`ChatFooter`, 10 stories; `chat-image` served by `Avatar`; `placement` required; visual pass open) |
-| Collapse | `collapse` | Planned — [`plans/components/collapse.md`](components/collapse.md) (single impl of the 7 `collapse-*` classes; supersedes `AccordionItem`) |
+| Collapse | `collapse` | **Implemented** — [`plans/components/collapse.md`](components/collapse.md) (single impl of the 7 `collapse-*` classes, 16 stories; 4 triggers; supersedes `AccordionItem`; visual pass open) |
 | Countdown | `countdown` | **Implemented** — [`plans/components/countdown.md`](components/countdown.md) (`Countdown` + `CountdownValue`, one row for both; 12 stories; visual pass open) |
 | Diff | `diff` | **Implemented** — [`plans/components/diff.md`](components/diff.md) (7 stories; native CSS `resize`, no JS; **no drag on iOS Safari**; visual pass open) |
 | Hover 3D card | `hover-3d-card` | **Implemented** — [`plans/components/hover-3d-card.md`](components/hover-3d-card.md) (5 stories; generates the 8 hover zones; pass exactly one child; visual pass open) |

@@ -62,6 +62,8 @@ import Mask from './components/Mask/Mask.astro';
 import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
 import PhoneMockupCamera from './components/PhoneMockup/PhoneMockupCamera.astro';
 import PhoneMockupDisplay from './components/PhoneMockup/PhoneMockupDisplay.astro';
+import Accordion from './components/Accordion/Accordion.astro';
+import Collapse from './components/Collapse/Collapse.astro';
 import Chat from './components/ChatBubble/Chat.astro';
 import ChatBubble from './components/ChatBubble/ChatBubble.astro';
 import ChatHeader from './components/ChatBubble/ChatHeader.astro';
@@ -241,3 +243,12 @@ import Steps from './components/Steps/Steps.astro';
   <ChatFooter class="opacity-50" data-test="f">Delivered</ChatFooter>
 </Chat>
 <Chat placement="end"><ChatBubble>ok</ChatBubble></Chat>
+
+<Accordion join class="bg-base-100" id="acc" data-test="y" title="t">
+  <Collapse trigger="radio" name="faq" open icon="arrow" titleClass="font-semibold" contentClass="text-sm">
+    <Fragment slot="title">How do I create an account?</Fragment>
+    Click the Sign Up button.
+  </Collapse>
+  <Collapse trigger="details" name="faq" force="close" class="join-item" id="c2">ok</Collapse>
+  <Collapse trigger="checkbox" tabindex="-1" data-test="y">ok</Collapse>
+</Accordion>

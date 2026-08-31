@@ -275,8 +275,8 @@ the edit in the **same commit** as the component.
 
 | When you implement | You must also |
 |---|---|
-| **Collapse** | Amend `accordion.md` — no `AccordionItem`, one `Collapse` with `trigger: 'focus' \| 'checkbox' \| 'radio' \| 'details'` (`collapse.md` §0a, §6 Step 3) |
-| **Join** | Drop Collapse's `join` boolean in favour of `class="join-item"` (`join.md` §2, §6 Step 7) |
+| ~~**Collapse**~~ | **Done 2026-08-31.** `accordion.md` amended — no `AccordionItem`, one `Collapse` with all four triggers (`collapse.md` §0a) |
+| ~~**Join**~~ | **Done early, 2026-08-31.** Collapse shipped with no `join` boolean: `[&>*]:join-item` on the Accordion wrapper emits, so the wrapper classes its own children (`collapse.md` §3i, `accordion.md` §3e.1). Join still owns `join-item` itself |
 | **Card** | Fix `plans/README.md` §5 (`card.md`) |
 | **Filter** | Amend `button.md` with the `aria-label`-as-visible-text rule (`filter.md`) |
 | **Text Input** | Nothing left — the missing-`type` audit note in `file-input.md` §0a is already written |
