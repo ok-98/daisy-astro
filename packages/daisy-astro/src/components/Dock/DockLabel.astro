@@ -1,0 +1,19 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The text under a dock item's icon.
+ *
+ * No size prop: the font size comes from the parent `Dock`'s `size`, through
+ * daisyUI's own descendant rules (plan §3f). daisyUI's xs and sm examples omit
+ * the label entirely and show icons only, which is a legitimate layout rather
+ * than a missing piece.
+ */
+interface Props extends HTMLAttributes<'span'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<span class:list={['dock-label', className]} {...rest}>
+  <slot />
+</span>

@@ -26,6 +26,9 @@ import Countdown from './components/Countdown/Countdown.astro';
 import CountdownValue from './components/Countdown/CountdownValue.astro';
 import Diff from './components/Diff/Diff.astro';
 import Divider from './components/Divider/Divider.astro';
+import Dock from './components/Dock/Dock.astro';
+import DockItem from './components/Dock/DockItem.astro';
+import DockLabel from './components/Dock/DockLabel.astro';
 import Otp from './components/Otp/Otp.astro';
 import Progress from './components/Progress/Progress.astro';
 import Radio from './components/Radio/Radio.astro';
@@ -70,6 +73,10 @@ import Steps from './components/Steps/Steps.astro';
 <CountdownValue value={24} digits={2} class="mine" style="color:red" id="cv" data-test="y" />
 
 <Diff class="aspect-16/9 rounded-field" item1Label="After" item2Label="Before" id="df" data-test="y" tabindex="-1">x</Diff>
+
+<Dock size="xs" class="relative" id="dk" data-test="y"><DockItem active aria-current="page"><DockLabel class="mine">Home</DockLabel></DockItem></Dock>
+<DockItem as="a" href="/inbox">ok</DockItem>
+<DockItem disabled>ok</DockItem>
 
 <Divider>OR</Divider>
 <Divider />

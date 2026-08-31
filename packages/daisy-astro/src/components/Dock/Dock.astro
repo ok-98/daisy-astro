@@ -1,14 +1,55 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/dock/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisySize } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'div'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+/**
+ * Bottom navigation bar.
+ *
+ * **`position: fixed` is not a modifier here, it is the component.** There is
+ * no static variant, so a dock is always pinned to the bottom of the viewport.
+ * Two consequences worth planning for (plan §3d):
+ *
+ *   - To show one inside a box — a demo, a story, a docs page — add
+ *     `class="relative"`, which is exactly what daisyUI's own rendered
+ *     examples do. Without it several docks stack on top of each other at the
+ *     bottom of the page.
+ *   - In production, give your page bottom padding so the dock does not cover
+ *     its content. daisyUI provides no spacer. Its `z-index: 1` is low enough
+ *     that a modal or drawer sits above it, which is usually what you want.
+ *
+ * **iOS needs a viewport meta tag this component cannot emit:**
+ * `viewport-fit=cover` in the document head, or the safe-area padding resolves
+ * to zero and the dock sits under the home indicator (plan §3e). It is in the
+ * package README's setup steps.
+ *
+ * Children must be the items themselves. daisyUI styles every direct child
+ * that is not a script, style or template — so an extra wrapper element does
+ * not go unstyled, it *becomes* a full-width item with the real items
+ * collapsed inside it (plan §3a).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * Sets the bar's height, and reaches the labels and the active indicator
+   * through daisyUI's own descendant rules — so `DockItem` and `DockLabel`
+   * need no size prop of their own (plan §3f). `md` matches the unmodified
+   * default and exists so it can be stated explicitly.
+   */
+  size?: DaisySize;
+}
 
-const { class: className, ...rest } = Astro.props;
+// Full literal class names. NEVER `dock-${size}` (plans/README.md §1b).
+const SIZE: Record<DaisySize, string> = {
+  xs: 'dock-xs',
+  sm: 'dock-sm',
+  md: 'dock-md',
+  lg: 'dock-lg',
+  xl: 'dock-xl',
+};
+
+const { size, class: className, ...rest } = Astro.props;
 ---
 
-<div class:list={['dock', className]} {...rest}>
+<div class:list={['dock', size && SIZE[size], className]} {...rest}>
   <slot />
 </div>

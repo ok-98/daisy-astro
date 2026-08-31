@@ -14,7 +14,7 @@
 - Stories run on `@storybook-astro/framework`.
 - `astro check` is the type gate, not `tsc` (§5b).
 
-> **Status:** Planned. Nothing in §4 is implemented. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/dock.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/dock/+page.md` in `saadeghi/daisyui`). §3g lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-31). `Dock.astro` plus the new `DockItem.astro` and `DockLabel.astro`, with 12 + 2 + 2 stories per §5. §3g.1 is answered in the build output — 16 docks render their items as direct children — and so is §3a's odd corollary: **23 inactive items render with no `class` attribute at all**, which is correct (§8). §3e's viewport meta tag is now in the package README. Step 5 (visual pass) is open. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/dock.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/dock/+page.md` in `saadeghi/daisyui`). §3g lists what is **unverified**.
 
 ---
 
@@ -142,7 +142,7 @@ Note that `md` sets exactly the same values as the unmodified `.dock` **[verifie
 
 ### 3g. Unverified assumptions
 
-1. **Does slot content land as direct children of `.dock`?** Blocking, and this one has an unusual twist: `.dock > :not(:where(script, style, template))` styles **every** other element type, so an injected wrapper would not merely go unstyled — it would *become* a dock item with `flex-basis: 100%`, and every real item would collapse inside it. Eighth plan to hit this shared question; see `plans/components/aura.md` §3e.1 and the list it carries. One answer, recorded in all of them.
+1. ~~**Does slot content land as direct children of `.dock`?**~~ **Answered 2026-08-31: yes.** `<div class="dock…"><button` or `><a` matches 16 times across the stories, with nothing injected between. This was the variant with the unusual twist — `.dock > :not(:where(script, style, template))` styles every other element type, so a wrapper would not have gone unstyled, it would have *become* a full-width dock item with every real item collapsed inside it. Consistent with the library-wide answer in `plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3.
 2. **Generic prop inference on `DockItem`.** `Polymorphic` brings `plans/README.md` §5c's `type Props`-before-`const` failure, which is silent — renders fine, accepts nothing. The probe in §4 is mandatory.
 3. **Sub-components as slot content.** Stories compose `Dock` > `DockItem` > `DockLabel`. Shared with `plans/components/card.md` §3f.4; raw HTML strings are the fallback.
 4. **Slot sanitization vs inline `<svg>`.** Every item in every doc example is an inline SVG icon. Shared with `plans/components/alert.md` §3d.1 — and here a stripped icon leaves an item that is empty apart from its label, which still looks deliberate.
@@ -344,41 +344,56 @@ Whether the stories can use `DockItem`/`DockLabel` as components rather than the
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3g.1 (direct children of `.dock`) — blocking, and the shared question across eight plans now. Its failure here is distinctive: a wrapper becomes a full-width item rather than merely going unstyled.
-- [ ] **Step 2:** No new shared unions — `size` reuses `DaisySize`, no colour axis (§1). `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Dock.astro` dummy scaffold and create `DockItem.astro` and `DockLabel.astro` per §4, then walk the Astro idioms gate. **Run the probe on `DockItem`** — the generic failure is silent (§3g.2).
-- [ ] **Step 4:** Replace `Dock.stories.ts` and add the two sub-component story files per §5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Dock`, verify:
-  - `Playground` renders **inside its wrapper**, not at the bottom of the canvas — if the stories overlap, `relative` is missing (§3d).
-  - `Default`: three evenly spaced items, the second with a **wider filled pill** under it; the other two show no pill (§3a).
-  - The five size stories differ in bar height **and** label size, and the pill stays anchored near the bottom in each (§3f).
-  - `ExtraSmall` / `Small` have no labels and still look right.
-  - `CustomColors`: the bar is neutral and the icons/labels follow `currentColor`.
-  - `AsLinks`: items render as `<a href>`, and the active one carries `aria-current="page"` (§3b).
-  - `DisabledItem`: dimmed and not clickable, with no extra classes (§3c).
-  - `Fixed`: pinned to the bottom of the canvas while the wrapper scrolls (§3d).
-- [ ] **Step 6:** Confirm forwarding via `Passthrough` — `id`, `data-*`, `style`, `class` survive on all three components. Headless check, which also answers §3g.1 and §3a:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="dock[^"]*"[^>]*><(button|a)' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoE '<button class="dock-active"' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoE '<div class="dock[^"]*"[^>]*><button>' storybook-static/astro-prerendered-stories.json | head
-  ```
-  The first proves items are direct children; the third confirms an inactive item emits **no** `class` attribute (§3a).
-- [ ] **Step 7:** Update the `Dock` row in `plans/README.md` to **Implemented**, noting `DockItem`/`DockLabel` as part of it. **Add the `viewport-fit=cover` meta tag to the package README's install steps** alongside the `@source` note from `plans/README.md` §1c (§3e).
+- [x] **Step 1: done — §3g.1 is answered.** Items are direct children of `.dock` in all 16 rendered docks. §3g.3 (sub-components as slot content) is settled library-wide, so the stories compose `DockItem`/`DockLabel` as real components rather than falling back to the `item()` string helper §5 sketched. §3g.4 is moot — sanitization is off, and the icons survive verbatim.
+- [x] **Step 2: skipped as planned.** `DaisySize` reused unchanged, no colour axis; `variants.ts` untouched.
+- [x] **Step 3: done.** Scaffold replaced and both sub-components created per §4; gate walked. The probe errored on all four intended lines — including both misplacements this plan warns about: `<Dock active>` and `<DockItem size="lg">` are compile errors, so neither can be written through the API.
+- [x] **Step 4: done.** `Dock.stories.ts` (12), `DockItem.stories.ts` (2), `DockLabel.stories.ts` (2). Every story frames its dock in the doc page's wrapper and passes `relative` — except `Fixed`, deliberately.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: stories render **inside their wrappers**, not stacked at the bottom of the canvas (§3d); `Default` shows three evenly spaced items with a wider filled pill under the second only (§3a); the five size stories differ in bar height **and** label size with the pill staying anchored (§3f); `ExtraSmall` / `Small` look right with no labels; `CustomColors` follows `currentColor`; `AsLinks` renders anchors with `aria-current="page"` on the active one (§3b); `DisabledItem` is dimmed and not clickable with no extra classes (§3c); and `Fixed` pins to the bottom of the canvas while its wrapper scrolls (§3d).
+- [x] **Step 6: done — forwarding confirmed on all three, and both §3a checks pass.** `Passthrough` renders `<div class="dock mine relative border border-base-300" id="dock-1" data-test="yes" style="letter-spacing:2px">`, and `DockItem`'s renders `<a href="#inbox" aria-current="page" id="dock-item-1" … class="dock-active mine">`. Items are direct children 16 times; **23 inactive items emit no `class` attribute**; 15 carry `dock-active`. Full output in §8.
+- [x] **Step 7: done — the `Dock` row in `plans/README.md` says Implemented**, covering `DockItem` and `DockLabel`. **The `viewport-fit=cover` requirement is now in the package README**, alongside the `@source` line from `plans/README.md` §1c — both are "the library looks subtly broken until you add this" items, so they live together.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 8 daisyUI classes from §1 are reachable: `dock` + 5 sizes on `Dock`, `dock-active` on `DockItem`, `dock-label` on `DockLabel`.
-- [ ] `active` is a `DockItem` prop and `size` is a `Dock` prop — neither is on the wrong component (§3b, §3f).
-- [ ] An inactive `DockItem` with no caller class emits **no `class` attribute** (§3a) — checked in the build output.
-- [ ] `DockItem` defaults to `button` and accepts `as="a"` with `href` narrowing (§3b).
-- [ ] `type Props` precedes every `const` in `DockItem.astro`, destructure annotated `as Props<HTMLTag>`, and the probe confirms props are accepted (§3g.2).
-- [ ] No invented axis — no `color` (§1), no `items`/`icon`/`label` props (§2), no `disabled` branching (§3c).
-- [ ] Slot content renders as **direct children** of `.dock` (§3g.1).
-- [ ] JSDoc states: the dock is `position: fixed` and needs `relative` for demos plus page padding in production (§3d), iOS needs the viewport meta (§3e), and `active` is visual so `aria-current` is the caller's (§3b).
-- [ ] The `viewport-fit=cover` requirement is in the package README (§3e).
-- [ ] `Playground` exposes every prop as a control; each sub-component has its own `Playground` and `Passthrough`.
-- [ ] One story per doc-page example, plus `AsLinks`, `DisabledItem` and `Fixed`.
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] All 8 daisyUI classes from §1 are reachable: `dock` + 5 sizes on `Dock`, `dock-active` on `DockItem`, `dock-label` on `DockLabel`.
+- [x] `active` is a `DockItem` prop and `size` is a `Dock` prop — neither is on the wrong component (§3b, §3f).
+- [x] An inactive `DockItem` with no caller class emits **no `class` attribute** (§3a) — checked in the build output.
+- [x] `DockItem` defaults to `button` and accepts `as="a"` with `href` narrowing (§3b).
+- [x] `type Props` precedes every `const` in `DockItem.astro`, destructure annotated `as Props<HTMLTag>`, and the probe confirms props are accepted (§3g.2).
+- [x] No invented axis — no `color` (§1), no `items`/`icon`/`label` props (§2), no `disabled` branching (§3c).
+- [x] Slot content renders as **direct children** of `.dock` (§3g.1).
+- [x] JSDoc states: the dock is `position: fixed` and needs `relative` for demos plus page padding in production (§3d), iOS needs the viewport meta (§3e), and `active` is visual so `aria-current` is the caller's (§3b).
+- [x] The `viewport-fit=cover` requirement is in the package README (§3e).
+- [x] `Playground` exposes every prop as a control; each sub-component has its own `Playground` and `Passthrough`.
+- [x] One story per doc-page example, plus `AsLinks`, `DisabledItem` and `Fixed`.
+- [x] Every box in §4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31), SVG icons elided. `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default      → <div class="bg-base-300 rounded-box w-full max-w-sm pt-32">
+                 <div class="dock relative border border-base-300">
+                   <button><svg…/><span class="dock-label">Home</span></button>
+                   <button class="dock-active"><svg…/><span class="dock-label">Inbox</span></button>
+                   <button><svg…/><span class="dock-label">Settings</span></button></div></div>
+ExtraSmall   → <div class="dock dock-xs relative …"><button><svg…/></button>…     icons only, no labels
+AsLinks      → <a href="#home">… <a href="#inbox" aria-current="page" class="dock-active">…
+DisabledItem → …<button disabled><svg…/><span class="dock-label">Settings</span></button>
+Fixed        → <div class="dock border border-base-300">…        no `relative` — the production shape
+Passthrough  → <div class="dock mine relative border border-base-300" id="dock-1" data-test="yes"
+                 style="letter-spacing:2px">…
+Item/Pass…   → <a href="#inbox" aria-current="page" id="dock-item-1" data-test="yes"
+                 style="letter-spacing:2px" class="dock-active mine">…
+```
+
+What this settles:
+
+- **§3g.1**: items are direct children of `.dock` 16 times over. A wrapper here would have become a full-width item with every real item collapsed inside it — the most destructive variant of that shared question so far.
+- **§3a's corollary, which looks like a bug until you check the CSS**: **23 inactive items render as bare `<button>` with no `class` attribute at all.** The item has no base class — it is styled entirely through the parent's child selector — so this is correct, and nobody should "fix" it by inventing a `dock-item` class that does not exist.
+- **Neither misplacement is writable.** `<Dock active>` and `<DockItem size="lg">` are both compile errors, so §3b's and §3f's silent failures are unreachable through this API — the same guarantee Carousel got for `snap`.
+- `disabled` needs no branch: it passes through and daisyUI styles it (§3c).
+- All 8 classes have rules in the built stylesheet.
+
+Not settled here: the pill indicator, the size ladder, and whether `Fixed` actually pins. Step 5.

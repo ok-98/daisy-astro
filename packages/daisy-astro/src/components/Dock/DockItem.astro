@@ -1,0 +1,42 @@
+---
+import type { HTMLTag, Polymorphic } from 'astro/types';
+
+// One dock item.
+//
+// It has NO BASE CLASS of its own — daisyUI styles it through the parent's
+// child selector. So an inactive item with no caller class emits no `class`
+// attribute at all, which is correct rather than a bug to fix by inventing a
+// `dock-item` class that does not exist (plan §3a).
+//
+// Defaults to a button, as daisyUI's examples do, but a navigation dock wants
+// anchors: pass `as="a"` with an `href`. Any element works, since the parent
+// styles every non-script child (plan §3b).
+//
+// Disabled needs nothing from this component: daisyUI styles both the native
+// `disabled` attribute and `aria-disabled="true"`, so neither a prop nor a
+// branch is required here — unlike Button, where the same situation did need
+// branching (plan §3c).
+//
+// NOTE: no angle brackets in this comment, deliberately. An angle bracket
+// anywhere in the frontmatter — comments included — breaks Props inference
+// (plans/README.md §5c). The `= 'button'` default type parameter is that same
+// section's second rule.
+type Props<Tag extends HTMLTag = 'button'> = Polymorphic<{
+  as: Tag;
+  /**
+   * Highlights this item's indicator pill. The inactive pill is already there
+   * and transparent, so switching it on does not shift the layout.
+   *
+   * **Visual only.** For a navigation dock, also pass `aria-current="page"` on
+   * the current item — this component does not invent it (plan §3b).
+   */
+  active?: boolean;
+}>;
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const { as: Tag = 'button', active = false, class: className, ...rest } = Astro.props as Props<HTMLTag>;
+---
+
+<Tag class:list={[{ 'dock-active': active }, className]} {...rest}>
+  <slot />
+</Tag>
