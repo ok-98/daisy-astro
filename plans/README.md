@@ -343,7 +343,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Badge | `badge` | **Implemented** — [`plans/components/badge.md`](components/badge.md) (16 stories; §3b mechanism corrected; visual pass open) |
 | Card | `card` | **Implemented** — [`plans/components/card.md`](components/card.md) (`Card`/`CardBody`/`CardTitle`/`CardActions`, one row for all four; 16 stories; no `CardFigure`; visual pass open) |
 | Carousel | `carousel` | **Implemented** — [`plans/components/carousel.md`](components/carousel.md) (`Carousel` + `CarouselItem`, one row for both; 15 stories; no JS by design; visual pass open) |
-| Chat bubble | `chat-bubble` | Planned — [`plans/components/chat-bubble.md`](components/chat-bubble.md) (`Chat`/`ChatBubble`/`ChatHeader`/`ChatFooter`; `chat-image` served by `Avatar`) |
+| Chat bubble | `chat-bubble` | **Implemented** — [`plans/components/chat-bubble.md`](components/chat-bubble.md) (`Chat`/`ChatBubble`/`ChatHeader`/`ChatFooter`, 10 stories; `chat-image` served by `Avatar`; `placement` required; visual pass open) |
 | Collapse | `collapse` | Planned — [`plans/components/collapse.md`](components/collapse.md) (single impl of the 7 `collapse-*` classes; supersedes `AccordionItem`) |
 | Countdown | `countdown` | **Implemented** — [`plans/components/countdown.md`](components/countdown.md) (`Countdown` + `CountdownValue`, one row for both; 12 stories; visual pass open) |
 | Diff | `diff` | **Implemented** — [`plans/components/diff.md`](components/diff.md) (7 stories; native CSS `resize`, no JS; **no drag on iOS Safari**; visual pass open) |

@@ -1,14 +1,39 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/chat-bubble/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisyColor } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'div'> {}
+/**
+ * The message body. **Must be inside a `Chat`**: the tail is a pseudo-element
+ * masked with `--mask-chat`, which is declared on `.chat`, and positioned by
+ * `.chat-start` / `.chat-end`. Outside one the variable is undefined, the mask
+ * is dropped, and the tail renders as a small unmasked square of the bubble's
+ * own colour (plan §3b).
+ *
+ * `<br />` inside works as written — daisyUI's own first example uses one.
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * The colour class is `chat-bubble-*` and belongs on the bubble, not on the
+   * `Chat` — on the container it would match no rule at all (plan §3c).
+   */
+  color?: DaisyColor;
+}
 
-const { class: className, ...rest } = Astro.props;
+// Full literal class names. NEVER `chat-bubble-${color}` (plans/README.md §1b).
+const COLOR: Record<DaisyColor, string> = {
+  primary: 'chat-bubble-primary',
+  secondary: 'chat-bubble-secondary',
+  accent: 'chat-bubble-accent',
+  neutral: 'chat-bubble-neutral',
+  info: 'chat-bubble-info',
+  success: 'chat-bubble-success',
+  warning: 'chat-bubble-warning',
+  error: 'chat-bubble-error',
+};
+
+const { color, class: className, ...rest } = Astro.props;
 ---
 
-<div class:list={['chat', className]} {...rest}>
+<div class:list={['chat-bubble', color && COLOR[color], className]} {...rest}>
   <slot />
 </div>

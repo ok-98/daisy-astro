@@ -16,6 +16,8 @@
 
 > **Status:** Planned. Nothing in §4 is implemented. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/chat.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/chat/+page.md` in `saadeghi/daisyui`). §3f lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-08-31). Four components, no `ChatImage`, and 10 stories in two files rather than §5's four (§3h). §3f.1 is answered — 22 of 22 messages hold their parts directly (§8) — and §3f.2 and §3f.4 with it. **§4's listings ship an HTML comment into every message and are corrected in §3g.** Step 5 (visual pass) is open, and it carries the tail, which is the whole component.
 ---
 
 ## 0. Structure
@@ -164,6 +166,44 @@ This is the library's first cross-component composition, so it gets a line in `C
 Every doc example that shows a conversation is **N sibling `.chat` divs**, one per message, each with its own placement **[verified]**. `.chat` has `padding-block: .25rem` **[verified]**, which is what spaces them; there is no `chat-log` or `chat-container` class in daisyUI.
 
 So there is no `ChatLog` component and no `messages` array prop — a conversation is a loop at the call site over `<Chat placement={…}>`. The `w-full` wrapper the doc page's live previews use is docs-site layout, not part of the component (its own copy-paste HTML omits it).
+
+### 3g. §4's explanatory comments are in the template, where they ship
+
+**Found while implementing, 2026-08-31.** Both listings in §4 put their note
+above the root element:
+
+```astro
+<!--
+  Direct children only — every part is placed by `grid-row-start` …
+-->
+<div class:list={['chat', PLACEMENT[placement], className]} {...rest}>
+```
+
+An HTML comment in an Astro template is **output**, not source annotation — so
+that paragraph would be emitted into the page once per message, and a
+conversation of thirty messages would carry thirty copies of it. `Avatar` hit
+this and says so in its own frontmatter (`plans/components/avatar.md` §3a); the
+same fix applies here. Both notes moved into the component JSDoc, where they
+also reach editors on hover.
+
+Second, smaller: §4's gate lists
+`<Chat placement="start" color="primary">` as a line that **must error**, and it
+cannot — `color` is a native HTML attribute present on every component in this
+library. That is the trap `plans/README.md` §5c already documents, and the
+second plan in a row to walk into it after `plans/components/stat.md` §3g.1. The
+other four probe lines all errored as intended, so §3a and §3c are still
+proven; the misplaced-colour claim is proven by the CSS instead, since
+`chat-bubble-primary` has no rule that matches a `.chat`.
+
+### 3h. Two story files, not four
+
+`ChatBubble` earns its own file: it owns the colour axis and the
+outside-a-`Chat` hazard (§3b). `ChatHeader` and `ChatFooter` have **no props at
+all** — a `Playground` with nothing to play with and a `Passthrough` that
+duplicates what `Chat`'s own nested `Passthrough` already asserts through all
+three parts at once (§8). Same call `plans/components/stat.md` §3g.2 made for
+its six one-class parts, and the same one `Card.stories.ts` made against its
+own §5.
 
 ### 3f. Unverified assumptions
 
@@ -370,37 +410,62 @@ Whether the stories can use the sub-components and `Avatar` as components rather
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3f.1 (direct grid children) — blocking, and now the shared question across five plans. Settle §3f.2 (components as slot content) with Card, and §3f.3 (image URLs) with Avatar/Card/Carousel.
-- [ ] **Step 2:** No new shared unions — `color` reuses `DaisyColor`, `ChatPlacement` stays local, no size axis (§1). `variants.ts` untouched. Skip.
-- [ ] **Step 3:** In `src/components/ChatBubble/`, **rename the mis-assigned scaffold** — `ChatBubble.astro` currently renders `.chat` and becomes `Chat.astro` (§0b) — then create `ChatBubble.astro`, `ChatHeader.astro`, `ChatFooter.astro` per §4 and walk the Astro idioms gate. Do **not** create `ChatImage.astro` (§0a).
-- [ ] **Step 4:** Replace `ChatBubble.stories.ts` with `Chat.stories.ts` and add the three sub-component story files per §5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Chat`, verify:
-  - `Playground` renders and both placement values flip the whole layout.
-  - `StartAndEnd`: the first bubble is left-aligned with its **tail at the bottom-left**, the second right-aligned with its tail at the bottom-right.
-  - `WithImage`: the avatar sits at the **bottom** of the message, level with the bubble, on the correct side for the placement (§3d).
-  - `WithImageHeaderAndFooter`: header above, footer below, both in the text column and **not** under the avatar — this is the §3a grid check, and the thing that silently breaks if placement is missing.
-  - `Colors`: all eight bubbles differ, with readable foreground text.
-  - `BubbleOutsideChat`: the bare bubble shows a stray square instead of a tail (§3b). Expected, not a bug.
-  - Flip the canvas to RTL if the toolbar offers it: the tails mirror with no code change.
-- [ ] **Step 6:** Confirm forwarding via `Passthrough` — `id`, `data-*`, `style`, `class` survive on all four components. Headless check, which also answers §3f.1:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="chat chat-(start|end)[^"]*"[^>]*><div class="chat-' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoc 'chat-bubble-primary' storybook-static/astro-prerendered-stories.json
-  ```
-  The first must match: a `chat-*` part immediately inside `.chat`, no wrapper between.
-- [ ] **Step 7:** Update the `Chat bubble` row in `plans/README.md` to **Implemented**, noting `Chat`/`ChatBubble`/`ChatHeader`/`ChatFooter` as part of it and that `chat-image` is served by `Avatar` (same convention as Accordion/AccordionItem).
+- [x] **Step 1: done for §3f.1**, the shared question's fifth and strictest instance — here a wrapper would have become the sole grid item and stacked all four parts inside it. The build shows a `chat-*` or `avatar` part as the immediate first child in **22 of 22** messages. §3f.2 is discharged (every story composes the real components, `Avatar` included), §3f.4 too: `<time class="text-xs opacity-50">` survives intact, sanitization being off library-wide. §3f.3 stays with the other plans.
+- [x] **Step 2: skipped as planned.** `color` reuses `DaisyColor`; `ChatPlacement` stays local; `variants.ts` untouched.
+- [x] **Step 3: done, with §3g's correction.** The scaffold rendered `.chat` under the name `ChatBubble.astro` and became `Chat.astro`; `ChatBubble.astro`, `ChatHeader.astro`, `ChatFooter.astro` are new; **no `ChatImage.astro`** (§0a). Gate walked — four of five probe lines errored, the fifth being the one that cannot (§3g).
+- [x] **Step 4: done, in two files rather than four** (§3h). `Chat.stories.ts` (6) and `ChatBubble.stories.ts` (4).
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and the tail is the component.** Verify: `StartAndEnd`'s first bubble is left-aligned with its **tail at the bottom-left**, the second right-aligned with its tail at the bottom-right; `WithImage`'s avatar sits **level with the bubble**, not the top of the message (§3d); `WithImageHeaderAndFooter` keeps header and footer in the **text** column rather than under the avatar — the §3a grid check; all eight `Colors` differ with readable foreground text; **`BubbleOutsideChat`'s bare bubble shows a stray square instead of a tail** (§3b); and an RTL canvas mirrors the tails with no code change.
+- [x] **Step 6: done — forwarding confirmed at two levels.** `Chat`'s `Passthrough` renders `<div class="chat chat-end mine" id="msg-1" data-test="yes" style="letter-spacing:2px">` around a marked header, a marked coloured bubble and a marked footer. Full output in §8.
+- [x] **Step 7: done — the `Chat bubble` row in `plans/README.md` says Implemented**, naming all four components and `Avatar` for `chat-image`.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 15 daisyUI classes from §1 are reachable: `chat` + placement on `Chat`, `chat-bubble` + 8 colours on `ChatBubble`, `chat-header`/`chat-footer` on their components, `chat-image` via `Avatar class="chat-image"` (§0a).
-- [ ] `placement` is **required** and has no default (§3a) — `<Chat>` with no placement is a type error.
-- [ ] `color` is a `ChatBubble` prop, not a `Chat` prop (§3c).
-- [ ] No invented axis — no `size`, no `messages` array, no `ChatLog` (§3e), no `ChatImage` (§0a).
-- [ ] Slot content renders as **direct children** of `.chat` — checked in the build output, not by eye (§3f.1).
-- [ ] `class` merges through `class:list` in all four components.
-- [ ] JSDoc states: `placement` is required and why (§3a), `ChatBubble` must live inside a `Chat` (§3b), the author image is an `Avatar` (§3d), and one `Chat` is one message (§3e).
-- [ ] `Playground` exposes every prop as a control in each file.
-- [ ] One story per doc-page example, reproducing that example's markup and copy, plus `BubbleOutsideChat`.
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] All 15 daisyUI classes from §1 are reachable: `chat` + placement on `Chat`, `chat-bubble` + 8 colours on `ChatBubble`, `chat-header`/`chat-footer` on their components, `chat-image` via `Avatar class="chat-image"` (§0a).
+- [x] `placement` is **required** and has no default (§3a) — `<Chat>` with no placement is a type error.
+- [x] `color` is a `ChatBubble` prop, not a `Chat` prop (§3c).
+- [x] No invented axis — no `size`, no `messages` array, no `ChatLog` (§3e), no `ChatImage` (§0a).
+- [x] Slot content renders as **direct children** of `.chat` — checked in the build output, not by eye (§3f.1).
+- [x] `class` merges through `class:list` in all four components.
+- [x] JSDoc states: `placement` is required and why (§3a), `ChatBubble` must live inside a `Chat` (§3b), the author image is an `Avatar` (§3d), and one `Chat` is one message (§3e).
+- [x] `Playground` exposes every prop as a control in each file.
+- [x] One story per doc-page example, reproducing that example's markup and copy, plus `BubbleOutsideChat`.
+- [x] Every box in §4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31). `astro check`: 191 files, 0 errors, 0 warnings, 0 hints.
+
+```
+WithImageHeaderAndFooter → <div class="chat chat-start">
+   <div class="avatar chat-image"><div class="w-10 rounded-full"><img alt="…" src="…kenobee@192.webp"/></div></div>
+   <div class="chat-header">Obi-Wan Kenobi <time class="text-xs opacity-50">12:45</time></div>
+   <div class="chat-bubble">You were the Chosen One!</div>
+   <div class="chat-footer opacity-50">Delivered</div></div>
+BubbleOutsideChat → …<div class="chat chat-start"><div class="chat-bubble chat-bubble-primary">Correct</div></div>
+                     …<div class="chat-bubble chat-bubble-primary">Broken</div>
+                        ↑ no .chat ancestor, so --mask-chat is undefined (§3b)
+Passthrough → <div class="chat chat-end mine" id="msg-1" data-test="yes" style="letter-spacing:2px">
+                <div class="chat-header header-marker" id="header-1" data-test="header">Passthrough</div>
+                <div class="chat-bubble chat-bubble-primary bubble-marker" id="bubble-1" …>forwarded</div>
+                <div class="chat-footer footer-marker opacity-50" id="footer-1" …>Delivered</div></div>
+```
+
+Counts across the 10 stories:
+
+```
+.chat messages   22  (15 start, 7 end)  → part as immediate first child  22
+bubbles 23 (22 in a Chat + 1 deliberately outside) | headers 6 | footers 6
+chat-image through Avatar 6
+all 8 colours present: neutral secondary accent info warning error ×1, success ×2, primary ×5
+```
+
+What this settles:
+
+- **§3f.1, the strictest of the five instances.** Every part is placed by its own `grid-row-start` / `grid-column-start` as a grid item, so one injected wrapper would have become the sole grid item and stacked header, bubble, footer and avatar inside it. 22 of 22 messages hold their first part directly.
+- **§3f.4 is answered**: `<time class="text-xs opacity-50">` reaches the output with its tag and classes intact.
+- **§0a's decision holds in the markup**: `<div class="avatar chat-image"><div class="w-10 rounded-full">` is daisyUI's own structure, produced by `Avatar` with `class` and `innerClass` doing exactly the split `plans/components/avatar.md` §3a set up. A `ChatImage.astro` would have wrapped nothing.
+- **All 15 classes have rules in the built stylesheet**, and `--mask-chat` is declared on `.chat` there — which is what makes `BubbleOutsideChat` a real hazard rather than a hypothetical one.
+- `StartAndEnd`'s first bubble keeps its `<br/>` as written.
+
+Not settled here: the tail, its side, the avatar's baseline, and the RTL mirror. All Step 5 — CSS-only behaviour that the built HTML cannot show.

@@ -62,6 +62,10 @@ import Mask from './components/Mask/Mask.astro';
 import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
 import PhoneMockupCamera from './components/PhoneMockup/PhoneMockupCamera.astro';
 import PhoneMockupDisplay from './components/PhoneMockup/PhoneMockupDisplay.astro';
+import Chat from './components/ChatBubble/Chat.astro';
+import ChatBubble from './components/ChatBubble/ChatBubble.astro';
+import ChatHeader from './components/ChatBubble/ChatHeader.astro';
+import ChatFooter from './components/ChatBubble/ChatFooter.astro';
 import Stats from './components/Stat/Stats.astro';
 import Stat from './components/Stat/Stat.astro';
 import StatTitle from './components/Stat/StatTitle.astro';
@@ -230,3 +234,10 @@ import Steps from './components/Steps/Steps.astro';
   </Stat>
 </Stats>
 <Stats direction="vertical" class="lg:stats-horizontal">ok</Stats>
+
+<Chat placement="start" id="msg" data-test="y" title="t">
+  <ChatHeader class="mine">Obi-Wan Kenobi</ChatHeader>
+  <ChatBubble color="primary" id="cb">You were the Chosen One!</ChatBubble>
+  <ChatFooter class="opacity-50" data-test="f">Delivered</ChatFooter>
+</Chat>
+<Chat placement="end"><ChatBubble>ok</ChatBubble></Chat>

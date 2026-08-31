@@ -1,0 +1,43 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type ChatPlacement = 'start' | 'end';
+
+/**
+ * One message. A two-column, three-row grid, with `ChatHeader`, `ChatBubble`,
+ * `ChatFooter` and the author image as its **direct children** — each is placed
+ * by a `grid-row-start` / `grid-column-start` of its own, so a wrapper around
+ * them collapses the layout (plan §3f.1).
+ *
+ * A conversation is several of these side by side, one per message: daisyUI has
+ * no chat-log class, and `.chat`'s own vertical padding is what spaces them
+ * (plan §3e).
+ *
+ * The author image is an `Avatar`, not a component of its own — pass
+ * `class="chat-image"` and `innerClass="w-10 rounded-full"` (plan §3d).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * **Required, and daisyUI marks it so.** `grid-template-columns` and every
+   * column assignment live on `chat-start` / `chat-end` rather than on `.chat`,
+   * so without one the grid has a single column and the author image is
+   * auto-placed on top of the message. No error, and it reads as a styling
+   * glitch (plan §3a).
+   */
+  placement: ChatPlacement;
+}
+
+// Full literal class names. NEVER `chat-${placement}` — an interpolated class
+// gets no CSS from daisyUI (plans/README.md §1b).
+const PLACEMENT: Record<ChatPlacement, string> = {
+  start: 'chat-start',
+  end: 'chat-end',
+};
+
+const { placement, class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['chat', PLACEMENT[placement], className]} {...rest}>
+  <slot />
+</div>

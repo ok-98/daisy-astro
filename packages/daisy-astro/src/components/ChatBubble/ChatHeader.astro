@@ -1,0 +1,19 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The line above the bubble — a name, and usually a `time` element. No props:
+ * it is a grid row assignment and a fixed font size, and the doc page's
+ * `text-xs opacity-50` on the timestamp is plain Tailwind from the caller.
+ *
+ * Sits in the text column, never under the author image, which is what the
+ * placement class arranges (plan §3a).
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['chat-header', className]} {...rest}>
+  <slot />
+</div>

@@ -1,0 +1,15 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The line below the bubble — "Delivered", "Seen at 12:46". No props; the doc
+ * page's `opacity-50` is a caller class.
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['chat-footer', className]} {...rest}>
+  <slot />
+</div>
