@@ -1,14 +1,117 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/tooltip/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisyColor } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'div'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
+type TooltipAlign = 'start' | 'center' | 'end';
+// Seven colours, not eight: neutral is the base value, so daisyUI ships no
+// `tooltip-neutral` class and one would be a no-op. Derived from the shared
+// union rather than retyped, so it stays in sync and states the exclusion in
+// the type itself (plan §0d).
+type TooltipColor = Exclude<DaisyColor, 'neutral'>;
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A hover bubble.
+ *
+ * **The bubble is a CSS pseudo-element fed by an attribute**, which is why the
+ * primary content route is the `tip` prop rather than a slot. The default slot
+ * holds the *trigger* — the button or text the tooltip is attached to
+ * (plan §0a).
+ *
+ * `tip=""` is meaningful, not an error: daisyUI gates visibility on a non-empty
+ * tip, so an empty string renders no bubble and no tail at all rather than an
+ * empty box. Do not coerce it away (plan §0a).
+ *
+ * For markup instead of text, use the `content` slot; it wins nothing over
+ * `tip` — they are alternatives, and the wrapper is only rendered when the slot
+ * is filled (plan §0b).
+ *
+ * **Accessibility: the bubble is decorative.** Generated content is not
+ * reliably exposed to assistive technology, and daisyUI adds no `role` or
+ * `aria-describedby`, so a screen-reader user gets nothing from `tip`. The
+ * accessible name belongs on the **trigger**, which is your slot content — give
+ * it an `aria-label`, or an `aria-describedby` pointing at real text. The
+ * tooltip is at least keyboard-*visible*, since daisyUI reveals it on
+ * `:focus-visible` of anything inside (plan §0f).
+ *
+ * **`lg:tooltip` is not reachable from any prop.** This component always emits
+ * `tooltip`, so the doc page's "tooltip only above lg" example — the correct
+ * answer to showing no hover affordance on touch screens — needs a hand-written
+ * wrapper rather than a prop (plan §0e).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /** The bubble's text. Empty string means no tooltip (plan §0a). */
+  tip?: string;
+  /**
+   * Which side the bubble sits on. `top` is daisyUI's default and emits no
+   * class.
+   */
+  position?: TooltipPosition;
+  /**
+   * Alignment along the **cross axis**, whose meaning swaps with `position`:
+   * horizontal for `top`/`bottom`, vertical for `left`/`right`. So
+   * `position="left" align="start"` means "on the left, aligned to the top" —
+   * which is not guessable, and is why these stay two independent props rather
+   * than one twelve-value enum (plan §0c). Undefined behaves as `center`.
+   */
+  align?: TooltipAlign;
+  /** Forces the bubble open, for demos and for testing. */
+  open?: boolean;
+  /** Seven colours — there is no neutral, because neutral is the base. */
+  color?: TooltipColor;
+}
+
+// Full literal class names. NEVER `tooltip-${position}` (plans/README.md §1b).
+const POSITION: Record<TooltipPosition, string> = {
+  top: 'tooltip-top',
+  bottom: 'tooltip-bottom',
+  left: 'tooltip-left',
+  right: 'tooltip-right',
+};
+
+const ALIGN: Record<TooltipAlign, string> = {
+  start: 'tooltip-start',
+  center: 'tooltip-center',
+  end: 'tooltip-end',
+};
+
+const COLOR: Record<TooltipColor, string> = {
+  primary: 'tooltip-primary',
+  secondary: 'tooltip-secondary',
+  accent: 'tooltip-accent',
+  info: 'tooltip-info',
+  success: 'tooltip-success',
+  warning: 'tooltip-warning',
+  error: 'tooltip-error',
+};
+
+const { tip, position, align, open = false, color, class: className, ...rest } = Astro.props;
+
+// Gated because an ungated wrapper would be inert but present: daisyUI ignores
+// an empty content div, so it would sit in the DOM of every tooltip that uses
+// `tip` instead, for no reason (plan §0b).
+const hasContent = Astro.slots.has('content');
 ---
 
-<div class:list={['tooltip', className]} {...rest}>
+<div
+  class:list={[
+    'tooltip',
+    position && POSITION[position],
+    align && ALIGN[align],
+    color && COLOR[color],
+    { 'tooltip-open': open },
+    className,
+  ]}
+  data-tip={tip}
+  {...rest}
+>
+  {
+    hasContent && (
+      <div class="tooltip-content">
+        <slot name="content" />
+      </div>
+    )
+  }
   <slot />
 </div>

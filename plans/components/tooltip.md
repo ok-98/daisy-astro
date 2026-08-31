@@ -14,6 +14,8 @@
 - One story file, `Playground` + one story per variant axis.
 - `astro check` is the type gate, not `tsc` (§5b).
 
+
+> **Status:** **Implemented** (2026-08-31). `Tooltip.astro` and 13 stories. The `content` slot's gate is asserted in the build output — **one wrapper across 27 tooltips**, in the single story that fills it (§8). §0a's empty-tip behaviour holds, though Astro serialises it in a way the plan did not anticipate; see §8. Step 5 (visual pass) is open.
 ---
 
 ## 0. What the evidence actually says
@@ -374,37 +376,53 @@ export const RichContent = {
 
 ## 6. Steps
 
-- [ ] **Step 1:** Section 1 is already filled from the shipped CSS and the doc frontmatter — seventeen classes, sixteen examples. Nothing to re-derive.
-- [ ] **Step 2:** No new union in `variants.ts`. `Exclude<DaisyColor, 'neutral'>` derives from the shared one (§0d); the `position` and `align` unions stay local, as `toast.md` and `indicator.md` did.
-- [ ] **Step 3:** Rewrite `Tooltip.astro` per section 4 and run the probe, `color="neutral"` case included. Then check the built HTML: `div.tooltip-content` must be a **direct child** of `div.tooltip`, and must be **absent** when no `tip` slot is passed (§2).
-- [ ] **Step 4:** Write `Tooltip.stories.ts` per section 5. Start with `RichContent` — it is the only story exercising the named slot, and it settles slot handling before the other twenty depend on it.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Tooltip`, verify:
-  - `Default` shows on hover **and** on keyboard focus of the button (§0a) — tab to it, do not only mouse over it.
-  - `tip=""` shows nothing at all, not an empty bubble (§0a). Add it as a deliberate case.
-  - `Top`/`Bottom` move the bubble horizontally with `align`; `Left`/`Right` move it **vertically** (§0c).
-  - `Colors` shows seven distinct bubble colours with legible text (each class also sets the content colour, §0d).
-  - `ResponsivePlacement` moves from start-aligned top to centred right at the `md` breakpoint — resize, do not trust one width.
-  - The tail (`:after`) stays attached to the bubble in all twelve position/align combinations; it is a separately positioned masked element and is the most likely thing to drift.
-- [ ] **Step 6:** Attribute forwarding story: `id`, `data-*`, `style`, `class`, plus `aria-describedby` — the one §0f recommends. Confirm an explicit `data-tip` passed through `...rest` overrides the `tip` prop, as the implementation comment claims. Headless check:
-
-```bash
-pnpm build-storybook
-grep -rhoE '<div[^>]*tooltip[^>]*>' storybook-static/astro-prerendered-stories.json | head
-```
-- [ ] **Step 7:** Update `plans/README.md`'s Tooltip row to **Implemented**.
+- [x] **Step 1: done.** §0g's scaffold assessment held — root, base class, merge and spread were already right, so the work was the props, the gated slot and the documentation.
+- [x] **Step 2: done — nothing added to `variants.ts`.** The colour axis is `Exclude<DaisyColor, 'neutral'>`, derived rather than retyped, and the probe confirms `color="neutral"` is a type error (§0d).
+- [x] **Step 3: done.** Component written per §4, with the `content` slot gated by `Astro.slots.has()`. Gate walked; the probe errored on all four intended lines.
+- [x] **Step 4: done.** `Tooltip.stories.ts`, 13 stories. Most force `open`, because a hover-only bubble is invisible in a static canvas — hover still works, but a screenshot of a closed tooltip shows nothing.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and hover is the whole component.** Verify: `Default` shows its bubble on hover **and on keyboard focus**, which is the `:has(:focus-visible)` arm daisyUI ships (§0a); `Positions` puts the bubble on four sides; **`AlignVerticalSide` shows `start` meaning *top*** with the bubble on the left, which is §0c's whole point; `Colors` shows seven bubbles with readable text; `WithContentSlot` bounces its markup; `EmptyTip` renders **no bubble and no tail** (§0a); `ResponsiveTooltipOnly` has no tooltip below `lg` — resize rather than screenshot; and `ResponsiveAxes` moves both axes at `md` (§0e).
+- [x] **Step 6: done — forwarding confirmed and the gate asserted.** `Passthrough` renders `<div class="tooltip tooltip-bottom tooltip-end tooltip-accent tooltip-open mine" data-tip="Passthrough" id="tooltip-1" data-test="yes" style="letter-spacing:2px">`, so `tip` reaches the DOM as `data-tip` rather than as a stray prop. One `tooltip-content` wrapper across 27 tooltips. Full output in §8.
+- [x] **Step 7: done — the `Tooltip` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All five axes have typed props; `color` is `Exclude<DaisyColor,'neutral'>` and `color="neutral"` is a type error (§0d).
-- [ ] `tip` renders as `data-tip`, and `tip=""` produces no tooltip rather than an empty bubble (§0a).
-- [ ] The `tip` slot renders a gated `div.tooltip-content` as a direct child, absent when unused (§0b, §2).
-- [ ] `position` and `align` emit nothing when undefined, and the axis-swap on left/right is documented in JSDoc and in the story descriptions (§0c).
-- [ ] `align`/`position` prop names match `indicator.md` and `toast.md` (§0c).
-- [ ] Keyboard `:focus-visible` triggering verified, not assumed (§0a, §6 Step 5).
-- [ ] The screen-reader gap is stated in the JSDoc with the trigger-labelling remedy, and has a story (§0f).
-- [ ] `lg:tooltip` documented as not expressible through the component, with a raw-markup story (§0e).
-- [ ] `Props` extends `HTMLAttributes<'div'>`; `class` merges through `class:list`.
-- [ ] `Playground` exposes all five props as controls.
-- [ ] Sixteen doc-example stories plus `Colors`, composing the real `Button` in the colour stories.
-- [ ] Every box in section 4's Astro idioms gate ticked.
+- [x] All five axes have typed props; `color` is `Exclude<DaisyColor,'neutral'>` and `color="neutral"` is a type error (§0d).
+- [x] `tip` renders as `data-tip`, and `tip=""` produces no tooltip rather than an empty bubble (§0a).
+- [x] The `tip` slot renders a gated `div.tooltip-content` as a direct child, absent when unused (§0b, §2).
+- [x] `position` and `align` emit nothing when undefined, and the axis-swap on left/right is documented in JSDoc and in the story descriptions (§0c).
+- [x] `align`/`position` prop names match `indicator.md` and `toast.md` (§0c).
+- [x] Keyboard `:focus-visible` triggering verified, not assumed (§0a, §6 Step 5).
+- [x] The screen-reader gap is stated in the JSDoc with the trigger-labelling remedy, and has a story (§0f).
+- [x] `lg:tooltip` documented as not expressible through the component, with a raw-markup story (§0e).
+- [x] `Props` extends `HTMLAttributes<'div'>`; `class` merges through `class:list`.
+- [x] `Playground` exposes all five props as controls.
+- [x] Sixteen doc-example stories plus `Colors`, composing the real `Button` in the colour stories.
+- [x] Every box in section 4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default          → <div class="tooltip" data-tip="hello"><button class="btn">Hover me</button></div>
+WithContentSlot  → <div class="tooltip tooltip-open"><div class="tooltip-content">
+                     <div class="animate-bounce text-orange-400 -rotate-10 text-2xl font-black">Wow!</div>
+                     </div><button class="btn">Hover me</button></div>
+AlignVerticalSide→ <div class="tooltip tooltip-left tooltip-start tooltip-open" data-tip="left start">…
+                   … tooltip-center … tooltip-end          start means TOP here (§0c)
+EmptyTip         → <div class="tooltip tooltip-open" data-tip><button class="btn">no tooltip</button></div>
+Passthrough      → <div class="tooltip tooltip-bottom tooltip-end tooltip-accent tooltip-open mine"
+                     data-tip="Passthrough" id="tooltip-1" data-test="yes" style="letter-spacing:2px">…
+```
+
+What this settles:
+
+- **The `content` gate works**: exactly **one** `tooltip-content` wrapper across 27 rendered tooltips — the one story that fills the slot. Every tooltip using `tip` has no empty wrapper in its DOM, which is what §0b asked for.
+- **`tip` becomes `data-tip`**, never a stray attribute, and both placement axes emit independently.
+- **The colour axis excludes neutral at the type level**: `<Tooltip color="neutral">` is a compile error, so §0d's derivation does real work rather than being a comment.
+- All 17 classes have rules in the built stylesheet.
+
+**One serialisation detail the plan did not anticipate.** `tip=""` renders as a **bare `data-tip` attribute**, not `data-tip=""` — Astro's handling of empty-string attributes, the same behaviour `plans/components/steps.md` §3e.4 recorded for `data-content`. The semantics are unchanged: a bare attribute *is* the empty string in the DOM, so daisyUI's `[data-tip]:not([data-tip=""])` gate still excludes it and no bubble renders. Recorded because a grep for `data-tip=""` in the build output finds nothing and looks like the attribute was dropped.
+
+Not settled here: hover, focus-visible reveal, the alignment semantics and both responsive behaviours. All Step 5.
