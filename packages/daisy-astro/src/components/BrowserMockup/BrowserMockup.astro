@@ -1,14 +1,56 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/browser-mockup/
 import type { HTMLAttributes } from 'astro/types';
 
+// A browser-chrome frame.
+//
+// The frame, fill and width are all YOURS: this class sets only a radius,
+// position and overflow, so a bare browser mockup is an unframed,
+// content-width box. Both doc examples add `border border-base-300 w-full`,
+// and the second adds `bg-base-100` (plan §3b).
+//
+// THE THREE DOTS BELONG TO THE TOOLBAR, not to this element — they are a
+// single ::before painted four times by box-shadow. So a mockup with no
+// toolbar slot has no dots at all, and daisyUI offers no way to have one
+// without the other. That is the opposite of CodeMockup and WindowMockup,
+// where the dots hang off the root and cannot be removed (plan §3c).
+//
+// The address bar is a DIV with daisyUI's `input` class, not an input element
+// — display-only text that daisyUI restyles and truncates inside this toolbar,
+// and gives a magnifier icon. There is no `url` prop: that would be a content
+// prop, and it would assume a toolbar holds exactly one address bar and
+// nothing else (plan §2, §3d):
+//
+//     <BrowserMockup class="border border-base-300 w-full">
+//       <div class="input" slot="toolbar">https://daisyui.com</div>
+//       ...
+//     </BrowserMockup>
+//
+// Content taller than a height you set is clipped with no scrollbar —
+// overflow-y is hidden, deliberately, so the chrome crops like a viewport
+// (plan §3a).
+//
+// NOTE: no angle brackets in this comment, deliberately (plans/README.md §5c).
 interface Props extends HTMLAttributes<'div'> {}
 
+// No variant class map: one component class and one part class, no modifiers
+// (plan §1).
+
 const { class: className, ...rest } = Astro.props;
+
+// The toolbar wrapper is gated because it is not inert when empty: it carries
+// vertical margin AND the ::before that paints the dots, so rendering it
+// unconditionally gives a caller who wanted a bare mockup an empty strip with
+// three dots in it (plan §2).
+const hasToolbar = Astro.slots.has('toolbar');
 ---
 
 <div class:list={['mockup-browser', className]} {...rest}>
+  {
+    hasToolbar && (
+      <div class="mockup-browser-toolbar">
+        <slot name="toolbar" />
+      </div>
+    )
+  }
   <slot />
 </div>

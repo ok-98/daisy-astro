@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): props extend `HTMLAttributes<'div'>`; `class:list` for merging; **no variant classes** so no `Record` map (§1b); **no shared unions** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/mockup.css` and the doc page source. §3e lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-31). `PhoneMockup.astro` plus the new `PhoneMockupCamera.astro` and `PhoneMockupDisplay.astro`, with 6 stories per §5. §3e.1 is answered in the build output at both levels it matters: the camera renders empty 7 times, and the wallpaper image is a **direct child** of the display (§8). Step 5 (visual pass) is open. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/mockup.css` and the doc page source. §3e lists what is **unverified**.
 
 ---
 
@@ -205,27 +205,48 @@ Both doc examples are 462 px tall at full width; the stories constrain the width
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3e.1 (direct children, both levels) — blocking. Settle §3e.3 (image URLs) with the seven other plans.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `PhoneMockup.astro` scaffold and create the two part components per §4, then walk the gate.
-- [ ] **Step 4:** Replace `PhoneMockup.stories.ts` and add the two sub-component story files per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` is a black phone-shaped frame with a grey bezel and a small notch pill at the top of the screen — the notch **overlapping** the display, not above it (§3a); `WithWallpaper` fills the screen edge-to-edge with the image and shows an orange bezel (§3b, §3d); `Narrow` keeps the same proportions at a smaller width (§3c); check the corner silhouette against §3d's `corner-shape` fallback.
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="mockup-phone[^"]*"[^>]*><div class="mockup-phone-camera"></div>' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoE '<div class="mockup-phone-display[^"]*"[^>]*><img' storybook-static/astro-prerendered-stories.json | head
-  ```
-  The second proves the image is a direct child (§3d, §3e.1).
-- [ ] **Step 7:** Update the `Phone` row (slug `phone-mockup`) in `plans/README.md` to **Implemented**, noting the two part components.
+- [x] **Step 1: done — §3e.1 is answered.** The camera and display are direct children of the frame, so both sit in the same grid cell and the camera overlaps rather than stacking; and the wallpaper `img` is a direct child of the display, which is what the `object-fit: cover` rule needs. A wrapper in either place would have failed silently — the image at its natural size inside a clipped box, or the camera pushed out of the cell.
+- [x] **Step 2: skipped as planned.** No variant axes; `variants.ts` untouched.
+- [x] **Step 3: done.** `PhoneMockup.astro` per §4, plus the two sub-components; gate walked.
+- [x] **Step 4: done.** `PhoneMockup.stories.ts`, 6 stories per §5.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: `Default` is a phone silhouette with the notch pill **over** the screen; `ColoredBorder` recolours the bezel only (§3b); `WithImage` fills the screen edge to edge (§3d); `Widths` shows two sizes at the same proportions, confirming the ratio is fixed (§3c); and check the corner silhouette once against §3d — a squarer radius is the documented `corner-shape` fallback, not a bug.
+- [x] **Step 6: done — forwarding confirmed at two levels.** `Passthrough` renders `<div class="mockup-phone mine w-64" id="phone-1" …>` containing `<div class="mockup-phone-display display-marker text-white grid place-content-center" id="phone-display-1" data-test="display">`. Full output in §8.
+- [x] **Step 7: done — the `Phone` row in `plans/README.md` says Implemented**, covering both sub-components.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 3 daisyUI classes reachable, one per component.
-- [ ] `PhoneMockupCamera` renders empty and accepts no slot (§3a).
-- [ ] An `<img>` inside the display is a direct child and fills the screen (§3d) — checked in the build output.
-- [ ] No invented axis — no colour, size or height prop (§3b, §3c).
-- [ ] JSDoc states: fixed aspect ratio, width-only sizing (§3c); the bezel is a border class (§3b); the camera overlaps the display (§3a); don't wrap the image (§3d).
-- [ ] One story per doc-page example, plus `NoCamera` and `Narrow`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 3 daisyUI classes reachable, one per component.
+- [x] `PhoneMockupCamera` renders empty and accepts no slot (§3a).
+- [x] An `<img>` inside the display is a direct child and fills the screen (§3d) — checked in the build output.
+- [x] No invented axis — no colour, size or height prop (§3b, §3c).
+- [x] JSDoc states: fixed aspect ratio, width-only sizing (§3c); the bezel is a border class (§3b); the camera overlaps the display (§3a); don't wrap the image (§3d).
+- [x] One story per doc-page example, plus `NoCamera` and `Narrow`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31).
+
+`astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+**One probe line was unachievable**, and it is the same shape as the `color` finding in `plans/components/avatar.md` §3e.3: `<WindowMockup title="Untitled">` does **not** error, because `title` is a native attribute on every element. No component can reject it; it forwards and does nothing. Drop that line from any plan's probe — `color`, `title`, `role` and `translate` are all on the base interface.
+
+```
+Default     → <div class="mockup-phone"><div class="mockup-phone-camera"></div>
+                <div class="mockup-phone-display text-white grid place-content-center">It's Glowtime.</div></div>
+WithImage   → <div class="mockup-phone-display"><img alt="wallpaper" src="…453966.webp" /></div>
+Widths      → <div class="mockup-phone w-40">… and … <div class="mockup-phone w-64">…
+Passthrough → <div class="mockup-phone mine w-64" id="phone-1" data-test="yes" style="opacity:.95">
+                <div class="mockup-phone-camera"></div>
+                <div class="mockup-phone-display display-marker text-white grid place-content-center"
+                     id="phone-display-1" data-test="display">Passthrough</div></div>
+```
+
+What this settles:
+
+- **§3e.1, in the two places it bites.** The camera renders as an empty element 7 times — it takes no slot, because the element *is* the graphic — and the wallpaper `img` is the display's direct child, which is what its `object-fit: cover` rule requires. A wrapper in either place fails silently rather than loudly.
+- Sizing is width-only in every story: no `h-*` anywhere, matching the fixed 462/978 ratio (§3c).
+- The bezel colour arrives as an arbitrary Tailwind value rather than a prop (§3b).
+
+Not settled here: the silhouette, the notch overlap and the `corner-shape` fallback. Step 5.

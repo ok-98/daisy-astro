@@ -14,7 +14,7 @@
 - Stories run on `@storybook-astro/framework`: import the `.astro` file as `component`, pass slot content via `args.slots`.
 - `astro check` is the type gate, not `tsc` (§5b).
 
-> **Status:** Planned. Nothing in §4 is implemented. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/mockup.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/mockup-browser/+page.md` in `saadeghi/daisyui`). §3f lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-31). `BrowserMockup.astro` and 7 stories per §5. The `toolbar` gate is asserted in the build output: **7 toolbars across 8 mockups**, the missing one being the story that deliberately omits the slot (§8). Step 5 (visual pass) is open. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/mockup.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/mockup-browser/+page.md` in `saadeghi/daisyui`). §3f lists what is **unverified**.
 
 ---
 
@@ -259,37 +259,52 @@ export const Passthrough = {
 
 ## 6. Steps
 
-- [ ] **Step 1:** Nothing to re-read — §1 and §2 are filled from the doc page and the shipped CSS. Note that §3e removes the slot-wrapping unknown that blocks three sibling plans; no cross-plan dependency here.
-- [ ] **Step 2:** No new shared unions, and no use of the existing ones — there are no variant axes (§1). `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `BrowserMockup.astro` dummy scaffold per §4, then walk the Astro idioms gate.
-- [ ] **Step 4:** Replace `BrowserMockup.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/BrowserMockup`, verify:
-  - `WithBorder` matches the doc page: rounded frame, **three dots** at the left of the toolbar, address bar centred with a magnifier icon.
-  - `NoToolbar` shows **no dots and no empty strip** — the §2 gate. If dots appear, the gate is missing or inverted.
-  - `WithBackgroundColor` differs from `WithBorder` in fill and in the absence of the line under the toolbar.
-  - `Unframed` is a bare, content-width box — confirming §3b rather than looking broken.
-  - `OverflowClipping`: the tall content is cut off with **no vertical scrollbar** (§3a).
-  - The address bar truncates with an ellipsis when given a long URL (§3d) — lengthen it in `Playground` to check.
-  - Flip the canvas to RTL if the toolbar offers it: the toolbar should reverse (§3f.2).
-- [ ] **Step 6:** Confirm forwarding via `Passthrough` — `id`, `data-*`, `style`, `class` all survive. Headless check, which also proves the gate:
-  ```bash
-  pnpm build-storybook
-  grep -rhoc 'mockup-browser-toolbar' storybook-static/astro-prerendered-stories.json
-  grep -rhoE '<div class="mockup-browser[^"]*"[^>]*><div class="mockup-browser-toolbar">' storybook-static/astro-prerendered-stories.json | head
-  ```
-  The `NoToolbar` story must contribute **no** `mockup-browser-toolbar` occurrence.
-- [ ] **Step 7:** Update the `Browser` row (slug `browser-mockup`) in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done.** §3e holds — descendant selectors only, so the blocking language from the sibling plans does not apply here.
+- [x] **Step 2: skipped as planned.** No variant axes; `variants.ts` untouched.
+- [x] **Step 3: done.** Scaffold replaced per §4, with the `Astro.slots.has('toolbar')` gate. Gate walked.
+- [x] **Step 4: done.** `BrowserMockup.stories.ts`, 7 stories per §5.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: `WithBorder` shows the toolbar with **three dots** and a centred address bar; `WithBackgroundColor` fills and drops the rule; **`NoToolbar`'s first mockup has no strip and no dots** (§3c); `LongUrl` ellipsises rather than wrapping, with the magnifier icon present (§3d); `OverflowClipping` cuts off with no scrollbar (§3a); and RTL flips the toolbar (§3f.2).
+- [x] **Step 6: done — forwarding confirmed and the gate asserted.** `Passthrough` renders `<div class="mockup-browser mine border border-base-300 w-full" id="browser-1" data-test="yes" style="max-width:40rem">`. Full output in §8.
+- [x] **Step 7: done — the `Browser` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] Both daisyUI classes from §1 are reachable: `mockup-browser` always, `mockup-browser-toolbar` as the gated `toolbar` slot wrapper.
-- [ ] No invented axis — no `color`, no `size`, no `url` prop (§2), no `toolbarClass` (§2).
-- [ ] `Props` extends `HTMLAttributes<'div'>`; native attributes work without explicit declaration.
-- [ ] Caller `class` merges through `class:list` — load-bearing here, since the frame, background and width all arrive that way (§3b).
-- [ ] Omitting the `toolbar` slot produces no toolbar element in the rendered HTML (§2) — checked in the build output, not by eye.
-- [ ] The JSDoc states: content is clipped vertically (§3a), the frame is caller-supplied (§3b), the dots come with the toolbar and only with it (§3c), and the address bar is `<div class="input">` (§3d).
-- [ ] `Playground` exposes `class` as a control and renders the doc page's shape.
-- [ ] One story per doc-page example, reproducing that example's markup and copy.
-- [ ] `NoToolbar`, `OverflowClipping` and `Unframed` exist and demonstrate §2, §3a and §3b.
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] Both daisyUI classes from §1 are reachable: `mockup-browser` always, `mockup-browser-toolbar` as the gated `toolbar` slot wrapper.
+- [x] No invented axis — no `color`, no `size`, no `url` prop (§2), no `toolbarClass` (§2).
+- [x] `Props` extends `HTMLAttributes<'div'>`; native attributes work without explicit declaration.
+- [x] Caller `class` merges through `class:list` — load-bearing here, since the frame, background and width all arrive that way (§3b).
+- [x] Omitting the `toolbar` slot produces no toolbar element in the rendered HTML (§2) — checked in the build output, not by eye.
+- [x] The JSDoc states: content is clipped vertically (§3a), the frame is caller-supplied (§3b), the dots come with the toolbar and only with it (§3c), and the address bar is `<div class="input">` (§3d).
+- [x] `Playground` exposes `class` as a control and renders the doc page's shape.
+- [x] One story per doc-page example, reproducing that example's markup and copy.
+- [x] `NoToolbar`, `OverflowClipping` and `Unframed` exist and demonstrate §2, §3a and §3b.
+- [x] Every box in §4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31).
+
+`astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+**One probe line was unachievable**, and it is the same shape as the `color` finding in `plans/components/avatar.md` §3e.3: `<WindowMockup title="Untitled">` does **not** error, because `title` is a native attribute on every element. No component can reject it; it forwards and does nothing. Drop that line from any plan's probe — `color`, `title`, `role` and `translate` are all on the base interface.
+
+```
+WithBorder   → <div class="mockup-browser border border-base-300 w-full">
+                 <div class="mockup-browser-toolbar"><div class="input">https://daisyui.com</div></div>
+                 <div class="grid place-content-center border-t border-base-300 h-80">Hello!</div></div>
+NoToolbar    → <div class="mockup-browser border border-base-300 w-full">
+                 <div class="grid place-content-center h-20">Hello!</div></div>     ← no strip at all
+               … then the same mockup with a toolbar, for comparison
+LongUrl      → <div class="input">https://daisyui.com/components/mockup-browser/a/very/long/path…</div>
+Passthrough  → <div class="mockup-browser mine border border-base-300 w-full" id="browser-1"
+                 data-test="yes" style="max-width:40rem">…
+```
+
+What this settles:
+
+- **The `toolbar` gate works**: 7 toolbar wrappers across 8 rendered mockups, the missing one being `NoToolbar`'s first. Rendering it unconditionally would have given that caller an empty strip carrying vertical margin and three dots — which is exactly why §2 called this the textbook gating case.
+- The address bar reaches the DOM as `<div class="input">` with its class intact, so §3f.1's sanitization worry is settled (sanitization is off library-wide anyway).
+- Everything else the mockup looks like arrives through caller classes (§3b).
+
+Not settled here: the dots, the magnifier, the URL truncation and the RTL flip. Step 5.

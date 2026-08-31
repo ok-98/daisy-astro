@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): props extend `HTMLAttributes<'div'>`; `class:list` for merging; **no variant classes** so no `Record` map (§1b); **no shared unions** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/mockup.css` and the doc page source. §3d lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-31). `WindowMockup.astro` — the scaffold's markup was already correct, so the work was the JSDoc and 7 stories per §5. Step 5 (visual pass) is open. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/mockup.css` and the doc page source. §3d lists what is **unverified**.
 
 ---
 
@@ -156,24 +156,64 @@ Plus `Playground` and `Passthrough`. Three beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Nothing to re-read. Note §3d removes the slot-wrapping unknown — despite `plans/components/phone-mockup.md` §3e.1 being blocking in the same CSS file.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Confirm `WindowMockup.astro` matches §4 — the scaffold's markup is already right, so this is adding the JSDoc and re-walking the gate.
-- [ ] **Step 4:** Replace `WindowMockup.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `WithBorder` is a rounded frame with **three dots** top-left and a rule under the title bar; `WithBackgroundColor` fills and drops the rule; `Unframed` shows dots above unframed content (§3a); `OverflowClipping` cuts off with **no scrollbar** (§3c); `WithPrefixedCode` renders the `$` gutter; flip the canvas to RTL and confirm the dots move to the right (§3b).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="mockup-window[^"]*"[^>]*>' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Window` row (slug `window-mockup`) in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done.** §3d holds — no child selectors here, so the shared slot-wrapping question does not apply, despite `plans/components/phone-mockup.md` §3e.1 being blocking in the same CSS file.
+- [x] **Step 2: skipped as planned.** No variant axes; `variants.ts` untouched.
+- [x] **Step 3: done.** The scaffold's markup was already right, so this was the JSDoc plus re-walking the gate.
+- [x] **Step 4: done.** `WindowMockup.stories.ts`, 7 stories per §5.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: `WithBorder` is a rounded frame with **three dots** top-left and a rule under the title bar; `WithBackgroundColor` fills and drops the rule; `Unframed` shows dots over unframed content (§3a); `OverflowClipping` cuts off with **no scrollbar** (§3c); `WithPrefixedCode` renders the `$` gutter; and flipping the canvas to RTL moves the dots to the right (§3b).
+- [x] **Step 6: done — forwarding confirmed.** `Passthrough` renders `<div class="mockup-window mine border border-base-300 w-full" id="window-1" data-test="yes" style="max-width:40rem">`. Full output in §8.
+- [x] **Step 7: done — the `Window` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] The single daisyUI class is applied; no others exist to expose (§1).
-- [ ] No invented axis — no colour, no `dots`, no `title` (§3a, §3b).
-- [ ] Caller `class` merges through `class:list` — load-bearing, since border, background and width all arrive that way (§3a).
-- [ ] JSDoc states: the frame is caller-supplied (§3a), the dots are unconditional with no title slot (§3b), and content clips vertically (§3c).
-- [ ] One story per doc-page example, plus `Unframed`, `OverflowClipping` and `WithPrefixedCode`.
-- [ ] Every box in §4's gate ticked.
+- [x] The single daisyUI class is applied; no others exist to expose (§1).
+- [x] No invented axis — no colour, no `dots`, no `title` (§3a, §3b).
+- [x] Caller `class` merges through `class:list` — load-bearing, since border, background and width all arrive that way (§3a).
+- [x] JSDoc states: the frame is caller-supplied (§3a), the dots are unconditional with no title slot (§3b), and content clips vertically (§3c).
+- [x] One story per doc-page example, plus `Unframed`, `OverflowClipping` and `WithPrefixedCode`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31).
+
+`astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+**One probe line was unachievable**, and it is the same shape as the `color` finding in `plans/components/avatar.md` §3e.3: `<WindowMockup title="Untitled">` does **not** error, because `title` is a native attribute on every element. No component can reject it; it forwards and does nothing. Drop that line from any plan's probe — `color`, `title`, `role` and `translate` are all on the base interface.
+
+```
+WithBorder      → <div class="mockup-window border border-base-300 w-full">
+                    <div class="grid place-content-center border-t border-base-300 h-80">Hello!</div></div>
+WithBackground… → <div class="mockup-window bg-base-100 border border-base-300 w-full">…   no border-t
+Unframed        → <div class="mockup-window">…                        no classes at all, beside a framed copy
+WithPrefixedCode→ …<pre data-prefix="$"><code>npm i daisyui</code></pre>…
+Passthrough     → <div class="mockup-window mine border border-base-300 w-full" id="window-1"
+                    data-test="yes" style="max-width:40rem">…
+```
+
+What this settles: the component contributes exactly one class and nothing else — every frame, fill and width in every story arrives through `class`, which is what §3a is about. The `pre[data-prefix]` gutter works here with no prop, as §3c predicted.
+
+Not settled here: the dots, the clipping and the RTL mirroring are all visual. Step 5.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31).
+
+`astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+**One probe line was unachievable**, and it is the same shape as the `color` finding in `plans/components/avatar.md` §3e.3: `<WindowMockup title="Untitled">` does **not** error, because `title` is a native attribute on every element. No component can reject it; it forwards and does nothing. Drop that line from any plan's probe — `color`, `title`, `role` and `translate` are all on the base interface.
+
+```
+WithBorder      → <div class="mockup-window border border-base-300 w-full">
+                    <div class="grid place-content-center border-t border-base-300 h-80">Hello!</div></div>
+WithBackground… → <div class="mockup-window bg-base-100 border border-base-300 w-full">…   no border-t
+Unframed        → <div class="mockup-window">…                        no classes at all, beside a framed copy
+WithPrefixedCode→ …<pre data-prefix="$"><code>npm i daisyui</code></pre>…
+Passthrough     → <div class="mockup-window mine border border-base-300 w-full" id="window-1"
+                    data-test="yes" style="max-width:40rem">…
+```
+
+What this settles: the component contributes exactly one class and nothing else — every frame, fill and width in every story arrives through `class`, which is what §3a is about. The `pre[data-prefix]` gutter works here with no prop, as §3c predicted.
+
+Not settled here: the dots, the clipping and the RTL mirroring are all visual. Step 5.

@@ -1,10 +1,39 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/code-mockup/
 import type { HTMLAttributes } from 'astro/types';
 
+/**
+ * A terminal or code-block frame.
+ *
+ * **Unlike its sibling `BrowserMockup`, this one brings its own colours** — a
+ * neutral background and matching foreground — so a bare `CodeMockup` already
+ * looks like a terminal. What it does not set is a width; every doc example
+ * adds `w-full`. Recolour it with plain Tailwind (`class="bg-primary
+ * text-primary-content"`), not a prop: there is no `mockup-code-primary` class
+ * (plan §3a).
+ *
+ * Lines are **bare `pre` elements** — daisyUI styles the element itself, with
+ * no class involved, so there is no line sub-component to import:
+ *
+ *     <CodeMockup class="w-full">
+ *       <pre data-prefix="$"><code>npm i daisyui</code></pre>
+ *     </CodeMockup>
+ *
+ * `data-prefix` is the whole API and passes through natively. Per-line styling
+ * is a class on the individual `pre`, which is why there is no `lines` array
+ * prop (plan §2).
+ *
+ * **Do not mix prefixed and unprefixed lines in one mockup.** Every line gets a
+ * `::before`; an unprefixed one is indented by 2ch, a prefixed one by a 2rem
+ * right-aligned box *plus* that 2ch, so mixing them misaligns the code by about
+ * 2rem. daisyUI's own examples are always all-prefixed or all-unprefixed
+ * (plan §3c).
+ *
+ * The three dots are a `::before` on this element and cannot be turned off —
+ * unlike `BrowserMockup`, where they belong to the optional toolbar (plan §3b).
+ */
 interface Props extends HTMLAttributes<'div'> {}
+
+// No variant class map: daisyUI defines exactly one class here (plan §1).
 
 const { class: className, ...rest } = Astro.props;
 ---

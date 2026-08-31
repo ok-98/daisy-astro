@@ -280,7 +280,7 @@ The third line is not filler: it is the only one that catches the missing defaul
 
 `packages/daisy-astro/src/_typecheck.astro` closes that: one file, never imported, holding valid usages of every implemented component — including at least one native attribute of each default element passed **without** `as`. Add lines as components land. Lines that must *not* compile still belong in a throwaway probe; this file only holds what should pass. Verified 2026-08-30 that it fails when the bug is reintroduced and passes when it is not.
 
-**A probe line that will never error, so don't write it: `color` on a component with no colour axis.** Astro's base `HTMLAttributes` declares `color?: string` in its non-standard/obsolete attribute list (`astro-jsx.d.ts:563`, verified 2026-08-30 while building Avatar), so `<Avatar color="primary">` type-checks on every component in this library and forwards through `...rest` as a plain attribute — `<div class="avatar" color="primary">`. It emits no class and does nothing. Components that *do* have a colour axis declare `color` themselves and narrow it, so they are unaffected; components that don't cannot reject it, and a caller reaching for it gets silence rather than an error. Found in `plans/components/avatar.md` §3e.3.
+**Probe lines that will never error, so don't write them: `color` or `title` on a component that declares neither.** Astro's base `HTMLAttributes` declares `color?: string` in its non-standard/obsolete attribute list (`astro-jsx.d.ts:563`, verified 2026-08-30 while building Avatar), so `<Avatar color="primary">` type-checks on every component in this library and forwards through `...rest` as a plain attribute — `<div class="avatar" color="primary">`. It emits no class and does nothing. Components that *do* have a colour axis declare `color` themselves and narrow it, so they are unaffected; components that don't cannot reject it, and a caller reaching for it gets silence rather than an error. Found in `plans/components/avatar.md` §3e.3.
 
 The general rule, which is `plans/components/button.md` §3a one level up: check a variant prop name against base `HTMLAttributes`, not only against the element's own attributes. `color`, `style`, `title`, `role` and `translate` are all on the base interface.
 
@@ -413,10 +413,10 @@ Copy the example markup from the doc page into the story rather than inventing d
 ### Mockup
 | Component | Slug | Status |
 |---|---|---|
-| Browser | `browser-mockup` | Planned — [`plans/components/browser-mockup.md`](components/browser-mockup.md) (current code is a dummy scaffold) |
-| Code | `code-mockup` | Planned — [`plans/components/code-mockup.md`](components/code-mockup.md) (scaffold markup is already correct; plan is docs + stories) |
-| Phone | `phone-mockup` | Planned — [`plans/components/phone-mockup.md`](components/phone-mockup.md) (`PhoneMockup`+camera+display; fixed 462/978 ratio) |
-| Window | `window-mockup` | Planned — [`plans/components/window-mockup.md`](components/window-mockup.md) (one class; scaffold already correct) |
+| Browser | `browser-mockup` | **Implemented** — [`plans/components/browser-mockup.md`](components/browser-mockup.md) (7 stories; gated `toolbar` slot carries the dots; visual pass open) |
+| Code | `code-mockup` | **Implemented** — [`plans/components/code-mockup.md`](components/code-mockup.md) (9 stories; bare `pre` lines, `data-prefix` is the API; visual pass open) |
+| Phone | `phone-mockup` | **Implemented** — [`plans/components/phone-mockup.md`](components/phone-mockup.md) (`PhoneMockup`+camera+display, one row for all three; 6 stories; visual pass open) |
+| Window | `window-mockup` | **Implemented** — [`plans/components/window-mockup.md`](components/window-mockup.md) (7 stories; one class, frame is caller-supplied; visual pass open) |
 
 ## Workflow for a new component
 

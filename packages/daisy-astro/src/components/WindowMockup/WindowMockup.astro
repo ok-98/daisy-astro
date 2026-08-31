@@ -1,10 +1,33 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/window-mockup/
 import type { HTMLAttributes } from 'astro/types';
 
+/**
+ * An OS-window frame.
+ *
+ * daisyUI supplies the rounded corners and the three title-bar dots. The
+ * **border, background and width are yours** — `class="border border-base-300
+ * w-full"` is what both doc examples add, and without them a window mockup is
+ * three faint dots floating above unframed, content-width content (plan §3a).
+ * Its sibling `CodeMockup` is the opposite: that one brings its own colours.
+ *
+ * **The dots are a `::before` on this element, so every window mockup has
+ * them** — no modifier, no variable, and no room for a window title beside
+ * them. A first child added for a title pushes the content down instead of
+ * sitting inline. A caller who truly wants none writes `before:hidden`, which
+ * also removes the spacing the pseudo-element provides (plan §3b).
+ *
+ * **Content taller than a height you set is clipped with no scrollbar**:
+ * `overflow-y` is hidden, deliberately, because a window frame should crop like
+ * a viewport. Both doc examples give their content a fixed `h-80`, which is why
+ * it never bites there (plan §3c).
+ *
+ * A `pre` with a `data-prefix` attribute inside gets the Code Mockup gutter for
+ * free — daisyUI ships that rule for this component too (plan §3c).
+ */
 interface Props extends HTMLAttributes<'div'> {}
+
+// No variant class map: daisyUI defines exactly one class for this component
+// and no modifiers at all (plan §1).
 
 const { class: className, ...rest } = Astro.props;
 ---

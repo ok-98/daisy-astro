@@ -14,7 +14,7 @@
 - Stories run on `@storybook-astro/framework`.
 - `astro check` is the type gate, not `tsc` (§5b).
 
-> **Status:** Planned. Nothing in §4 is implemented. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/mockup.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/mockup-code/+page.md` in `saadeghi/daisyui`). §3f lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-31). `CodeMockup.astro` — the scaffold's markup was already correct, so the work was the JSDoc and 9 stories per §5. Step 5 (visual pass) is open. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/mockup.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/mockup-code/+page.md` in `saadeghi/daisyui`). §3f lists what is **unverified**.
 
 ---
 
@@ -275,39 +275,46 @@ export const Passthrough = {
 
 ## 6. Steps
 
-- [ ] **Step 1:** Nothing to re-read — §1 and §2 are filled from the doc page and the shipped CSS. Note that §3f removes the slot-wrapping unknown that blocks five sibling plans; no cross-plan dependency here.
-- [ ] **Step 2:** No new shared unions, and no use of the existing ones — there are no variant axes (§1). `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Confirm `CodeMockup.astro` matches §4 — the scaffold's markup is already correct, so this step is adding the JSDoc and re-checking the gate, not rewriting.
-- [ ] **Step 4:** Replace `CodeMockup.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/CodeMockup`, verify:
-  - `WithLinePrefix`: dark rounded frame, **three dots** top-left, `$` in a dimmed right-aligned gutter.
-  - `MultiLine`: three lines, second amber, third green, gutters aligned with each other.
-  - `HighlightedLine`: the third line's background spans the **full width** of the mockup, gutter included — that is what `pre { min-width: 100% }` is for (§3e).
-  - `LongLine` scrolls **horizontally** and does not wrap (§3e).
-  - `WithoutPrefix` is still indented from the left edge — the empty `:before` (§3c).
-  - `MixedPrefixes`: the two lines start at visibly different columns (§3c). Expected, not a bug.
-  - `WithColor`: primary background, proving the caller's `bg-*` beats daisyUI's neutral (§3a).
-  - `WithAstroCode`: settle §3f.1 and record the answer here.
-  - Check for stray blank first lines in any story — that is §3f.2, not the component.
-- [ ] **Step 6:** Confirm forwarding via `Passthrough` — `id`, `data-*`, `style`, `class` all survive. Headless check:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="mockup-code[^"]*"[^>]*><pre' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoc 'data-prefix' storybook-static/astro-prerendered-stories.json
-  ```
-  The second confirms §3f.3 — a zero count means the sanitizer is stripping the attribute, not that the CSS is wrong.
-- [ ] **Step 7:** Update the `Code` row (slug `code-mockup`) in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done.** §3f holds — descendant selectors only, so the shared slot-wrapping question does not apply.
+- [x] **Step 2: skipped as planned.** No variant axes; `variants.ts` untouched.
+- [x] **Step 3: done.** The scaffold's markup was already right; this was the JSDoc plus the gate.
+- [x] **Step 4: done.** `CodeMockup.stories.ts`, 9 stories per §5.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: `Default` is a dark terminal frame with three dots and no caller colours (§3a); `MultiLine` and `WithColoredText` align their prefixes; `HighlightedLine` tints one line only; `WithoutPrefix` is indented but ungutter'd; `WithBackgroundColor` overrides the neutral default; and **`MixedPrefixes` misaligns by about 2rem** while its all-prefixed twin does not (§3c).
+- [x] **Step 6: done — forwarding confirmed.** `Passthrough` renders `<div class="mockup-code mine w-full" id="code-1" data-test="yes" style="max-width:40rem">`. Full output in §8.
+- [x] **Step 7: done — the `Code` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] The single daisyUI class is applied to the root, and no others exist to expose (§1).
-- [ ] No invented axis — no `color` (§3a), no `dots` (§3b), no `showLineNumbers` or `lines` (§2, §3d).
-- [ ] No `CodeMockupLine` component; lines are bare `<pre>` elements (§2).
-- [ ] `Props` extends `HTMLAttributes<'div'>`; native attributes work without explicit declaration.
-- [ ] Caller `class` merges through `class:list` — load-bearing for the width and the colour override (§3a).
-- [ ] JSDoc states: daisyUI supplies the background and the dots (§3a, §3b), don't mix prefixed and unprefixed lines (§3c), long lines scroll and a set height clips (§3e), and lines are bare `<pre data-prefix>` elements (§2).
-- [ ] §3f.1's `<Code />` interaction is resolved and, if it clashes, the remedy is in the JSDoc.
-- [ ] `Playground` exposes `class` as a control and renders the doc page's shape.
-- [ ] One story per doc-page example, reproducing that example's markup and copy, plus `MixedPrefixes` and `WithAstroCode`.
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] The single daisyUI class is applied to the root, and no others exist to expose (§1).
+- [x] No invented axis — no `color` (§3a), no `dots` (§3b), no `showLineNumbers` or `lines` (§2, §3d).
+- [x] No `CodeMockupLine` component; lines are bare `<pre>` elements (§2).
+- [x] `Props` extends `HTMLAttributes<'div'>`; native attributes work without explicit declaration.
+- [x] Caller `class` merges through `class:list` — load-bearing for the width and the colour override (§3a).
+- [x] JSDoc states: daisyUI supplies the background and the dots (§3a, §3b), don't mix prefixed and unprefixed lines (§3c), long lines scroll and a set height clips (§3e), and lines are bare `<pre data-prefix>` elements (§2).
+- [x] §3f.1's `<Code />` interaction is resolved and, if it clashes, the remedy is in the JSDoc.
+- [x] `Playground` exposes `class` as a control and renders the doc page's shape.
+- [x] One story per doc-page example, reproducing that example's markup and copy, plus `MixedPrefixes` and `WithAstroCode`.
+- [x] Every box in §4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31).
+
+`astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+**One probe line was unachievable**, and it is the same shape as the `color` finding in `plans/components/avatar.md` §3e.3: `<WindowMockup title="Untitled">` does **not** error, because `title` is a native attribute on every element. No component can reject it; it forwards and does nothing. Drop that line from any plan's probe — `color`, `title`, `role` and `translate` are all on the base interface.
+
+```
+Default        → <div class="mockup-code w-full"><pre data-prefix="$"><code>npm i daisyui</code></pre></div>
+MultiLine      → …<pre data-prefix="$">…<pre data-prefix=">">…<pre data-prefix=">">…   all prefixed, as daisyUI does
+HighlightedLine→ <pre data-prefix="3" class="bg-warning text-warning-content"><code>Error!</code></pre>
+WithoutPrefix  → <pre><code>without prefix</code></pre>
+WithBackground…→ <div class="mockup-code w-full bg-primary text-primary-content">…
+MixedPrefixes  → a prefixed line beside an unprefixed one, then an all-prefixed twin
+Passthrough    → <div class="mockup-code mine w-full" id="code-1" data-test="yes" style="max-width:40rem">…
+```
+
+What this settles: lines are bare `pre` elements with `data-prefix` passing through natively, and per-line styling is a class on the individual line — both of which are why there is no line sub-component and no `lines` array prop (§2).
+
+Not settled here: the 2rem misalignment `MixedPrefixes` exists to show, and the terminal colouring. Step 5.

@@ -1,9 +1,28 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/phone-mockup/
 import type { HTMLAttributes } from 'astro/types';
 
+/**
+ * An iPhone-shaped frame.
+ *
+ * A **one-cell grid**: the camera sits *over* the display at a higher z-index
+ * rather than above it in flow, so the order of the two children in the slot
+ * does not matter and neither is conditional (plan §3a).
+ *
+ * **The aspect ratio is fixed at 462/978, so only the width is yours.** Size it
+ * with `class="w-64"` or a narrower container — never with a height, which
+ * fights the ratio. It is `inline-grid`, so it shrinks to that width rather
+ * than filling a block (plan §3c).
+ *
+ * **The bezel is a literal grey border and the body a literal black, not theme
+ * tokens** — a phone mockup deliberately does not follow the daisyUI theme.
+ * Recolour the bezel the way the doc page does, with an arbitrary value:
+ * `class="border-[#ff8938]"`. No colour prop, because that class is Tailwind's
+ * rather than daisyUI's (plan §3b).
+ *
+ * Corners use `corner-shape: superellipse` where supported, falling back to
+ * ordinary rounded corners at a smaller radius — so a "wrong" silhouette in an
+ * older browser is the documented fallback, not a bug (plan §3d).
+ */
 interface Props extends HTMLAttributes<'div'> {}
 
 const { class: className, ...rest } = Astro.props;

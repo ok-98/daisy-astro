@@ -1,0 +1,21 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+// The screen.
+//
+// A single image inside fills it through a DIRECT-CHILD rule that sets
+// object-fit: cover and 100% width and height — so do not wrap it, or it
+// renders at its natural size inside a clipped box (plan §3d).
+//
+// For text, bring your own layout classes, as the doc page does:
+// class="text-white bg-neutral-900 grid place-content-center".
+//
+// NOTE: no angle brackets in this comment, deliberately (plans/README.md §5c).
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['mockup-phone-display', className]} {...rest}>
+  <slot />
+</div>

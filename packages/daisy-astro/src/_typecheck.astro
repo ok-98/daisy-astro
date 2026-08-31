@@ -19,7 +19,9 @@ import Avatar from './components/Avatar/Avatar.astro';
 import AvatarGroup from './components/Avatar/AvatarGroup.astro';
 import Badge from './components/Badge/Badge.astro';
 import Breadcrumbs from './components/Breadcrumbs/Breadcrumbs.astro';
+import BrowserMockup from './components/BrowserMockup/BrowserMockup.astro';
 import Button from './components/Button/Button.astro';
+import CodeMockup from './components/CodeMockup/CodeMockup.astro';
 import Carousel from './components/Carousel/Carousel.astro';
 import CarouselItem from './components/Carousel/CarouselItem.astro';
 import Countdown from './components/Countdown/Countdown.astro';
@@ -39,7 +41,11 @@ import Kbd from './components/Kbd/Kbd.astro';
 import Link from './components/Link/Link.astro';
 import Loading from './components/Loading/Loading.astro';
 import Mask from './components/Mask/Mask.astro';
+import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
+import PhoneMockupCamera from './components/PhoneMockup/PhoneMockupCamera.astro';
+import PhoneMockupDisplay from './components/PhoneMockup/PhoneMockupDisplay.astro';
 import Status from './components/Status/Status.astro';
+import WindowMockup from './components/WindowMockup/WindowMockup.astro';
 import Tab from './components/Tab/Tab.astro';
 import TabContent from './components/Tab/TabContent.astro';
 import Tabs from './components/Tab/Tabs.astro';
@@ -136,6 +142,11 @@ import Steps from './components/Steps/Steps.astro';
     <TimelineEnd box>First Macintosh</TimelineEnd>
   </TimelineItem>
 </Timeline>
+
+<WindowMockup class="border w-full" id="wm" data-test="y">Hello!</WindowMockup>
+<CodeMockup class="w-full" id="cm">code</CodeMockup>
+<BrowserMockup class="border w-full" id="bm"><div class="input" slot="toolbar">url</div>Hello!</BrowserMockup>
+<PhoneMockup class="w-64" id="pm"><PhoneMockupCamera class="mine" /><PhoneMockupDisplay class="text-white" id="pd">hi</PhoneMockupDisplay></PhoneMockup>
 
 <Status />
 <Status color="success" size="lg" aria-label="Online" />
