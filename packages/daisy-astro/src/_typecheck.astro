@@ -15,6 +15,7 @@
 // WITHOUT `as` — that is the case the polymorphic default-type-parameter rule
 // exists for. Lines that must NOT compile belong in a throwaway probe, not
 // here.
+import Alert from './components/Alert/Alert.astro';
 import Aura from './components/Aura/Aura.astro';
 import Avatar from './components/Avatar/Avatar.astro';
 import AvatarGroup from './components/Avatar/AvatarGroup.astro';
@@ -22,6 +23,10 @@ import Badge from './components/Badge/Badge.astro';
 import Breadcrumbs from './components/Breadcrumbs/Breadcrumbs.astro';
 import BrowserMockup from './components/BrowserMockup/BrowserMockup.astro';
 import Button from './components/Button/Button.astro';
+import Card from './components/Card/Card.astro';
+import CardActions from './components/Card/CardActions.astro';
+import CardBody from './components/Card/CardBody.astro';
+import CardTitle from './components/Card/CardTitle.astro';
 import CodeMockup from './components/CodeMockup/CodeMockup.astro';
 import Carousel from './components/Carousel/Carousel.astro';
 import CarouselItem from './components/Carousel/CarouselItem.astro';
@@ -118,6 +123,11 @@ import Steps from './components/Steps/Steps.astro';
 <Skeleton class="h-32 w-32" />
 <Skeleton text as="span">ok</Skeleton>
 <Skeleton class="h-16 w-16" id="sk" data-test="y" title="t" />
+
+<Alert color="info" variant="soft" direction="vertical" role="status" id="al" data-test="y">msg</Alert>
+<Card as="label" variant="border" size="lg" side imageFull class="w-96" id="cd" data-test="y">
+  <CardBody id="cb" class="mine"><CardTitle as="h3" id="ct">T</CardTitle><CardActions class="justify-end" id="ca">a</CardActions></CardBody>
+</Card>
 
 <Aura variant="rainbow" size="lg" class="text-primary" id="au" data-test="y">child</Aura>
 <Hover3dCard class="mine" id="h3"><div>card</div></Hover3dCard>

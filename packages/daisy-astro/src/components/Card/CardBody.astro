@@ -1,0 +1,21 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The padded content area of a card.
+ *
+ * No size prop: padding and font size come from the parent `Card`'s `size`,
+ * through daisyUI's own descendant rules (plan §1).
+ *
+ * A bare `<p>` inside is styled by daisyUI directly — it grows to fill the
+ * body, which is what keeps a card's actions pinned to the bottom. Nothing to
+ * wrap and no prop for it (plan §2).
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['card-body', className]} {...rest}>
+  <slot />
+</div>

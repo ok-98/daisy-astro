@@ -341,7 +341,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Avatar | `avatar` | **Implemented** — [`plans/components/avatar.md`](components/avatar.md) (`Avatar` + `AvatarGroup`, one row for both; §3e.1 open until the visual pass) |
 | Aura | `aura` | **Implemented** — [`plans/components/aura.md`](components/aura.md) (17 stories; wraps a direct child; colour/duration are caller classes; visual pass open) |
 | Badge | `badge` | **Implemented** — [`plans/components/badge.md`](components/badge.md) (16 stories; §3b mechanism corrected; visual pass open) |
-| Card | `card` | Planned — [`plans/components/card.md`](components/card.md) (wrapper + `CardBody`/`CardTitle`/`CardActions`; current code is a dummy scaffold) |
+| Card | `card` | **Implemented** — [`plans/components/card.md`](components/card.md) (`Card`/`CardBody`/`CardTitle`/`CardActions`, one row for all four; 16 stories; no `CardFigure`; visual pass open) |
 | Carousel | `carousel` | **Implemented** — [`plans/components/carousel.md`](components/carousel.md) (`Carousel` + `CarouselItem`, one row for both; 15 stories; no JS by design; visual pass open) |
 | Chat bubble | `chat-bubble` | Planned — [`plans/components/chat-bubble.md`](components/chat-bubble.md) (`Chat`/`ChatBubble`/`ChatHeader`/`ChatFooter`; `chat-image` served by `Avatar`) |
 | Collapse | `collapse` | Planned — [`plans/components/collapse.md`](components/collapse.md) (single impl of the 7 `collapse-*` classes; supersedes `AccordionItem`) |
@@ -373,7 +373,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 ### Feedback
 | Component | Slug | Status |
 |---|---|---|
-| Alert | `alert` | Planned — [`plans/components/alert.md`](components/alert.md) (current code is a dummy scaffold) |
+| Alert | `alert` | **Implemented** — [`plans/components/alert.md`](components/alert.md) (14 stories; four colours, not eight; layout depends on direct child count; visual pass open) |
 | Loading | `loading` | **Implemented** — [`plans/components/loading.md`](components/loading.md) (12 stories; no colour prop, no slot; animation unverified until the visual pass) |
 | Progress | `progress` | **Implemented** — [`plans/components/progress.md`](components/progress.md) (15 stories; indeterminate asserted in the build; visual pass open) |
 | Radial progress | `radial-progress` | **Implemented** — [`plans/components/radial-progress.md`](components/radial-progress.md) (10 stories; `value` required; aria derived from it; visual pass open) |

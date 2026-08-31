@@ -1,11 +1,15 @@
 import Aura from './Aura.astro';
 import Button from '../Button/Button.astro';
+import Card from '../Card/Card.astro';
+import CardBody from '../Card/CardBody.astro';
 
-// Buttons compose the real <Button>. Cards are still raw markup:
-// TODO(daisy-astro): compose <Card>/<CardBody> here once implemented — see plans/components/aura.md §5
+// Both children compose the real components now that Card is implemented.
 
-const card = (text: string, extra = '') =>
-  `<div class="card bg-base-100 ${extra}"><div class="card-body"><p>${text}</p></div></div>`;
+const card = (text: string, extra = '') => ({
+  component: Card,
+  props: { class: `bg-base-100 ${extra}`.trim() },
+  slots: { default: { component: CardBody, slots: { default: `<p>${text}</p>` } } },
+});
 
 const button = (label = 'button with aura') => ({
   component: Button,
@@ -80,8 +84,19 @@ export const PricingCard = {
   args: {
     variant: 'rainbow',
     slots: {
-      default:
-        '<div class="card bg-base-100 w-96"><div class="card-body"><h2 class="card-title">Premium</h2><p class="text-4xl font-bold">$29<span class="text-base font-normal">/mo</span></p><ul class="my-4 space-y-2"><li>Unlimited projects</li><li>Priority support</li><li>Custom domains</li></ul><div class="card-actions"><button class="btn btn-primary btn-block">Subscribe</button></div></div></div>',
+      default: {
+        component: Card,
+        props: { class: 'bg-base-100 w-96' },
+        slots: {
+          default: {
+            component: CardBody,
+            slots: {
+              default:
+                '<h2 class="card-title">Premium</h2><p class="text-4xl font-bold">$29<span class="text-base font-normal">/mo</span></p><ul class="my-4 space-y-2"><li>Unlimited projects</li><li>Priority support</li><li>Custom domains</li></ul><div class="card-actions"><button class="btn btn-primary btn-block">Subscribe</button></div>',
+            },
+          },
+        },
+      },
     },
   },
 };

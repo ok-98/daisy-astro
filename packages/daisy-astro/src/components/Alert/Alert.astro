@@ -1,14 +1,101 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/alert/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type AlertColor = 'info' | 'success' | 'warning' | 'error';
+type AlertVariant = 'outline' | 'dash' | 'soft';
+type AlertDirection = 'vertical' | 'horizontal';
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A notification banner.
+ *
+ * **Its layout is a function of the direct child count**, so never wrap the
+ * slot content in a single element. daisyUI lays this out as a grid and adds a
+ * second column only when a second child is present, so one wrapper div
+ * collapses every alert to the single-column branch — the icon, text and
+ * actions layout degrades silently while the markup still looks plausible
+ * (plan §2).
+ *
+ * There is no `icon`, `title` or `description` prop: daisyUI defines no inner
+ * classes here at all, so any structure this component invented would be
+ * library-specific fiction. The doc page composes them as plain children:
+ *
+ *     <Alert color="info">
+ *       <svg …/>
+ *       <span>New software update available.</span>
+ *     </Alert>
+ *
+ * `role="alert"` is defaulted here, since it is what makes the component
+ * announce itself and every doc example carries it. It stays overridable —
+ * `role="alert"` implies an assertive live region, which is right for a warning
+ * and arguably loud for an informational notice, where `role="status"` is the
+ * polite counterpart. daisyUI ships `role="alert"` for all four colours, so
+ * this component follows the library rather than branching on `color`
+ * (plan §3b).
+ *
+ * Responsive direction is a caller class, using daisyUI's own prebuilt
+ * variants: `direction="vertical" class="sm:alert-horizontal"` (plan §3c).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * **Four colours, not eight.** daisyUI defines colour rules for exactly
+   * these, so this is deliberately not the shared eight-value union: widening
+   * it would let `color="primary"` type-check, emit `alert-primary` and match
+   * no rule at all — the invisible failure, arriving through the type system
+   * rather than through string interpolation (plan §3a).
+   */
+  color?: AlertColor;
+  /**
+   * Named `variant`, never `style` — `style` is a native attribute
+   * (plans/components/button.md §3a).
+   */
+  variant?: AlertVariant;
+  direction?: AlertDirection;
+}
+
+// Full literal class names. NEVER `alert-${color}` (plans/README.md §1b).
+const COLOR: Record<AlertColor, string> = {
+  info: 'alert-info',
+  success: 'alert-success',
+  warning: 'alert-warning',
+  error: 'alert-error',
+};
+
+const VARIANT: Record<AlertVariant, string> = {
+  outline: 'alert-outline',
+  dash: 'alert-dash',
+  soft: 'alert-soft',
+};
+
+const DIRECTION: Record<AlertDirection, string> = {
+  vertical: 'alert-vertical',
+  horizontal: 'alert-horizontal',
+};
+
+// `role` is on the base attribute interface, so it would otherwise sit in
+// `...rest` and leave a caller's own value to Astro's duplicate-attribute
+// precedence. Destructuring with a default is deterministic and keeps the
+// override working (plan §3b).
+const {
+  color,
+  variant,
+  direction,
+  role = 'alert',
+  class: className,
+  ...rest
+} = Astro.props;
 ---
 
-<div class:list={['alert', className]} {...rest}>
+<div
+  class:list={[
+    'alert',
+    color && COLOR[color],
+    variant && VARIANT[variant],
+    direction && DIRECTION[direction],
+    className,
+  ]}
+  role={role}
+  {...rest}
+>
   <slot />
 </div>

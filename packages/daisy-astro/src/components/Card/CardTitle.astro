@@ -1,0 +1,26 @@
+---
+import type { HTMLTag, Polymorphic } from 'astro/types';
+
+// A card's heading.
+//
+// POLYMORPHIC, defaulting to h2 — which is what every daisyUI example writes,
+// but hardcoding it would bake a document-outline decision into a visual
+// component: a card inside a section that already has an h2 needs an h3, and a
+// card used as a list item may want no heading semantics at all (plan §3a).
+//
+// No size prop: the font size comes from the parent card's size, through
+// daisyUI's own descendant rules (plan §1).
+//
+// NOTE: no angle brackets in this comment, deliberately — this component has a
+// generic Props type (plans/README.md §5c).
+type Props<Tag extends HTMLTag = 'h2'> = Polymorphic<{
+  as: Tag;
+}>;
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const { as: Tag = 'h2', class: className, ...rest } = Astro.props as Props<HTMLTag>;
+---
+
+<Tag class:list={['card-title', className]} {...rest}>
+  <slot />
+</Tag>

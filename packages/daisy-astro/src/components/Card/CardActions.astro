@@ -1,0 +1,17 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The action row of a card — buttons, or badges.
+ *
+ * daisyUI gives it flex layout and a gap and nothing else, so alignment is a
+ * caller class: `class="justify-end"` is what every doc example uses.
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['card-actions', className]} {...rest}>
+  <slot />
+</div>

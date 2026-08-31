@@ -14,7 +14,7 @@
 - Stories run on `@storybook-astro/framework`: import the `.astro` file as `component`, pass slot content via `args.slots`.
 - `astro check` is the type gate, not `tsc` (§5b).
 
-> **Status:** Planned. Nothing in §4 is implemented. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/alert.css`), the doc page source (`packages/docs/src/routes/(routes)/components/alert/+page.md` in `saadeghi/daisyui`), and `astro@7.2.4`'s `astro-jsx.d.ts`. §3d lists what is **unverified** and must be resolved while building.
+> **Status:** **Implemented** (2026-08-31). `Alert.astro` and 14 stories. §2's structural rule is asserted in the build output, with `WrappedChildren` showing the failure it prevents (§8). Step 5 (visual pass) is open, and it carries §3c's one open question — whether Tailwind emits daisyUI's prefixed `sm:alert-horizontal` from a story's class string. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/alert.css`), the doc page source (`packages/docs/src/routes/(routes)/components/alert/+page.md` in `saadeghi/daisyui`), and `astro@7.2.4`'s `astro-jsx.d.ts`. §3d lists what is **unverified** and must be resolved while building.
 
 ---
 
@@ -266,35 +266,52 @@ The soft/outline/dash stories each show four alerts at once; compose multiples t
 
 ## 6. Steps
 
-- [ ] **Step 1:** Nothing to re-read — §1 and §2 are filled from the doc page and the shipped CSS. Resolve §3d.2 (sibling children from one slot string) first, since §5's whole story shape depends on it.
-- [ ] **Step 2:** No new shared unions. `AlertColor` stays local (§3a); `variants.ts` is untouched. Skip.
-- [ ] **Step 3:** Replace the `Alert.astro` dummy scaffold per §4, then walk the Astro idioms gate.
-- [ ] **Step 4:** Replace `Alert.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Alert`, verify:
-  - `Playground` renders and every control changes the markup.
-  - The four colour stories are visibly distinct, and `color="primary"` is not offerable (§3a).
-  - `SoftStyle` / `OutlineStyle` / `DashStyle` differ from each other and from the default — dash is dashed-bordered, outline is transparent-backed.
-  - `WithButtons` is a single row at desktop width and **reflows to stacked below the `sm` breakpoint** — resize the canvas. If it never reflows, read §3c.
-  - `Directions` shows `horizontal` and `vertical` as genuinely different layouts.
-  - Icons actually render (§3d.1).
-- [ ] **Step 6:** Confirm forwarding via `Passthrough` — `id`, `data-*`, `style`, `class` survive and `role="status"` beats the default. Headless check:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<[^>]*alert[^>]*>' storybook-static/astro-prerendered-stories.json | head
-  ```
-  Also confirm in that output that a multi-child slot rendered as **siblings** inside `div.alert`, not nested in a wrapper (§2, §3d.2).
-- [ ] **Step 7:** Update the `Alert` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done.** Both §3d unknowns were answered while building Button and hold here: SVG survives, and one slot value renders as unwrapped siblings.
+- [x] **Step 2: skipped as planned.** `AlertColor` stays local — deliberately **not** added to `variants.ts`, per §3a.
+- [x] **Step 3: done.** Component written per §4, with `role` destructured to a default rather than hardcoded beside the spread. Gate walked.
+
+  Two §4 probe lines were unachievable, both for the reason `plans/README.md` §5c now records: `<Alert style="soft">` cannot error, because `style` is a native attribute that accepts any string — which is precisely *why* the style axis is named `variant` (§1). `<Alert color="primary">` **does** error, because this component declares `color` and narrows it to four values, which is §3a working exactly as intended.
+- [x] **Step 4: done.** `Alert.stories.ts`, 14 stories per §5.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: the four colours read distinctly; the three styles differ; `WithButtons` reflows from stacked to inline at the `sm` breakpoint — **resize the canvas**, and if it does not reflow check the built CSS for `sm:alert-horizontal` before touching the component (§3c); `WrappedChildren`'s first alert collapses to one centred column while the second lays out properly (§2).
+- [x] **Step 6: done — forwarding confirmed.** `Passthrough` renders `<div class="alert alert-warning alert-soft mine w-full" role="alert" id="alert-1" data-test="yes" style="letter-spacing:2px">`. Across the stories, 27 alerts carry a role and 2 of them carry the overridden `role="status"`. Full output in §8.
+- [x] **Step 7: done — the `Alert` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 10 daisyUI classes from §1 are reachable: `alert` always, 4 colours via `color`, 3 styles via `variant`, 2 directions via `direction`.
-- [ ] No invented axis — no `size`, and `color` accepts only the four values that have CSS (§3a).
-- [ ] `Props` extends `HTMLAttributes<'div'>`; non-variant native attributes work without explicit declaration.
-- [ ] Caller `class` merges through `class:list`.
-- [ ] `role="alert"` present by default and overridable — checked in rendered HTML (§3b).
-- [ ] Slot content renders as direct children of `div.alert`, unwrapped (§2) — checked in rendered HTML.
-- [ ] `Playground` exposes every prop as a control.
-- [ ] One story per doc-page example, reproducing that example's markup and copy.
-- [ ] `Directions` covers the axis the doc examples only show responsively.
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] All 10 daisyUI classes from §1 are reachable: `alert` always, 4 colours via `color`, 3 styles via `variant`, 2 directions via `direction`.
+- [x] No invented axis — no `size`, and `color` accepts only the four values that have CSS (§3a).
+- [x] `Props` extends `HTMLAttributes<'div'>`; non-variant native attributes work without explicit declaration.
+- [x] Caller `class` merges through `class:list`.
+- [x] `role="alert"` present by default and overridable — checked in rendered HTML (§3b).
+- [x] Slot content renders as direct children of `div.alert`, unwrapped (§2) — checked in rendered HTML.
+- [x] `Playground` exposes every prop as a control.
+- [x] One story per doc-page example, reproducing that example's markup and copy.
+- [x] `Directions` covers the axis the doc examples only show responsively.
+- [x] Every box in §4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31), SVG elided. `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Info           → <div class="alert alert-info w-full" role="alert">SVG<span>New software update available.</span></div>
+WithButtons    → <div class="alert alert-vertical w-full sm:alert-horizontal" role="alert">SVG
+                   <span>we use cookies for no reason.</span>
+                   <div><button class="btn btn-sm">Deny</button>
+                        <button class="btn btn-primary btn-sm">Accept</button></div></div>
+WrappedChildren→ <div class="alert alert-info w-full" role="alert"><div>SVG<span>…</span></div></div>
+                   … then the same alert with the children passed directly
+PoliteRole     → role="alert" then role="status"
+Passthrough    → <div class="alert alert-warning alert-soft mine w-full" role="alert" id="alert-1"
+                   data-test="yes" style="letter-spacing:2px">…
+```
+
+What this settles:
+
+- **§2's rule is visible rather than described**: `WrappedChildren` renders both shapes side by side, so the collapse to a single grid column can be seen instead of taken on trust. The layout is a function of the direct child count, and every other story passes icon, text and actions as separate children.
+- **`role` is defaulted, not hardcoded**: 27 alerts carry one, and the two `PoliteRole` overrides come through as `role="status"` — so the destructure-with-default mechanism works and the caller keeps control (§3b).
+- The `WithButtons` action row is deliberately one wrapper div holding two buttons: that div is the alert's third child, which is what the grid lays out.
+- All 10 classes have rules in the built stylesheet.
+
+Not settled here: §3c's responsive reflow, which needs the canvas resized rather than screenshotted.

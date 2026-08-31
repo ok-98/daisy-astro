@@ -1,14 +1,95 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/card/
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
+import type { DaisySize } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'div'> {}
+// A content container.
+//
+// Composition happens at the CALL SITE: the slot is plain and ungated, and you
+// write the figure, the body and any input yourself. That is why there is no
+// CardFigure component — daisyUI styles the bare figure element and there is no
+// card-figure class, so a wrapper would add an import and nothing else
+// (plan §0b).
+//
+// FIGURE CORNERS COME FROM DOM POSITION, not from a prop: the same figure
+// rounds its top corners at the top of a card, its bottom corners at the
+// bottom, and its leading corners in a side card (plan §3b).
+//
+// SELECTABLE CARDS need a bare checkbox or radio as a DIRECT CHILD — a sibling
+// of the body, not inside it, since every rule for them is a child selector.
+// Pair it with as="label" so clicking anywhere toggles it. daisyUI hides that
+// input with appearance:none, which leaves it focusable and in the
+// accessibility tree; replacing that with sr-only or hidden breaks it. An
+// aria-checked attribute is honoured too, for state driven from JS (plan §3d).
+//
+// Colour is plain Tailwind on this element — bg-primary text-primary-content —
+// because no card colour class exists (plan §1). The responsive side card is a
+// caller class as well: side plus class="lg:card-side" (plan §3e).
+//
+// NOTE: no angle brackets in this comment, deliberately. This component has a
+// GENERIC Props type, where an angle bracket anywhere in the frontmatter breaks
+// inference (plans/README.md §5c). The `= 'div'` default type parameter is that
+// same section's second rule.
+type CardVariant = 'border' | 'dash';
 
-const { class: className, ...rest } = Astro.props;
+type Props<Tag extends HTMLTag = 'div'> = Polymorphic<{
+  /** `div` by default; `label` is the selectable form (plan §3d). */
+  as: Tag;
+  /**
+   * Named `variant`, never `style` — `style` is a native attribute
+   * (plans/components/button.md §3a).
+   */
+  variant?: CardVariant;
+  /** Lays the card out as a row. Responsive form is a caller class (plan §3e). */
+  side?: boolean;
+  /**
+   * Bleeds the figure behind the body. Note daisyUI's class here is
+   * **unprefixed** — `image-full`, not `card-image-full` — which is why a
+   * prefix-based audit of this component silently misses it (plan §3c).
+   */
+  imageFull?: boolean;
+  /**
+   * Sets the body's padding and font size, and the title's, through daisyUI's
+   * own descendant rules — so `CardBody` and `CardTitle` need no size prop of
+   * their own (plan §1).
+   */
+  size?: DaisySize;
+}>;
+
+// Full literal class names. NEVER `card-${variant}` (plans/README.md §1b).
+const VARIANT: Record<CardVariant, string> = {
+  border: 'card-border',
+  dash: 'card-dash',
+};
+
+const SIZE: Record<DaisySize, string> = {
+  xs: 'card-xs',
+  sm: 'card-sm',
+  md: 'card-md',
+  lg: 'card-lg',
+  xl: 'card-xl',
+};
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const {
+  as: Tag = 'div',
+  variant,
+  side = false,
+  imageFull = false,
+  size,
+  class: className,
+  ...rest
+} = Astro.props as Props<HTMLTag>;
 ---
 
-<div class:list={['card', className]} {...rest}>
+<Tag
+  class:list={[
+    'card',
+    variant && VARIANT[variant],
+    size && SIZE[size],
+    { 'card-side': side, 'image-full': imageFull },
+    className,
+  ]}
+  {...rest}
+>
   <slot />
-</div>
+</Tag>

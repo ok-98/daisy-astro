@@ -14,7 +14,7 @@
 - Stories run on `@storybook-astro/framework`: import the `.astro` file as `component`, pass slot content via `args.slots`.
 - `astro check` is the type gate, not `tsc` (§5b).
 
-> **Status:** Planned. Nothing in §4 is implemented. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/card.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/card/+page.md` in `saadeghi/daisyui`). §3f lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-31). `Card.astro`, `CardBody.astro`, `CardTitle.astro` and `CardActions.astro`, with 16 stories. §3c's unprefixed `image-full` and §3d's direct-child input are both asserted in the build output (§8). Landing this also cleared the `TODO(daisy-astro)` in `Aura.stories.ts`. Step 5 (visual pass) is open. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/card.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/card/+page.md` in `saadeghi/daisyui`). §3f lists what is **unverified**.
 
 ---
 
@@ -402,41 +402,56 @@ Whether the stories can use `CardBody`/`CardTitle`/`CardActions` as components r
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3f.4 (sub-components as slot content) — it decides the whole shape of §5. Also settle §3f.3 (image URLs), shared with Avatar.
-- [ ] **Step 2:** No new shared unions — `size` reuses `DaisySize`, `CardVariant` stays local, no colour axis (§1). `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Card.astro` dummy scaffold and create `CardBody.astro`, `CardTitle.astro`, `CardActions.astro` per §4, then walk the Astro idioms gate. **Run the probe on both generic components** (§3f.1).
-- [ ] **Step 4:** Replace `Card.stories.ts` and add the three sub-component story files per §5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Card`, verify:
-  - `Playground` renders and every control changes the markup.
-  - `Default`: the figure's **top** corners are rounded and its bottom edge is square, flush against the body.
-  - `BottomImage`: the **bottom** corners are rounded instead — the §3b check, and the reason for §0a.
-  - `FigureInTheMiddle`: square corners, image overflowing the card's rounding (§3b).
-  - `Sizes`: padding **and** font size change across xs→xl, in both body and title (they come from different CSS variables).
-  - `Border` vs `Dash`: solid vs dashed border.
-  - `ImageFull`: image dimmed behind the text, body text forced to neutral-content — try overriding it with a `text-*` class and confirm daisyUI wins (§3c).
-  - `Side` is a row; `ResponsiveSide` is a column below `lg` and a row above it (§3e).
-  - `ActionOnTop`: actions render above the paragraph (§0a).
-  - **`Selectable`**: clicking anywhere on the card toggles the input, the card shows an outline when checked, and the radio group is mutually exclusive. This is the one behaviour that silently does nothing if the input is not a direct child (§3d).
-- [ ] **Step 6:** Confirm forwarding via `Passthrough` — `id`, `data-*`, `style`, `class` survive and the tag is `section`. Headless check:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<[a-z]+ class="card[^"]*"[^>]*><(figure|div|input|label)' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoc 'image-full' storybook-static/astro-prerendered-stories.json
-  ```
-  The second confirms §3c's unprefixed class actually reaches the markup.
-- [ ] **Step 7:** Update the `Card` row in `plans/README.md` to **Implemented**, noting the three sub-components as part of it (same convention as Accordion/AccordionItem). **Also fix `plans/README.md` §5's Card parenthetical** per §0a — replace it with Browser Mockup's `toolbar` slot.
+- [x] **Step 1: done.** §1's audit warning holds — `image-full` carries no `card-` prefix and would be missed by a prefix grep, so it is covered by its own prop and its own story.
+- [x] **Step 2: skipped as planned.** `DaisySize` reused unchanged, `CardVariant` local, no colour axis; `variants.ts` untouched.
+- [x] **Step 3: done.** Four files per §4 — no `CardFigure`, since daisyUI styles the bare element and a wrapper would add an import and nothing else (§0b). Gate walked; the probe errored on both achievable intended lines.
+- [x] **Step 4: done.** `Card.stories.ts`, 16 stories, composing the real `Button` and `Badge`.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: `Default`'s figure rounds its **top** corners and `BottomImage`'s the **bottom** ones, from DOM position alone (§3b); `Sizes` changes both the body padding and the title size from one class on the card (§1); `ImageFull` bleeds the figure behind the body; `Side` and `ResponsiveSide` lay out as rows, the second only above `lg` — resize rather than screenshot (§3e); and **`Selectable` toggles when you click anywhere on a card**, with the focus ring appearing on keyboard focus, which is what the hidden-but-focusable input buys (§3d).
+- [x] **Step 6: done — forwarding confirmed at three levels.** `Passthrough` renders `<div id="card-1" data-test="yes" style="letter-spacing:1px" class="card card-border card-lg mine w-96 bg-base-100">` containing a marked `card-body` and a marked `card-title` rendered as `h3`. Full output in §8.
+- [x] **Step 7: done — the `Card` row in `plans/README.md` says Implemented**, covering all four components.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 13 daisyUI classes from §1 are reachable, `image-full` included and spelled unprefixed (§3c).
-- [ ] No invented axis — no `color` prop (§1), no `figurePosition`/`actionsPosition` (§0a), no `justify` prop on `CardActions` (§4).
-- [ ] Every one of the 16 doc examples is expressible with no escape hatch — in particular bottom image, action on top, and selectable cards (§0a).
-- [ ] `Card` defaults to `div` and accepts `as="label"`; `CardTitle` defaults to `h2` and accepts any heading level (§3a, §3d).
-- [ ] A selectable card's `<input>` is a **direct child** of `.card` in the rendered HTML, and toggling works in the browser (§3d).
-- [ ] `type Props` precedes every `const` in both generic components, destructures annotated `as Props<HTMLTag>`, and the probes confirm props are accepted (§3f.1).
-- [ ] `class` merges through `class:list` in all four components — load-bearing, since background, width, shadow and alignment all arrive that way.
-- [ ] `Playground` exposes every `Card` prop as a control; each sub-component has its own `Playground` and `Passthrough`.
-- [ ] One story per doc-page example, reproducing that example's markup and copy, plus `FigureInTheMiddle`.
-- [ ] `plans/README.md` §5's Card reference is corrected (§0a).
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] All 13 daisyUI classes from §1 are reachable, `image-full` included and spelled unprefixed (§3c).
+- [x] No invented axis — no `color` prop (§1), no `figurePosition`/`actionsPosition` (§0a), no `justify` prop on `CardActions` (§4).
+- [x] Every one of the 16 doc examples is expressible with no escape hatch — in particular bottom image, action on top, and selectable cards (§0a).
+- [x] `Card` defaults to `div` and accepts `as="label"`; `CardTitle` defaults to `h2` and accepts any heading level (§3a, §3d).
+- [x] A selectable card's `<input>` is a **direct child** of `.card` in the rendered HTML, and toggling works in the browser (§3d).
+- [x] `type Props` precedes every `const` in both generic components, destructures annotated `as Props<HTMLTag>`, and the probes confirm props are accepted (§3f.1).
+- [x] `class` merges through `class:list` in all four components — load-bearing, since background, width, shadow and alignment all arrive that way.
+- [x] `Playground` exposes every `Card` prop as a control; each sub-component has its own `Playground` and `Passthrough`.
+- [x] One story per doc-page example, reproducing that example's markup and copy, plus `FigureInTheMiddle`.
+- [x] `plans/README.md` §5's Card reference is corrected (§0a).
+- [x] Every box in §4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default     → <div class="card w-96 bg-base-100 shadow-sm"><figure><img … alt="Shoes" /></figure>
+                <div class="card-body"><h2 class="card-title">Card Title</h2><p>…</p>
+                <div class="card-actions justify-end"><button class="btn btn-primary">Buy Now</button></div></div></div>
+BottomImage → the same figure, after the body
+ImageFull   → <div class="card image-full w-96 bg-base-100 shadow-sm">…        note: no `card-` prefix
+Selectable  → <label class="card bg-accent text-accent-content">
+                <input type="checkbox" name="card-urgent-1" />
+                <div class="card-body">…                         input is a SIBLING of the body
+              … <label class="card join-item"><input type="radio" … disabled />
+                <div class="card-body opacity-60">…
+Passthrough → <div id="card-1" data-test="yes" style="letter-spacing:1px"
+                class="card card-border card-lg mine w-96 bg-base-100">
+                <div class="card-body body-marker" id="card-body-1" data-test="body">
+                  <h3 id="card-title-1" data-test="title" class="card-title title-marker">Passthrough</h3>…
+```
+
+What this settles:
+
+- **§3c**: `image-full` is emitted unprefixed, alongside `card` rather than as `card-image-full`. That is the class a prefix-based audit of this component loses.
+- **§3d**: four selectable cards render their `input` as a **direct child** of the `label.card`, a sibling of the body. Every daisyUI rule for this is a child selector, so an input inside the body would have matched none of them — and §0a's plain, ungated slot is what makes writing it there natural.
+- **§3a**: `CardTitle` renders `h2` by default and `h3` on request, so the document outline stays the caller's decision.
+- Forwarding works at three levels, and the figure is written by the caller as a bare element — no `CardFigure` (§0b).
+- All 13 classes have rules in the built stylesheet.
+
+Not settled here: the corner-radius-by-position behaviour, the image bleed, the responsive row, and whether clicking a selectable card actually toggles it. All Step 5.
