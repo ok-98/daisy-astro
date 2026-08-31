@@ -366,7 +366,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Navbar | `navbar` | Planned — [`plans/components/navbar.md`](components/navbar.md) (`Navbar`+start/center/end; 50%/50% halves) |
 | Pagination | `pagination` | Planned — [`plans/components/pagination.md`](components/pagination.md) (**no component**: daisyUI has no pagination class; served by `Join` + `Button`) |
 | Steps | `steps` | **Implemented** — [`plans/components/steps.md`](components/steps.md) (`Steps`+`Step`+`StepIcon`, one row for all three; 18 stories; visual pass open) |
-| Tab | `tab` | Planned — [`plans/components/tab.md`](components/tab.md) (`tabs` is the component; 4 tab shapes; panels need radios) |
+| Tab | `tab` | **Implemented** — [`plans/components/tab.md`](components/tab.md) (`Tabs`/`Tab`/`TabContent`, one row for all three; 22 stories; `tabs` is the component; panels need the radio shape; visual pass open) |
 
 ### Feedback
 | Component | Slug | Status |

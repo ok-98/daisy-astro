@@ -1,14 +1,54 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/tab/
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+// One tab. Four shapes are supported, all of them daisyUI's (plan §3a):
+//
+//   button (default) or as="a"   label from the slot; selection is yours to
+//                                manage, via `active` plus aria-selected
+//   as="input" type="radio"      THE LABEL COMES FROM aria-label, not the
+//                                slot — daisyUI renders it with
+//                                `content: attr(aria-label)`, so a radio tab
+//                                without one renders completely blank
+//   as="label" wrapping a radio  label from the slot, selection from :checked
+//
+// The default is button rather than the anchor the doc page's copy-paste HTML
+// shows: the page's own rendered examples use buttons, and a tab that does not
+// navigate should not be a link.
+//
+// Radio shapes need a unique `name` per tab group. Two groups sharing a name
+// become one group, so selecting in either clears the other (plan §3d).
+//
+// Recolour with the two custom properties daisyUI declares here — for example
+// class="[--tab-bg:orange] [--tab-border-color:red] text-primary". There is no
+// colour prop, because those are arbitrary Tailwind values this library does
+// not own (plan §3e).
+//
+// NOTE: no angle brackets in this comment, deliberately. An angle bracket
+// anywhere in the frontmatter — comments included — breaks Props inference
+// (plans/README.md §5c). The `= 'button'` default type parameter is that same
+// section's second rule.
+type Props<Tag extends HTMLTag = 'button'> = Polymorphic<{
+  as: Tag;
+  /**
+   * **Visual only.** For a real tab list also set `aria-selected="true"`,
+   * which daisyUI's CSS honours as well. In the radio shapes `:checked` does
+   * the work and this is unnecessary (plan §3b).
+   */
+  active?: boolean;
+  /** Visual only. On a button, add the native `disabled` attribute too. */
+  disabled?: boolean;
+}>;
 
-const { class: className, ...rest } = Astro.props;
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const {
+  as: Tag = 'button',
+  active = false,
+  disabled = false,
+  class: className,
+  ...rest
+} = Astro.props as Props<HTMLTag>;
 ---
 
-<div class:list={['tabs', className]} {...rest}>
+<Tag class:list={['tab', { 'tab-active': active, 'tab-disabled': disabled }, className]} {...rest}>
   <slot />
-</div>
+</Tag>

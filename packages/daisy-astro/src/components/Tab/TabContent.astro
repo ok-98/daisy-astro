@@ -1,0 +1,23 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * A tab panel.
+ *
+ * **Must be the immediate next sibling of its `Tab`**, and that tab must be one
+ * of the radio shapes: daisyUI shows the panel with an adjacent-sibling rule
+ * hanging off `:checked`. So the markup interleaves — tab, panel, tab, panel —
+ * and writing all the tabs first then all the panels leaves every panel hidden
+ * with no error at all (plan §3c).
+ *
+ * A `button`-driven tab set has no checked state, so its panels never appear;
+ * that arrangement needs the caller's own show/hide.
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['tab-content', className]} {...rest}>
+  <slot />
+</div>

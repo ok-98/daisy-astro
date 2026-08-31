@@ -8,7 +8,7 @@
 
 **Global Constraints** (from `plans/README.md`, apply as-is): props forward every native attribute for the rendered element; `class:list` for merging; variant classes are literals in a `Record` map (§1b); **uses `DaisySize`, not `DaisyColor`** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
-> **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/tab.css` and the doc page source. §3f lists what is **unverified**.
+> **Status:** **Implemented** (2026-08-31). `Tabs.astro`, `Tab.astro` and `TabContent.astro`, with 18 + 2 + 2 stories per §5. §3f.1 is answered at both levels in the build output: 28 tabs render as direct children of `.tabs`, and 18 panels render as the immediate next sibling of their tab (§8). §0's description of the scaffold was wrong — see the correction there. Step 5 (visual pass) is open. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/tab.css` and the doc page source. §3f lists what is **unverified**.
 
 ---
 
@@ -16,7 +16,7 @@
 
 Same naming inversion as Stat (`plans/components/stat.md` §0): daisyUI's frontmatter lists **`tabs`** as the component and `tab` / `tab-content` as parts **[verified]**, while the doc page, the repo directory and the checklist all say "Tab".
 
-The scaffold renders `<div class="tab">` — the part, not the container. Step 3 renames it and adds `Tabs.astro`.
+~~The scaffold renders `<div class="tab">` — the part, not the container.~~ **Corrected 2026-08-31:** the scaffold actually rendered `<div class="tabs">` — the container, on a file named `Tab.astro`. So the mismatch was between the *filename* and its content, not a wrong class. The resolution is the same either way: `Tabs.astro` is new and holds the container, `Tab.astro` now holds the part it is named after, and `TabContent.astro` joins them.
 
 Three files: `Tabs`, `Tab`, `TabContent`.
 
@@ -105,7 +105,7 @@ Note `--tab-radius-grad` and the `--tab-order` variable also exist **[verified]*
 
 ### 3f. Unverified assumptions
 
-1. **Do children land as direct children of `.tabs`?** Blocking, and doubly: `.tab:is(.tabs > .tab)` is a **child** selector **[verified]**, so a wrapper unstyles every tab; and `+ .tab-content` needs the panel to be the tab's immediate sibling (§3c). Twenty-ninth plan touching the shared question in `plans/components/aura.md` §3e.1.
+1. ~~**Do children land as direct children of `.tabs`?**~~ **Answered 2026-08-31: yes, at both levels.** `<div class="tabs…"><button|a|input|label` matches **28** times, and `class="tab"…><div class="tab-content` — the panel as the tab's immediate next sibling — matches **18** times. So the child selector that styles the tabs and the adjacent-sibling selector that reveals the panels both have the structure they need. This was the only plan where the shared question had *two* independent answers to check.
 2. **`:has()` support** — the `label:has(:checked)` shape depends on it **[verified]**. Without it, label-wrapped tabs never show as selected. Check before judging `RadioLiftWithIcons`.
 3. **Radio-group isolation across stories** (§3d) — seven radio examples on one docs page.
 4. **Slot sanitization vs inline `<svg>`** — the icons example. Shared with `plans/components/alert.md` §3d.1.
@@ -271,30 +271,53 @@ Three beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3f.1 (direct child **and** adjacent sibling) — blocking. Check §3f.2 (`:has()`) and §3f.3 (name isolation).
-- [ ] **Step 2:** No new shared unions — `DaisySize` reused unchanged. `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Rename the scaffold — `Tab.astro` stays as the **part** and `Tabs.astro` is new (§0) — and create `TabContent.astro` per §4. Walk the gate; **run the probe** on `Tab`.
-- [ ] **Step 4:** Replace `Tab.stories.ts` with `Tabs.stories.ts` and create the two sub-component story files per §5, with scoped names.
-- [ ] **Step 5:** `pnpm storybook`, verify: the four style stories look distinct, with `lift` raising the active tab into the panel; `Sizes` shows five heights; every radio story **switches panels on click** (§3c); `RadioLiftWithIcons` selects via the label shape (§3f.2); `RadioLiftContentBottom` puts the tabs under the panel with no DOM reorder (§3e's `--tab-order`); `HorizontalScroll` scrolls with the panel sticky; `RadioWithoutAriaLabel` is blank (§3a); `PanelsAfterAllTabs` and `ButtonTabsWithPanels` show nothing (§3c).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="tabs[^"]*"[^>]*><(button|a|input|label)' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoE 'class="tab"[^>]*/?><div class="tab-content' storybook-static/astro-prerendered-stories.json | head
-  ```
-  The second proves the panel is the tab's immediate sibling (§3c).
-- [ ] **Step 7:** Update the `Tab` row in `plans/README.md` to **Implemented**, noting all three components and the `tabs`-is-the-component naming (§0).
+- [x] **Step 1: done — §3f.1 is answered at both levels** (see §3f.1 and §8). §3f.2 (`:has()` for the label shape) and §3f.3 (radio-group isolation) are runtime and move to Step 5, though every story already uses a scoped `name`. §3f.4 is moot — sanitization is off library-wide.
+- [x] **Step 2: skipped as planned.** `DaisySize` reused unchanged, no colour axis; `variants.ts` untouched.
+- [x] **Step 3: done.** `Tabs.astro` created, `Tab.astro` rewritten as the part it is named after, `TabContent.astro` created — see §0 for what the scaffold actually contained. Gate walked; the probe errored on all four intended lines, including `<Tabs active>` and `<Tab size="lg">`, so §3b's misplacement is unrepresentable in both directions.
+- [x] **Step 4: done.** `Tabs.stories.ts` (18), `Tab.stories.ts` (5), `TabContent.stories.ts` (2). Every radio story uses a story-scoped `name`.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and the panel switching is the point.** Verify: the four style stories look distinct, with `lift` raising the active tab into the panel; `Sizes` shows five heights; every radio story **switches panels on click** (§3c); `Tab/AsLabel` selects through the label shape, which is where `:has()` support shows (§3f.2); `RadioLiftContentBottom` puts the tabs under the panel with no DOM reorder (§3e); `HorizontalScroll` scrolls with the panel sticky; `RadioWithoutAriaLabel`'s first group is blank (§3a); `PanelsAfterAllTabs` and `ButtonTabsWithPanels` show no panels at all (§3c).
+- [x] **Step 6: done — forwarding confirmed on all three, and both adjacency rules asserted.** `Passthrough` renders `<div class="tabs tabs-lift tabs-top tabs-lg mine" role="tablist" id="tabs-1" data-test="yes" style="letter-spacing:2px">`. Full output in §8.
+- [x] **Step 7: done — the `Tab` row in `plans/README.md` says Implemented**, naming all three components and the `tabs`-is-the-component inversion.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 15 daisyUI classes reachable across three components.
-- [ ] The scaffold's `tab`-as-container mistake is corrected (§0).
-- [ ] `Tab` defaults to `button` and supports the `a` / `input` / `label` shapes; probe passes (§3a).
-- [ ] `active`/`disabled` are `Tab` props; the rest are `Tabs` props (§3b).
-- [ ] Panels render as immediate siblings of their tab (§3c) — checked in the build output.
-- [ ] No invented axis — no colour prop (§3e), no `tabs` array (§2), no `role` defaults (§3a).
-- [ ] JSDoc states: the four shapes and where each gets its label (§3a), that `active` is visual and `aria-selected` is separate (§3b), that panels need the radio shape and immediate adjacency (§3c), the unique-`name` rule (§3d), and the two colour custom properties (§3e).
-- [ ] Radio stories use scoped `name` values (§3d).
-- [ ] One story per doc-page example, plus `RadioWithoutAriaLabel`, `PanelsAfterAllTabs` and `ButtonTabsWithPanels`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 15 daisyUI classes reachable across three components.
+- [x] The scaffold's `tab`-as-container mistake is corrected (§0).
+- [x] `Tab` defaults to `button` and supports the `a` / `input` / `label` shapes; probe passes (§3a).
+- [x] `active`/`disabled` are `Tab` props; the rest are `Tabs` props (§3b).
+- [x] Panels render as immediate siblings of their tab (§3c) — checked in the build output.
+- [x] No invented axis — no colour prop (§3e), no `tabs` array (§2), no `role` defaults (§3a).
+- [x] JSDoc states: the four shapes and where each gets its label (§3a), that `active` is visual and `aria-selected` is separate (§3b), that panels need the radio shape and immediate adjacency (§3c), the unique-`name` rule (§3d), and the two colour custom properties (§3e).
+- [x] Radio stories use scoped `name` values (§3d).
+- [x] One story per doc-page example, plus `RadioWithoutAriaLabel`, `PanelsAfterAllTabs` and `ButtonTabsWithPanels`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31). `astro check`: 145 files, 0 errors, with `src/_typecheck.astro` exercising the props.
+
+```
+Default        → <div class="tabs" role="tablist"><a role="tab" class="tab">Tab 1</a>
+                   <a role="tab" class="tab tab-active">Tab 2</a><a role="tab" class="tab">Tab 3</a></div>
+RadioBorder…   → <div class="tabs tabs-border">
+                   <input type="radio" name="tabs-border-story" aria-label="Tab 1" class="tab"/>
+                   <div class="tab-content border-base-300 bg-base-100 p-10">Tab content 1</div>
+                   <input … aria-label="Tab 2" checked class="tab"/><div class="tab-content …">…
+CustomColor    → <a role="tab" class="tab tab-active text-primary [--tab-bg:orange] [--tab-border-color:red]">Tab 2</a>
+Tab/AsLabel    → <label class="tab"><input type="radio" name="tab-story-label" checked />Live</label>
+RadioWithout…  → <input type="radio" name="tabs-noaria-story" checked class="tab"/>   ← no label to render
+Passthrough    → <div class="tabs tabs-lift tabs-top tabs-lg mine" role="tablist" id="tabs-1"
+                   data-test="yes" style="letter-spacing:2px">…
+```
+
+What this settles:
+
+- **§3f.1, twice over.** 28 tabs are direct children of `.tabs`, and 18 panels are the immediate next sibling of their tab. Both selectors daisyUI depends on — the child combinator that styles tabs, the adjacent-sibling that reveals panels — have the structure they need.
+- **All four tab shapes render**: anchor, button, `input[type=radio]` and `label`-wrapping-a-radio, each from the same component through `as`.
+- **Neither misplacement is writable**: `<Tabs active>` and `<Tab size="lg">` are both compile errors, so §3b's split is enforced by the type system rather than by discipline.
+- `role="tablist"` / `role="tab"` are passed by the stories, never emitted by the components — correct, since `role="tab"` would be wrong on the radio shapes (§3a).
+- The two colour custom properties reach the built stylesheet as a real rule, so §3e's "document, don't wrap in a prop" decision costs nothing.
+- All 15 classes have rules in the built stylesheet.
+
+Not settled here: whether clicking a tab actually switches the panel. That, the label shape's `:has()` dependency, and the bottom placement's visual reorder are all Step 5.

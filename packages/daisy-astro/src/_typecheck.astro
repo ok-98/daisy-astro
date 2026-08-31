@@ -40,6 +40,9 @@ import Link from './components/Link/Link.astro';
 import Loading from './components/Loading/Loading.astro';
 import Mask from './components/Mask/Mask.astro';
 import Status from './components/Status/Status.astro';
+import Tab from './components/Tab/Tab.astro';
+import TabContent from './components/Tab/TabContent.astro';
+import Tabs from './components/Tab/Tabs.astro';
 import Step from './components/Steps/Step.astro';
 import StepIcon from './components/Steps/StepIcon.astro';
 import Steps from './components/Steps/Steps.astro';
@@ -115,6 +118,11 @@ import Steps from './components/Steps/Steps.astro';
 <Steps><Step color="primary">Register</Step><Step>Purchase</Step></Steps>
 <Steps direction="vertical" class="lg:steps-horizontal" id="st" data-test="y"><Step data-content="✓">ok</Step></Steps>
 <Step><StepIcon class="mine" id="si">★</StepIcon>Step 3</Step>
+
+<Tabs role="tablist" variant="lift" placement="bottom" size="lg" id="tb" data-test="y"><Tab role="tab" active>Tab 1</Tab></Tabs>
+<Tab as="input" type="radio" name="t1" aria-label="Tab 1" />
+<Tab as="label" disabled class="mine">Live</Tab>
+<TabContent class="p-6" id="tc">panel</TabContent>
 
 <Status />
 <Status color="success" size="lg" aria-label="Online" />

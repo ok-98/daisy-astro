@@ -1,0 +1,75 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import type { DaisySize } from '../../lib/variants';
+
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type TabsVariant = 'box' | 'border' | 'lift';
+type TabsPlacement = 'top' | 'bottom';
+
+/**
+ * Container for `Tab`s. daisyUI calls **this** the component and `tab` the
+ * part, which inverts the doc page's own name (plan §0).
+ *
+ * For a tab list of links or buttons, add `role="tablist"` here and
+ * `role="tab"` on each `Tab`. Neither is defaulted — `role="tab"` is only
+ * correct inside a tablist, and the radio shapes must not carry it (plan §3a).
+ *
+ * **For panels, interleave them**: tab, content, tab, content — not all tabs
+ * then all panels. daisyUI selects the panel with an adjacent-sibling rule off
+ * the tab's `:checked` state, so panels also require one of the radio shapes;
+ * a button-driven tab set needs the caller's own show/hide (plan §3c).
+ *
+ * Style, placement and size live here; `active` and `disabled` live on the
+ * individual `Tab` (plan §3b).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * Named `variant`, never `style` — `style` is a native attribute, and a prop
+   * of that name would eat the caller's inline styles
+   * (plans/components/button.md §3a).
+   */
+  variant?: TabsVariant;
+  /**
+   * `bottom` puts the tabs under the panel **without reordering the DOM** —
+   * daisyUI does it with a `--tab-order` custom property, so the markup stays
+   * tab-then-panel (plan §3e).
+   */
+  placement?: TabsPlacement;
+  size?: DaisySize;
+}
+
+// Full literal class names. NEVER `tabs-${variant}` (plans/README.md §1b).
+const VARIANT: Record<TabsVariant, string> = {
+  box: 'tabs-box',
+  border: 'tabs-border',
+  lift: 'tabs-lift',
+};
+
+const PLACEMENT: Record<TabsPlacement, string> = {
+  top: 'tabs-top',
+  bottom: 'tabs-bottom',
+};
+
+const SIZE: Record<DaisySize, string> = {
+  xs: 'tabs-xs',
+  sm: 'tabs-sm',
+  md: 'tabs-md',
+  lg: 'tabs-lg',
+  xl: 'tabs-xl',
+};
+
+const { variant, placement, size, class: className, ...rest } = Astro.props;
+---
+
+<div
+  class:list={[
+    'tabs',
+    variant && VARIANT[variant],
+    placement && PLACEMENT[placement],
+    size && SIZE[size],
+    className,
+  ]}
+  {...rest}
+>
+  <slot />
+</div>
