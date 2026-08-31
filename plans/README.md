@@ -350,7 +350,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Hover 3D card | `hover-3d-card` | **Implemented** — [`plans/components/hover-3d-card.md`](components/hover-3d-card.md) (5 stories; generates the 8 hover zones; pass exactly one child; visual pass open) |
 | Hover Gallery | `hover-gallery` | **Implemented** — [`plans/components/hover-gallery.md`](components/hover-gallery.md) (6 stories; first child is a resting frame; caps at 10; visual pass open) |
 | Kbd | `kbd` | **Implemented** — [`plans/components/kbd.md`](components/kbd.md) (10 stories; no `as`, no `keys` prop; visual pass open) |
-| List | `list` | Planned — [`plans/components/list.md`](components/list.md) (`List`+`ListRow`; second child grows by default) |
+| List | `list` | **Implemented** — [`plans/components/list.md`](components/list.md) (`List`+`ListRow`, one row for both; 10 stories; second child grows by default; visual pass open) |
 | Stat | `stat` | Planned — [`plans/components/stat.md`](components/stat.md) (`stats` is the component; 7 files — most in the library) |
 | Status | `status` | **Implemented** — [`plans/components/status.md`](components/status.md) (10 stories; no slot; uneven size steps; visual pass open) |
 | Table | `table` | Planned — [`plans/components/table.md`](components/table.md) (one class, no parts; ships in the utilities layer so daisyUI emits responsive variants) |

@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/list.css` and the doc page source. §3e lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-08-31). `List.astro` and `ListRow.astro`, with 10 stories. §3e.1 is answered at the level that matters — 11 lists render `<li>` as a direct child, and **no list has a non-`li` child at all**, which is §3d's validity rule (§8). Step 5 (visual pass) is open, and it carries the column behaviour, which is the whole component.
 ---
 
 ## 0. A flex column of auto-flow grids
@@ -197,26 +199,49 @@ Three beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3e.1 — blocking for `ListRow`. Settle §3e.2 (image URLs) with the other five plans.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `List.astro` scaffold and create `ListRow.astro` per §4, then walk the gate.
-- [ ] **Step 4:** Replace `List.stories.ts` and create `ListRow.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` puts the avatar at content width, the text block filling the middle, and the buttons at the end; hairline dividers between rows but **not after the last** (§3c); `ThirdColumnGrows` moves the stretch to the third child; `WrappedColumn` puts the paragraph on a second row starting under the text block (§3b); `WrongOrder` and `GrowBeyondSix` misbehave as documented.
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<ul class="list[^"]*"[^>]*><li' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoE '<li class="list-row[^"]*"[^>]*><div' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `List` row in `plans/README.md` to **Implemented**, noting `ListRow` as part of it.
+- [x] **Step 1: done for §3e.1**, which this plan correctly predicted would be split: tolerant at the list level, blocking inside a row. The build confirms both — 11 lists hold `<li>` directly, and every row's children are its own direct children, which the `grid-row-start` pin requires. §3e.2 (image URLs) and §3e.3 are shared and runtime; sanitization is off library-wide, so the icons survive.
+- [x] **Step 2: skipped as planned.** Neither component has a variant prop; `variants.ts` untouched.
+- [x] **Step 3: done.** Two files per §4, neither polymorphic — a `ul`/`li` pair is what a list of rows is for, and screen readers announce the count (§3d). Gate walked; the probe errored on all three intended lines, including `grow` and `wrap`, which are caller classes rather than props.
+- [x] **Step 4: done.** `List.stories.ts` (7) and `ListRow.stories.ts` (3), composing the real `Avatar` and `Button`.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and the columns are the component.** Verify: `Default` lays out avatar / text / two buttons with **the text taking the slack**, from no modifier at all (§3a); `ThirdColumnGrows` moves that growth past the track number; `ThirdColumnWraps` drops the paragraph to a second row **starting under the text block, not under the avatar** (§3b); dividers appear between rows and **not after the last** (§3c); `WrongChildOrder`'s first row stretches the button column; and `GrowBeyondSix`'s seventh child is ignored (§3a).
+- [x] **Step 6: done — forwarding confirmed at two levels.** `Passthrough` renders `<ul class="list mine bg-base-100 rounded-box shadow-md" id="list-1" data-test="yes" style="letter-spacing:1px">` containing a marked `list-row`. Full output in §8.
+- [x] **Step 7: done — the `List` row in `plans/README.md` says Implemented**, covering `ListRow`.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 4 daisyUI classes reachable; the two `list-col-*` modifiers documented as caller classes (§2).
-- [ ] Roots are `<ul>`/`<li>`, and plain `<li>` headers work alongside `ListRow`s (§2, §3d).
-- [ ] Row children render as direct children (§3e.1) — checked in the build output.
-- [ ] JSDoc states: the second child grows by default (§3a), the six-child `list-col-grow` cap (§3a), `list-col-wrap` keeps its column (§3b), and the last row has no divider (§3c).
-- [ ] No invented axis — no colour, size, `items` prop, or grow/wrap props.
-- [ ] One story per doc-page example, plus `WrongOrder`, `GrowBeyondSix` and `LastRowNoDivider`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 4 daisyUI classes reachable; the two `list-col-*` modifiers documented as caller classes (§2).
+- [x] Roots are `<ul>`/`<li>`, and plain `<li>` headers work alongside `ListRow`s (§2, §3d).
+- [x] Row children render as direct children (§3e.1) — checked in the build output.
+- [x] JSDoc states: the second child grows by default (§3a), the six-child `list-col-grow` cap (§3a), `list-col-wrap` keeps its column (§3b), and the last row has no divider (§3c).
+- [x] No invented axis — no colour, size, `items` prop, or grow/wrap props.
+- [x] One story per doc-page example, plus `WrongOrder`, `GrowBeyondSix` and `LastRowNoDivider`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-08-31), SVG elided. `astro check`: 145 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Default          → <ul class="list bg-base-100 rounded-box shadow-md">
+                     <li class="p-4 pb-2 text-xs opacity-60 tracking-wide">Most played songs this week</li>
+                     <li class="list-row"><div class="avatar"><div class="size-10 rounded-box"><img …/></div></div>
+                       <div><div>Dio Lupa</div><div class="text-xs …">Remaining Reason</div></div>
+                       <button class="btn btn-square btn-ghost">SVG</button> ×2</li> …
+ThirdColumnGrows → …<div class="text-4xl font-thin opacity-30 tabular-nums">01</div>…
+                     <div class="list-col-grow">…                    the growth moved off the second child
+ThirdColumnWraps → …<p class="list-col-wrap text-xs">…</p>…
+Passthrough      → <ul class="list mine bg-base-100 rounded-box shadow-md" id="list-1" data-test="yes"
+                     style="letter-spacing:1px"><li class="list-row row-marker" id="list-row-1"
+                     data-test="row">…
+```
+
+What this settles:
+
+- **§3d's validity rule holds**: 11 lists render `<li>` as their first child, 22 rows and 4 plain `<li>` headers across the stories, and **zero non-`li` children of any list**. The header is the element a caller would most likely write as a `div`, which would be invalid inside a `ul` — so the stories keep it an `li` and the JSDoc says why.
+- **The modifiers stay caller classes**: 4 `list-col-grow` and 4 `list-col-wrap` children, each on markup the caller wrote inside a row rather than on a component (§2).
+- **The default example carries no modifier at all**, which is the evidence for §3a: the second child grows on its own, so avatar / text / buttons is correct by construction and any other order is not.
+- Rows compose the real `Avatar` and `Button`; the thumbnail renders as `div.avatar > div.size-10` rather than the doc page's bare div, which is the same shape through a real component.
+- All 4 classes have rules in the built stylesheet.
+
+Not settled here: which column actually takes the slack, where the wrapped paragraph starts, and whether the last row skips its divider. All Step 5.

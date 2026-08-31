@@ -1,0 +1,36 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * One row of a `List`, laid out as a single-row grid.
+ *
+ * **The second child grows.** The row is `minmax(0, auto) 1fr` with column
+ * auto-flow, so the first child is sized to its content, the second takes the
+ * rest, and every later child is sized to its content again. That is why
+ * daisyUI's default example needs no modifier: avatar, then the text block that
+ * grows, then two buttons. Get the child order wrong and the wrong element
+ * stretches, with no error (plan §3a).
+ *
+ * To move the growth elsewhere, put `class="list-col-grow"` on the child that
+ * should take the space — a caller class, since it belongs to a child you
+ * write. **It only works for the first six positions**: daisyUI has rules up to
+ * the sixth child and nothing beyond, so a seventh silently keeps the default
+ * second-column growth (plan §3a).
+ *
+ * `class="list-col-wrap"` drops a child onto a second row. It keeps its column
+ * position rather than starting at the left edge — so the paragraph in the doc
+ * example begins under the text block, not under the avatar, which is intended.
+ * Several wrapped children stack into that same second row; there is no third
+ * (plan §3b).
+ *
+ * **Its children must be direct children.** The rule pinning them to row one is
+ * a child selector, so an extra wrapper breaks the grid outright (plan §3e.1).
+ */
+interface Props extends HTMLAttributes<'li'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<li class:list={['list-row', className]} {...rest}>
+  <slot />
+</li>

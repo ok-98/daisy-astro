@@ -1,10 +1,30 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/list/
 import type { HTMLAttributes } from 'astro/types';
 
+/**
+ * A vertical list of rows.
+ *
+ * Renders a `ul`, and **its children must be list items** — `ListRow`s, and
+ * plain `li`s for section headers, which is what every doc example opens with.
+ * A header written as a `div` would be invalid inside a `ul`, and that is the
+ * one a caller is most likely to reach for (plan §3d).
+ *
+ * Not polymorphic, deliberately: daisyUI's classes would work on any element,
+ * but a list of rows is exactly what `ul` and `li` are for, and screen readers
+ * announce the item count.
+ *
+ * The row separator is drawn by this element as an `::after` on every row that
+ * is not last, inset so it clears the rounded corners — so there is no divider
+ * prop and nothing to switch off (plan §3c).
+ *
+ * Background, rounding and shadow are plain Tailwind here; there is no colour
+ * or size axis at all (plan §1).
+ */
 interface Props extends HTMLAttributes<'ul'> {}
+
+// No variant class map: daisyUI defines two component classes and two modifiers
+// for this component, and the modifiers are caller classes on a row's children
+// (plan §2).
 
 const { class: className, ...rest } = Astro.props;
 ---

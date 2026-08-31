@@ -54,6 +54,8 @@ import Hover3dCard from './components/Hover3dCard/Hover3dCard.astro';
 import HoverGallery from './components/HoverGallery/HoverGallery.astro';
 import Kbd from './components/Kbd/Kbd.astro';
 import Link from './components/Link/Link.astro';
+import List from './components/List/List.astro';
+import ListRow from './components/List/ListRow.astro';
 import Loading from './components/Loading/Loading.astro';
 import Mask from './components/Mask/Mask.astro';
 import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
@@ -170,6 +172,8 @@ import Steps from './components/Steps/Steps.astro';
 <Link href="/docs">ok</Link>
 <Link color="primary" hover class="text-lg" id="l" data-test="y" target="_blank">ok</Link>
 <Link as="button" type="button">ok</Link>
+
+<List class="mine" id="ls" data-test="y"><ListRow id="lr" class="row">items</ListRow></List>
 
 <Loading />
 <Loading variant="bars" size="lg" class="text-primary" aria-label="Loading" />
