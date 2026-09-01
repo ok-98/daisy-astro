@@ -1,14 +1,66 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/footer/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'footer'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type FooterDirection = 'horizontal' | 'vertical';
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A grid of columns, where **each direct child is a column** and is itself a
+ * grid laying out its own links with a tighter gap (plan §0).
+ *
+ * Columns are bare `<nav>`, `<aside>` or `<form>` elements with **no class at
+ * all** — daisyUI styles them by position, so there is no `FooterColumn` and
+ * which element to use is a semantics call you own: `nav` for link groups,
+ * `aside` for a logo or copyright block, `form` for a newsletter (plan §2).
+ *
+ * The child rule is `.footer > :not(script, style, template)`, so **a stray
+ * wrapper does not go unstyled — it becomes a column**, and collapses the real
+ * columns into one cell (plan §3d). For the same reason, links inside a column
+ * are spaced by its `.5rem` grid gap rather than by margins; wrapping them in a
+ * div is how the social-icon examples deliberately take that back, adding
+ * `grid grid-flow-col gap-4` of their own.
+ *
+ * **Most footers want the responsive form, which is a class, not the prop** —
+ * nine of daisyUI's ten examples use `sm:footer-horizontal`, i.e. stacked on
+ * mobile and spread above it (plan §3b):
+ *
+ *     <Footer class="sm:footer-horizontal bg-neutral text-neutral-content p-10">
+ *
+ * daisyUI supplies no colour or size axis; the `bg-*`, `p-*` and `rounded` in
+ * every example are plain Tailwind on the root.
+ */
+interface Props extends HTMLAttributes<'footer'> {
+  /**
+   * Unconditional direction. `vertical` is daisyUI's default and still
+   * emittable. For the usual responsive footer use the class instead
+   * (plan §3b).
+   */
+  direction?: FooterDirection;
+  /**
+   * **A layout mode, not just an alignment tweak.** `footer-center` already
+   * flows in columns on its own, and combining it with `direction` changes the
+   * axis rather than adding to it — `horizontal` + `center` flows in **rows**
+   * (plan §3c):
+   *
+   *     default             row
+   *     horizontal          column
+   *     center              column dense
+   *     horizontal center   dense  ← rows again
+   *     vertical center     column dense
+   */
+  center?: boolean;
+}
+
+// Full literal class names. NEVER `footer-${direction}` — an interpolated class
+// gets no CSS from daisyUI (plans/README.md §1b).
+const DIRECTION: Record<FooterDirection, string> = {
+  horizontal: 'footer-horizontal',
+  vertical: 'footer-vertical',
+};
+
+const { direction, center = false, class: className, ...rest } = Astro.props;
 ---
 
-<footer class:list={['footer', className]} {...rest}>
+<footer class:list={['footer', direction && DIRECTION[direction], { 'footer-center': center }, className]} {...rest}>
   <slot />
 </footer>

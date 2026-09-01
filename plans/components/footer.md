@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/footer.css` and the doc page source. §3e lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-09-01). `Footer.astro`, `FooterTitle.astro` and 15 stories. §3e.1 is answered — a `nav`, `aside` or `form` is the direct child in 21 of 21 footers (§8) — and §3e.4's raw-markup fallback is **fully discharged**: every partner component now exists, so the form example composes `Fieldset`, `Label`, `Join`, `TextInput` and `Button`, and 133 links are the real `Link`. §3's five findings all held; nothing needed correcting. Step 5 (visual pass) is open.
 ---
 
 ## 0. A grid of grids
@@ -212,26 +214,57 @@ Two beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3e.1 (direct children) — blocking, and loud here.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Footer.astro` scaffold and create `FooterTitle.astro` per §4, then walk the gate. **Run the probe** on `FooterTitle`.
-- [ ] **Step 4:** Replace `Footer.stories.ts` and create `FooterTitle.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` stacks below `sm` and spreads above it; columns have a `2.5rem` row gap and `.5rem` between their own links; titles are uppercase and dimmed; `Placements` matches §3c's table exactly; `TwoRows` wraps into two rows; `CenteredWithSocial` centres both the columns and their contents.
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<footer class="footer[^"]*"[^>]*><(nav|aside|form)' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Footer` row in `plans/README.md` to **Implemented**, noting `FooterTitle` as part of it.
+- [x] **Step 1: done for §3e.1**, the loud variety: a stray wrapper here does not go unstyled, it *becomes a column* and collapses the real ones into a single cell. 21 of 21 footers hold a `nav`, `aside` or `form` directly. §3e.3 is clear too — 23 inline SVGs survive — and §3e.4 is discharged entirely.
+- [x] **Step 2: skipped as planned.** `FooterDirection` is local; `variants.ts` untouched.
+- [x] **Step 3: done.** Gate walked; the probe errors on all three intended lines, including `href` on a `FooterTitle as="h3"`, which is the proof the polymorphic typing took — the failure §3e.2 warns about is silent.
+- [x] **Step 4: done.** `Footer.stories.ts`, 15 stories — 11 doc-page examples plus `Playground`, `Passthrough`, `Placements` and `ResponsiveVsProp`. **No `FooterTitle.stories.ts`**: its only prop is `as`, exercised by `Passthrough`, and its forwarding is asserted there too (the call `plans/components/stat.md` §3g.2 established).
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes and a resize.** Verify: `Default` **stacks below `sm` and spreads above it**, which is the responsive class rather than the prop; columns sit `2.5rem` apart with `.5rem` between their own links; titles are uppercase and dimmed; **`Placements` matches §3c's table exactly, including `horizontal` + `center` flowing in rows**; `TwoRows` wraps six columns into two rows; and `CenteredWithSocial` centres both the columns and their contents.
+- [x] **Step 6: done — forwarding confirmed at both levels.** `Passthrough` renders `<footer class="footer footer-horizontal footer-center mine p-10 …" id="footer-1" data-test="yes" style="letter-spacing:1px">` around `<h3 id="title-1" data-test="title" class="footer-title title-marker">`, which also shows the polymorphic root changing. Full output in §8.
+- [x] **Step 7: done — the `Footer` row in `plans/README.md` says Implemented** and names `FooterTitle`.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 5 daisyUI classes reachable.
-- [ ] Columns render as direct children and are bare semantic elements (§2, §3d).
-- [ ] `FooterTitle` defaults to `h6` and accepts any tag; probe passes (§3a, §3e.2).
-- [ ] `center` × `direction` behaves per §3c's table, and `Placements` shows it.
-- [ ] JSDoc states: prefer `class="sm:footer-horizontal"` over the prop (§3b), `center` is a flow mode (§3c), and each child becomes a column (§3d).
-- [ ] No invented axis — no colour, size, `columns` prop, or `FooterColumn`.
-- [ ] One story per doc-page example, plus `Placements` and `ResponsiveVsProp`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 5 daisyUI classes reachable.
+- [x] Columns render as direct children and are bare semantic elements (§2, §3d).
+- [x] `FooterTitle` defaults to `h6` and accepts any tag; probe passes (§3a, §3e.2).
+- [x] `center` × `direction` behaves per §3c's table, and `Placements` shows it.
+- [x] JSDoc states: prefer `class="sm:footer-horizontal"` over the prop (§3b), `center` is a flow mode (§3c), and each child becomes a column (§3d).
+- [x] No invented axis — no colour, size, `columns` prop, or `FooterColumn`.
+- [x] One story per doc-page example, plus `Placements` and `ResponsiveVsProp`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01), SVG paths elided. `astro check`: 200 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Default     → <footer class="footer sm:footer-horizontal p-10 bg-neutral text-neutral-content rounded">
+                <nav><h6 class="footer-title">Services</h6>
+                  <button class="link link-hover">Branding</button>…</nav>…
+                     ↑ the column is a bare <nav> with no class — §2
+Passthrough → <footer class="footer footer-horizontal footer-center mine p-10 …" id="footer-1"
+                data-test="yes" style="letter-spacing:1px">
+                <nav><h3 id="title-1" data-test="title" class="footer-title title-marker">Passthrough</h3>…
+```
+
+Counts across the 15 stories:
+
+```
+<footer> elements 21  → a nav/aside/form is the direct child  21 of 21
+footer-title 43 — 42 as <h6> (the default), 1 as <h3>
+sm:footer-horizontal 12 | footer-horizontal 18 | footer-vertical 1 | footer-center 7
+inline SVG 23 | real Link components 133
+built CSS: all 5 classes, the `.footer-horizontal.footer-center` combination rule, and `sm\:footer-horizontal`
+```
+
+What this settles:
+
+- **§3e.1, in its loud form.** Everywhere else in the library a wrapper degrades a rule quietly; here `.footer > :not(script, style, template)` means a wrapper **becomes a column** and swallows the real ones. 21 of 21 are clean.
+- **§2's no-`FooterColumn` decision is visible in the output**: every column is a bare `nav`, `aside` or `form` carrying no class at all, which is exactly why a sub-component would have had nothing to add.
+- **§3b's advice is what the stories actually do**: 12 uses of `sm:footer-horizontal` against 1 of `direction="vertical"`. The prop exists for the two doc examples that are unconditionally horizontal, and `ResponsiveVsProp` puts the two side by side.
+- **§3c's combination rule is in the built CSS** as its own `.footer-horizontal.footer-center` block, which is the evidence that `center` is a flow mode rather than an alignment tweak. `Placements` renders all five rows of that table.
+- **§3a's default is the common case**: 42 of 43 titles are `h6`, and the one `h3` asked for it — which is the balance the polymorphic default is aiming at.
+- **§3e.4 is discharged**: 133 links are the real `Link`, and the newsletter column composes `Fieldset` → `Label` → `Join` → `TextInput` + `Button`. No raw-markup fallback remains here.
+
+Not settled here: the responsive flip, the two gaps, and whether `Placements` really matches §3c. All Step 5.

@@ -1,0 +1,26 @@
+---
+import type { HTMLTag, Polymorphic } from 'astro/types';
+
+// `Props` MUST precede every `const` (plans/README.md §5c).
+//
+// NOTE: no angle brackets anywhere in this frontmatter, deliberately — this
+// component has a generic Props type, and one bracket silently stops the props
+// being inferred (plans/README.md §5c).
+//
+// A column heading.
+//
+// POLYMORPHIC, defaulting to h6 — which is what every daisyUI example writes,
+// and which is a document-outline decision rather than a styling one: h6 is
+// defensible in a footer and wrong in a page whose outline has no five levels
+// above it. The class is presentational only (uppercase, dimmed, semibold), so
+// as="p" or as="div" is available where a heading would be wrong outright
+// (plan §3a).
+type Props<Tag extends HTMLTag = 'h6'> = Polymorphic<{ as: Tag }>;
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const { as: Tag = 'h6', class: className, ...rest } = Astro.props;
+---
+
+<Tag class:list={['footer-title', className]} {...rest}>
+  <slot />
+</Tag>

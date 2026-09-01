@@ -456,7 +456,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 |---|---|---|
 | Divider | `divider` | **Implemented** — [`plans/components/divider.md`](components/divider.md) (11 stories; empty divider verified to have zero child nodes; visual pass open) |
 | Drawer sidebar | `drawer` | **Implemented** — [`plans/components/drawer.md`](components/drawer.md) (`Drawer`+`DrawerButton`, 10 stories; fixed sibling order; `toggleId` repeats; `drawer-button` carries the focus ring; visual pass open) |
-| Footer | `footer` | Planned — [`plans/components/footer.md`](components/footer.md) (`Footer`+`FooterTitle`; grid of grids, center changes the flow axis) |
+| Footer | `footer` | **Implemented** — [`plans/components/footer.md`](components/footer.md) (`Footer`+`FooterTitle`, 15 stories; grid of grids, every child is a column; `center` changes the flow axis) |
 | Hero | `hero` | Planned — [`plans/components/hero.md`](components/hero.md) (`Hero`+`HeroContent`+`HeroOverlay`; one-cell grid) |
 | Indicator | `indicator` | **Implemented** — [`plans/components/indicator.md`](components/indicator.md) (`Indicator`+`IndicatorItem`, 22 stories; placement props on the **item**; composes by class for Badge/Status — §3g) |
 | Join (group items) | `join` | **Implemented** — [`plans/components/join.md`](components/join.md) (10 stories; a *utility*, not a component; items may be nested; no `JoinItem`; visual pass open) |
