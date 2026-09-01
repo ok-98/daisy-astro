@@ -62,6 +62,8 @@ import Mask from './components/Mask/Mask.astro';
 import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
 import PhoneMockupCamera from './components/PhoneMockup/PhoneMockupCamera.astro';
 import PhoneMockupDisplay from './components/PhoneMockup/PhoneMockupDisplay.astro';
+import Indicator from './components/Indicator/Indicator.astro';
+import IndicatorItem from './components/Indicator/IndicatorItem.astro';
 import ValidatorHint from './components/Validator/ValidatorHint.astro';
 import FileInput from './components/FileInput/FileInput.astro';
 import Toggle from './components/Toggle/Toggle.astro';
@@ -315,3 +317,7 @@ import Steps from './components/Steps/Steps.astro';
            disabled id="fi" data-test="y" title="t" class="w-full" />
 <ValidatorHint>Enter valid email address</ValidatorHint>
 <ValidatorHint as="span" collapse role="alert" id="vh" data-test="y" title="t" class="mine">Required</ValidatorHint>
+<Indicator class="mine" id="ind" data-test="y" title="t">
+  <IndicatorItem align="center" position="bottom" class="badge" id="ii" data-test="y">New</IndicatorItem>
+  <button class="btn">inbox</button>
+</Indicator>

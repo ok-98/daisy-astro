@@ -458,7 +458,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Drawer sidebar | `drawer` | **Implemented** — [`plans/components/drawer.md`](components/drawer.md) (`Drawer`+`DrawerButton`, 10 stories; fixed sibling order; `toggleId` repeats; `drawer-button` carries the focus ring; visual pass open) |
 | Footer | `footer` | Planned — [`plans/components/footer.md`](components/footer.md) (`Footer`+`FooterTitle`; grid of grids, center changes the flow axis) |
 | Hero | `hero` | Planned — [`plans/components/hero.md`](components/hero.md) (`Hero`+`HeroContent`+`HeroOverlay`; one-cell grid) |
-| Indicator | `indicator` | Planned — [`plans/components/indicator.md`](components/indicator.md) (`Indicator`+`IndicatorItem`; placement is two axes, on the item) |
+| Indicator | `indicator` | **Implemented** — [`plans/components/indicator.md`](components/indicator.md) (`Indicator`+`IndicatorItem`, 22 stories; placement props on the **item**; composes by class for Badge/Status — §3g) |
 | Join (group items) | `join` | **Implemented** — [`plans/components/join.md`](components/join.md) (10 stories; a *utility*, not a component; items may be nested; no `JoinItem`; visual pass open) |
 | Mask | `mask` | **Implemented** — [`plans/components/mask.md`](components/mask.md) (21 stories; `shape` required; found the two §5c inference rules; visual pass open) |
 | Stack | `stack` | **Implemented** — [`plans/components/stack.md`](components/stack.md) (13 stories; first child is the front; only 3 distinct layers; visual pass open) |

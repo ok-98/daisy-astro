@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/indicator.css` and the doc page source. §3e lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-09-01), first of Stage 5. `Indicator.astro`, `IndicatorItem.astro` and 22 stories. Two things §0–§3 did not cover turned up in the doc markup: **`indicator` is also a mixin**, applied to another component's root in two examples (§3f), and **this component composes by class rather than by nesting** for Badge and Status, which changes what "compose the real component" means (§3g). Implementing it also **cleared the library's last two `TODO(daisy-astro)` markers**. Step 5 (visual pass) is open.
 ---
 
 ## 0. Six placement classes, two axes, six custom properties
@@ -94,6 +96,62 @@ Four doc examples have `<span class="indicator-item badge badge-secondary"></spa
 `.indicator` is `display: inline-flex; width: max-content` **[verified]** — it shrinks to the decorated element, which is why it can be dropped around a button or an input with no layout change. It also means **`class="w-full"` on the container does nothing useful**; size the child instead. Same family as `plans/components/aura.md` §3c.
 
 The doc page's responsive example is `indicator-start sm:indicator-middle md:indicator-bottom lg:indicator-center xl:indicator-end` on the item — five prefixed classes, no prop. The library's standing answer (`plans/components/card.md` §3e), and here it is the doc page's own final example, so it gets a story.
+
+### 3f. `indicator` is a mixin too, not only a wrapper
+
+**Found in the doc markup, 2026-09-01.** §2 describes `Indicator` purely as a
+container holding both the indicators and the decorated element. Two of the
+examples do something else — they put the class on the **root of the component
+being decorated**:
+
+```html
+<div class="avatar indicator">…</div>
+<button class="indicator tab tab-active">Notifications <span class="indicator-item badge">8</span></button>
+```
+
+That works because `.indicator` only sets `position: relative`,
+`display: inline-flex` and `width: max-content` — nothing that conflicts with
+`avatar` or `tab`. So `<Avatar class="indicator">` and `<Tab class="indicator">`
+are both correct, and the `ForAvatar` and `ForTab` stories use them rather than
+adding a wrapper the doc page does not have.
+
+Recorded in `Indicator`'s JSDoc: it is a wrapper *or* a class you add to
+something that is already a component.
+
+### 3g. It composes by class, not by nesting — for Badge and Status
+
+**Found while writing the stories, 2026-09-01**, and it is a correction to the
+library's default instinct rather than to this plan.
+
+`IndicatorItem` is a positioning mixin (§2 says so), and daisyUI writes the
+partner's classes **on the same element**:
+
+```html
+<span class="indicator-item badge badge-secondary">New</span>
+<span class="indicator-item status status-success"></span>
+```
+
+The first draft of the stories composed the real `Badge` and `Status`
+components *inside* the item — following `plans/IMPLEMENTATION-ORDER.md` §5.2's
+"compose the real component" rule — and produced
+
+```html
+<span class="indicator-item"><span class="status status-success"></span></span>
+```
+
+Two spans where daisyUI has one. Not broken, but not the documented markup, and
+the outer span becomes an empty positioned box around a positioned dot.
+
+**So the rule needs a qualifier**, worth carrying to any future mixin-shaped
+component: *compose the real component where daisyUI nests one; pass the
+partner's classes where daisyUI puts both on one element.* Here that means
+`Badge` and `Status` arrive as `class="badge badge-secondary"` /
+`class="status status-success"` on the item, while `Button`, `Card`,
+`TextInput`, `Avatar` and `Tab` — which daisyUI genuinely nests or decorates —
+are composed as components.
+
+`plans/components/status.md`'s own `InIndicator` story now shows both shapes
+side by side, since it is the one place the difference is visible.
 
 ### 3e. Unverified assumptions
 
@@ -208,25 +266,57 @@ One story beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Confirm §3e.1 (mild) — no blocker expected. Nothing else to re-read.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Indicator.astro` scaffold and create `IndicatorItem.astro` per §4, then walk the gate.
-- [ ] **Step 4:** Replace `Indicator.stories.ts` and create `IndicatorItem.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: each of the nine placements sits where its name says, half-overlapping the corner/edge; `MultipleIndicators` shows all nine at once without collision; `Responsive` moves through five positions as the canvas is resized; `ForInput` and `ForButton` do not change the decorated element's size (§3d); RTL mirrors the horizontal placements with no code change.
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<span class="indicator-item[^"]*"' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Indicator` row in `plans/README.md` to **Implemented**, noting `IndicatorItem` as part of it.
+- [x] **Step 1: done.** §3e.1 is as mild as predicted — the item rule is a descendant selector, so nothing here depends on slot children being direct children. §3e.2 is fully discharged: every partner component now exists, so no story falls back to raw markup for one. §3e.3 (`:where()` specificity) needs no check beyond the CSS, which is quoted in §0.
+- [x] **Step 2: skipped as planned.** Both unions local; `variants.ts` untouched.
+- [x] **Step 3: done.** Gate walked. The probe errors on `<Indicator align="start">` — the §3a mistake, made unrepresentable — and on a vertical value passed to `align`. Its third line, `color="primary"`, cannot error: `color` is a native HTML attribute, the trap `plans/README.md` §5c records, and the third plan in this library to write it into a probe.
+- [x] **Step 4: done.** `Indicator.stories.ts`, 22 stories — 19 doc-page examples plus `Playground`, `Passthrough` and `PlacementOnContainer`. **No `IndicatorItem.stories.ts`**: its props are exercised by all nine placement stories and its forwarding by `Indicator`'s nested `Passthrough`, the same call `plans/components/stat.md` §3g.2 made.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes and a resize.** Verify: each of the nine placements sits where its name says, half-overlapping the corner or edge; `MultipleIndicators` shows all nine at once without collision; **`Responsive` moves through five positions as the canvas is resized**; `ForButton` and `ForInput` leave the decorated element's size unchanged (§3d); **`PlacementOnContainer`'s right-hand box stacks both badges in one corner** (§3a); and an RTL canvas mirrors the horizontal placements with no code change.
+- [x] **Step 6: done — forwarding confirmed at both levels.** `Passthrough` renders `<div class="indicator mine" id="indicator-1" data-test="yes" style="letter-spacing:1px">` around a marked item carrying both placement classes. Full output in §8.
+- [x] **Step 7: done — the `Indicator` row in `plans/README.md` says Implemented** and names `IndicatorItem`. Implementing it also cleared the last two `TODO(daisy-astro)` markers in the library, in `Join` and `Status`.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 8 daisyUI classes reachable; the six placement classes are `IndicatorItem` props (§3a).
-- [ ] `align` and `position` are independent and compose to nine placements (§3b).
-- [ ] `Indicator` has no variant props.
-- [ ] An empty `IndicatorItem` renders as a dot — no fallback content (§3c).
-- [ ] JSDoc states: `indicator-item` is a mixin to combine with Badge/Status (§2), the container is content-sized (§3d), `z-index: 1` is low (§3c), and the responsive form is a class (§3d).
-- [ ] One story per doc-page example, plus `PlacementOnContainer`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 8 daisyUI classes reachable; the six placement classes are `IndicatorItem` props (§3a).
+- [x] `align` and `position` are independent and compose to nine placements (§3b).
+- [x] `Indicator` has no variant props.
+- [x] An empty `IndicatorItem` renders as a dot — no fallback content (§3c).
+- [x] JSDoc states: `indicator-item` is a mixin to combine with Badge/Status (§2), the container is content-sized (§3d), `z-index: 1` is low (§3c), and the responsive form is a class (§3d).
+- [x] One story per doc-page example, plus `PlacementOnContainer`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01). `astro check`: 196 files, 0 errors, 0 warnings, 0 hints.
+
+```
+StatusIndicator → <div class="indicator"><span class="indicator-item status status-success"></span>
+                    <div class="grid w-32 h-32 rounded bg-base-300 place-items-center">content</div></div>
+                          ↑ one element, two component classes — §3g
+ForTab          → <div class="tabs tabs-lift"><button class="tab">Messages</button>
+                    <button class="tab tab-active indicator">Notifications
+                      <span class="indicator-item badge">8</span></button>…
+                             ↑ `indicator` on the Tab's own root — §3f
+Passthrough     → <div class="indicator mine" id="indicator-1" data-test="yes" style="letter-spacing:1px">
+                    <span class="indicator-item indicator-center indicator-bottom badge item-marker"
+                      id="item-1" data-test="item">Passthrough</span>…
+```
+
+Counts across the 22 stories:
+
+```
+.indicator roots 21 | .indicator-item elements 33 | empty items 10
+start 9 | center 9 | end 5 | top 3 | middle 8 | bottom 11
+`indicator` applied to another component's root: 2 (Avatar, Tab)
+all 8 classes have rules in the built stylesheet
+```
+
+What this settles:
+
+- **§3b's two axes, demonstrated at full span**: the nine placement stories and `MultipleIndicators` between them emit every combination of the six classes. A single nine-value union could not have produced that grid without listing all nine literals.
+- **§3c's empty item is the common case, not an edge case** — 10 of the 33 items have no content at all, which is why the slot has no fallback.
+- **§3f**: two roots carry `indicator` alongside `avatar` or `tab`, matching the doc page rather than adding a wrapper it does not have.
+- **§3g**: `indicator-item badge badge-secondary` and `indicator-item status status-success` are single elements, as published. The nested alternative renders and looks similar, which is exactly why it is worth a note rather than a silent choice.
+- **The last raw-markup debt in the library is gone**: `Join`'s `NestedItems` and `Status`'s `InIndicator` both compose this component now, and `grep -rn 'TODO(daisy-astro)' packages/daisy-astro/src` returns nothing.
+
+Not settled here: where any of the nine actually lands, the responsive ladder, and the RTL mirror. All Step 5.

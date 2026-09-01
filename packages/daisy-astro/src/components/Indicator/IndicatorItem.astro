@@ -1,0 +1,58 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type IndicatorAlign = 'start' | 'center' | 'end';
+type IndicatorPosition = 'top' | 'middle' | 'bottom';
+
+/**
+ * A positioning mixin, not a visible thing in itself — combine it with whatever
+ * you actually want to show: `class="badge badge-primary"`,
+ * `class="status status-success"`, or wrap a `Button` in it, as the doc page's
+ * card example does.
+ *
+ * **An empty item is a documented use** — four doc examples use one as a status
+ * dot — so the slot is optional and there is no fallback content (plan §3c).
+ * `white-space: nowrap` keeps long text on one line rather than wrapping back
+ * over the decorated element.
+ *
+ * **`z-index: 1` is low.** An indicator over a card is fine; one competing with
+ * a `Dropdown`'s panel at `z-index: 999` is not (plan §3c).
+ *
+ * Responsive placement is a caller class, and the doc page's last example is
+ * exactly that: `class="indicator-start sm:indicator-middle md:indicator-bottom"`
+ * (plan §3d).
+ */
+interface Props extends HTMLAttributes<'span'> {
+  /**
+   * Horizontal placement. Independent of `position`, so the two compose to nine
+   * placements from six classes — which is why they are two props and not one
+   * nine-value union (plan §3b).
+   *
+   * daisyUI's default is `end`.
+   */
+  align?: IndicatorAlign;
+  /** Vertical placement. daisyUI's default is `top`. */
+  position?: IndicatorPosition;
+}
+
+// Full literal class names. NEVER `indicator-${align}` — an interpolated class
+// gets no CSS from daisyUI (plans/README.md §1b).
+const ALIGN: Record<IndicatorAlign, string> = {
+  start: 'indicator-start',
+  center: 'indicator-center',
+  end: 'indicator-end',
+};
+
+const POSITION: Record<IndicatorPosition, string> = {
+  top: 'indicator-top',
+  middle: 'indicator-middle',
+  bottom: 'indicator-bottom',
+};
+
+const { align, position, class: className, ...rest } = Astro.props;
+---
+
+<span class:list={['indicator-item', align && ALIGN[align], position && POSITION[position], className]} {...rest}>
+  <slot />
+</span>

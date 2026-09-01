@@ -1,6 +1,7 @@
 import Join from './Join.astro';
 import Button from '../Button/Button.astro';
-import Badge from '../Badge/Badge.astro';
+import Indicator from '../Indicator/Indicator.astro';
+import IndicatorItem from '../Indicator/IndicatorItem.astro';
 import TextInput from '../TextInput/TextInput.astro';
 import Select from '../Select/Select.astro';
 
@@ -71,11 +72,17 @@ export const NestedItems = {
             ],
           },
         },
-        // TODO(daisy-astro): compose <Indicator> here once it is implemented — see plans/components/join.md §5
-        '<div class="indicator">',
-        { component: Badge, props: { color: 'secondary', class: 'indicator-item' }, slots: { default: 'new' } },
-        button('Search'),
-        '</div>',
+        {
+          component: Indicator,
+          slots: {
+            default: [
+              // `indicator-item` and `badge` land on one element, as daisyUI
+              // writes them (plans/components/indicator.md §3g).
+              { component: IndicatorItem, props: { class: 'badge badge-secondary' }, slots: { default: 'new' } },
+              button('Search'),
+            ],
+          },
+        },
       ],
     },
   },

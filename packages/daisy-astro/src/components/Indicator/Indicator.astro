@@ -1,9 +1,30 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/indicator/
 import type { HTMLAttributes } from 'astro/types';
 
+/**
+ * Wraps an element so `IndicatorItem`s can be pinned to its corners.
+ *
+ * Put **both** the indicators and the decorated element in the slot, in any
+ * order and any number — the doc page's own example pins nine at once. There is
+ * no named slot for the decorated element, because that would cap it at one
+ * (plan §2).
+ *
+ * **This component has no props.** The placement classes belong on the *item*,
+ * where daisyUI writes them: on the container they would cascade to every item
+ * inside and stack them all in one corner — which looks correct as long as
+ * there is only one (plan §3a).
+ *
+ * **It is also a mixin.** Two doc examples put `indicator` on the root of the
+ * component being decorated rather than on a wrapper —
+ * `<Avatar class="indicator">`, `<Tab class="indicator">` — which works because
+ * the class only sets `position: relative` and `inline-flex`. Use whichever
+ * reads better (plan §3f).
+ *
+ * `width: max-content`, so it shrinks to the decorated element and can be
+ * dropped around a button or an input with no layout change. That also means
+ * `class="w-full"` here does nothing useful — size the child instead
+ * (plan §3d).
+ */
 interface Props extends HTMLAttributes<'div'> {}
 
 const { class: className, ...rest } = Astro.props;

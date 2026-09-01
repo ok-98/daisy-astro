@@ -1,4 +1,6 @@
 import Status from './Status.astro';
+import Indicator from '../Indicator/Indicator.astro';
+import IndicatorItem from '../Indicator/IndicatorItem.astro';
 
 // Story shape and the sweep pattern: plans/README.md §4 and
 // plans/IMPLEMENTATION-ORDER.md §2, Tier 0.3.
@@ -99,15 +101,38 @@ export const WithAccessibleName = {
 
 // Beyond the doc page: the most common real use is a Status pinned to a corner
 // by Indicator, which is also Indicator's own doc example.
-// TODO(daisy-astro): compose <Indicator>/<IndicatorItem> here once implemented — see plans/components/status.md §5
+//
+// The status classes go **on the IndicatorItem itself**, not on a Status nested
+// inside it: daisyUI writes `indicator-item status status-success` as one
+// element (plans/components/indicator.md §3g). The second one below nests a
+// real `Status`, which is the shape to avoid — it renders two spans where
+// daisyUI has one.
 export const InIndicator = {
   render: () => [
-    '<div class="indicator">',
-    '<span class="indicator-item">',
-    dot({ color: 'success', 'aria-label': 'Online' }),
-    '</span>',
-    '<div class="bg-base-300 grid h-16 w-16 place-items-center">box</div>',
-    '</div>',
+    '<div class="flex gap-8 items-start"><div><div class="text-xs opacity-60 mb-2">classes on one element — the daisyUI shape</div>',
+    {
+      component: Indicator,
+      slots: {
+        default: [
+          { component: IndicatorItem, props: { class: 'status status-success', 'aria-label': 'Online' } },
+          '<div class="bg-base-300 grid h-16 w-16 place-items-center">box</div>',
+        ],
+      },
+    },
+    '</div><div><div class="text-xs opacity-60 mb-2">nested — two spans, avoid</div>',
+    {
+      component: Indicator,
+      slots: {
+        default: [
+          {
+            component: IndicatorItem,
+            slots: { default: dot({ color: 'success', 'aria-label': 'Online' }) },
+          },
+          '<div class="bg-base-300 grid h-16 w-16 place-items-center">box</div>',
+        ],
+      },
+    },
+    '</div></div>',
   ],
 };
 
