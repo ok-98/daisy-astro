@@ -62,6 +62,7 @@ import Mask from './components/Mask/Mask.astro';
 import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
 import PhoneMockupCamera from './components/PhoneMockup/PhoneMockupCamera.astro';
 import PhoneMockupDisplay from './components/PhoneMockup/PhoneMockupDisplay.astro';
+import Table from './components/Table/Table.astro';
 import Indicator from './components/Indicator/Indicator.astro';
 import IndicatorItem from './components/Indicator/IndicatorItem.astro';
 import ValidatorHint from './components/Validator/ValidatorHint.astro';
@@ -321,3 +322,6 @@ import Steps from './components/Steps/Steps.astro';
   <IndicatorItem align="center" position="bottom" class="badge" id="ii" data-test="y">New</IndicatorItem>
   <button class="btn">inbox</button>
 </Indicator>
+<Table size="xs" zebra pinRows pinCols summary="s" id="tbl" data-test="y" title="t" class="mine">
+  <thead><tr><th>a</th></tr></thead>
+</Table>

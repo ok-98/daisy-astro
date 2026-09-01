@@ -14,6 +14,8 @@
 - One story file, `Playground` + one story per variant axis.
 - `astro check` is the type gate, not `tsc` (§5b).
 
+
+> **Status:** **Implemented** (2026-09-01), second of Stage 5. `Table.astro` and 13 stories. **§2's shared unknown is settled here, where it was load-bearing**: `<thead>` is a direct child of `<table>` in 17 of 17 tables (§8). §5's sanitization worry is a non-issue — 106 `<tr>` and 342 `<td>` survive intact. One refinement to `plans/README.md` §1b's comment-scanning rule came out of the `row-hover` check (§0h). Step 5 (visual pass) is open.
 ---
 
 ## 0. What the evidence actually says
@@ -109,6 +111,34 @@ Related: `.table` sets `border-radius: var(--radius-box)` with `border-collapse:
 ### 0f. Scaffold check
 
 `packages/daisy-astro/src/components/Table/Table.astro` is the dummy scaffold. Unlike Stat (`stat.md` §0), Tab (`tab.md` §0), OTP (`otp.md` §0) and the missing-`type` group (`file-input.md` §0), **the Table scaffold is correct as far as it goes**: root is `<table>`, base class is `table`, `class:list` merge and `...rest` spread are already right. It is only missing the four variant props. First clean scaffold in the batch — no bug to record.
+
+### 0h. `row-hover` ships anyway — and that refines §1b's comment rule
+
+**Checked while implementing, 2026-09-01.** §0b decided not to build a prop for
+the undocumented `row-hover`. The built stylesheet contains it regardless — 8
+occurrences — even though nothing in the library renders the class.
+
+The obvious suspect was `plans/README.md` §1b's newly recorded rule that a class
+**named in a comment** emits its CSS, since this component's JSDoc mentions
+`row-hover` in prose. It is not that. Every occurrence is a **compound
+descendant selector** rooted at a class the stories do use:
+
+```css
+@media (hover:hover){ :is(.table-zebra tbody tr.row-hover,
+                          .table-zebra tbody tr.row-hover:where(:nth-child(2n))):hover{…} }
+```
+
+and `grep '.row-hover{'` returns **zero** — there is no standalone rule for it
+anywhere.
+
+So the rule needs a boundary, worth carrying: **§1b's comment-scanning applies
+to classes that have a rule of their own.** A class that exists only as part of
+a compound selector under another class ships with that class, whether or not
+anyone mentions it — nothing was gained or lost by the JSDoc line here.
+
+Contrast `fieldset-label` (`plans/components/fieldset.md` §3e), which *is* a
+standalone rule and did vanish when the comment was reworded. The two cases look
+identical from a `grep` of the output and are not.
 
 ### 0g. Attribute collisions: none
 
@@ -281,34 +311,61 @@ Every story needs the `overflow-x-auto` wrapper (§0e) — supply it via a decor
 
 ## 6. Steps
 
-- [ ] **Step 1:** Section 1's variant audit and section 2's slot decision are already filled from the shipped CSS and the doc page's `classnames` frontmatter — both agree on nine classes. Nothing to re-derive.
-- [ ] **Step 2:** No new union needed; `DaisySize` already covers xs–xl.
-- [ ] **Step 3:** Replace the scaffold body of `Table.astro` per section 4. **First** render `<Table><thead><tr><th>a</th></tr></thead></Table>` and inspect the HTML: `<thead>` must be a direct child of `<table>` (§2 shared unknown). If it isn't, stop and record the finding — several other plans depend on the answer.
-- [ ] **Step 4:** Write `Table.stories.ts` per section 5, starting with `Default` alone to settle the slot-sanitization question before writing the other eight.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Table`, verify:
-  - `Playground` renders and all four controls change the markup.
-  - `Sizes` shows five visibly different paddings.
-  - `PinnedRows` header stays put while the A–Z body scrolls.
-  - `PinnedRowsAndCols` keeps the leading `<th>` column fixed on horizontal scroll — and confirm the §0c `<td>`-header inversion is what makes it work by temporarily flipping one to `<th>`.
-- [ ] **Step 6:** Attribute forwarding story: `id`, `data-*`, `style`, `class`, plus `summary` (a real `TableHTMLAttributes` member — good proof the interface is inherited, not just the base). Headless check:
-
-```bash
-pnpm build-storybook
-grep -rhoE '<table[^>]*>' storybook-static/astro-prerendered-stories.json | head
-```
-- [ ] **Step 7:** Update `plans/README.md`'s Table row to **Implemented**.
+- [x] **Step 1: nothing to re-derive.** Nine classes, agreed by the CSS and the frontmatter.
+- [x] **Step 2: skipped as planned.** `DaisySize` covers xs–xl unchanged.
+- [x] **Step 3: done, and §2's check was made first as instructed.** `<thead>` lands as a **direct child of `<table>`** — 17 of 17 in the build. That was the one component where the shared slot-wrapping question was load-bearing rather than cosmetic: `.table-zebra tbody tr:nth-child(2n)` and `.table :where(th,td)` all assume the real table structure. The probe errors on `size="huge"` and an invented `variant`; its `color` line cannot error, `color` being a native attribute (`plans/README.md` §5c).
+- [x] **Step 4: done, `Default` first as §5 instructed — and the fear was unfounded.** Table markup passes through the story pipeline untouched: 106 `<tr>` and 342 `<td>` in the output, no wrapper `.astro` story component needed.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes and scrolling.** Verify: `Sizes` shows five visibly different paddings; **`PinnedRows`' headers stay put while the A–Z body scrolls**; **`PinnedRowsAndCols` keeps the leading and trailing `th` columns fixed on horizontal scroll** — and confirm §0c by temporarily flipping one of its `<td>` header cells to `<th>` and watching it stick; `Zebra` stripes the body only; and `ResponsiveSize` changes size at `lg`.
+- [x] **Step 6: done — forwarding confirmed, `summary` included.** `Passthrough` renders `<table class="table table-lg table-zebra table-pin-rows table-pin-cols mine" id="table-1" data-test="yes" style="letter-spacing:1px" summary="Passthrough table">`, where `summary` is a `TableHTMLAttributes` member and so proves the table's own interface is inherited rather than just the base one. Full output in §8.
+- [x] **Step 7: done — the `Table` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All four documented modifier axes have typed props; the two undocumented/uncoverable ones (`row-hover`, responsive variants) are documented as caller classes, not silently dropped.
-- [ ] `Props` extends `HTMLAttributes<'table'>`.
-- [ ] `class` from a caller merges through `class:list`.
-- [ ] `Playground` exposes all four props as controls.
-- [ ] `Sizes` renders all five values, visibly distinct.
-- [ ] Nine stories, one per doc-page example, markup copied from the page.
-- [ ] Slot content confirmed to land as a direct child of `<table>` (§2) — recorded, not assumed.
-- [ ] Slot sanitization confirmed not to strip `<thead>`/`<tr>`/`<td>` (§5) — or the fallback taken and documented.
-- [ ] No `overflow-x-auto` wrapper baked into the component (§0e).
-- [ ] `pinCols`' `<td>`-header requirement documented in the prop's doc comment and demonstrated in `PinnedRowsAndCols` (§0c).
-- [ ] Every box in section 4's Astro idioms gate ticked.
+- [x] All four documented modifier axes have typed props; the two undocumented/uncoverable ones (`row-hover`, responsive variants) are documented as caller classes, not silently dropped.
+- [x] `Props` extends `HTMLAttributes<'table'>`.
+- [x] `class` from a caller merges through `class:list`.
+- [x] `Playground` exposes all four props as controls.
+- [x] `Sizes` renders all five values, visibly distinct.
+- [x] Nine stories, one per doc-page example, markup copied from the page.
+- [x] Slot content confirmed to land as a direct child of `<table>` (§2) — recorded, not assumed.
+- [x] Slot sanitization confirmed not to strip `<thead>`/`<tr>`/`<td>` (§5) — or the fallback taken and documented.
+- [x] No `overflow-x-auto` wrapper baked into the component (§0e).
+- [x] `pinCols`' `<td>`-header requirement documented in the prop's doc comment and demonstrated in `PinnedRowsAndCols` (§0c).
+- [x] Every box in section 4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01). `astro check`: 197 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Default            → <div class="overflow-x-auto"><table class="table"><thead><tr><th></th>
+                       <th>Name</th>…</thead><tbody><tr><th>1</th><td>Cy Ganderton</td>…
+                                       ↑ thead is a direct child of table
+PinnedRowsAndCols  → <thead><tr><th></th><td>Name</td><td>Job</td><td>company</td><td>location</td>
+                       <td>Last Login</td><td>Favorite Color</td><th></th></tr></thead>
+                                ↑ th at both ends, td in between — §0c's inversion, as published
+Passthrough        → <table class="table table-lg table-zebra table-pin-rows table-pin-cols mine"
+                       id="table-1" data-test="yes" style="letter-spacing:1px" summary="Passthrough table">
+```
+
+Counts across the 13 stories:
+
+```
+<table> elements 17  → <thead> as a direct child  17 of 17
+table markup intact: 19 tbody, 106 tr, 342 td
+zebra 2 | pin-rows 3 | pin-cols 2 | all 5 sizes present
+built CSS: all 9 classes, plus `.lg\:table-lg` from the responsive story
+row-hover in the built CSS: 8 occurrences, 0 of them a standalone rule (§0h)
+```
+
+What this settles:
+
+- **§2's shared unknown, in the component that would have shown it worst.** Everywhere else a wrapper degrades a rule; here `.table-zebra tbody tr:nth-child(2n)` and every `th`/`td` rule assume real table structure, so a wrapper would have broken the component visibly. 17 of 17 are clean.
+- **§5's sanitization fear was unfounded.** `<thead>`, `<tbody>`, `<tr>`, `<th>` and `<td>` are only valid in table context and a reparsing sanitizer would have dropped them; none did. No fallback wrapper component was needed.
+- **§0c's inversion is reproduced as published** — `th` at both ends of the header row, `td` between them — because that is what makes pinned columns work at all.
+- **§0a's escape hatch is real**: `.lg\:table-lg` is in the built CSS, generated from a caller class in `ResponsiveSize`. An object-valued `size` prop would have had to interpolate and would have emitted nothing.
+- **§0h**: `row-hover`'s CSS ships with `.table-zebra` rather than because a comment names it — a boundary on `plans/README.md` §1b that only a `grep` for the standalone rule reveals.
+- `VisualElements` composes the real `Checkbox`, `Avatar` (with a mask), `Badge` and `Button`.
+
+Not settled here: the sticky behaviour of either pinned axis, the five paddings, and the zebra stripes. All Step 5.

@@ -1,14 +1,73 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/table/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisySize } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'table'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A styled `<table>`, and nothing else: daisyUI gives `thead`, `tbody`, `tr`,
+ * `th` and `td` **no classes at all**, so there are no sub-components here —
+ * the slot takes your own table markup verbatim (plan §0d).
+ *
+ * **The scroll container is yours.** All nine doc examples wrap the table in
+ * `<div class="overflow-x-auto">`, with the height, width, border and
+ * background differing per example, so baking one in would need a second
+ * class-like prop and make `class` ambiguous about where it lands (plan §0e).
+ *
+ * Related: `.table` sets a border radius but nothing paints a background, so
+ * the rounding only shows if the **wrapper** has one — which is why the doc's
+ * bordered example puts `rounded-box bg-base-100` there.
+ *
+ * Responsive sizes are caller classes: `class="table-xs lg:table-lg"`. daisyUI
+ * emits every one of its nine classes at all five breakpoints, because this
+ * component ships in the utilities layer (plan §0a).
+ *
+ * daisyUI also still ships a `row-hover` class for `<tr>`, but has dropped it
+ * from the documented surface — its own hover example uses the plain Tailwind
+ * `hover:bg-base-300` instead. No prop for it; it stays reachable as a caller
+ * class (plan §0b).
+ */
+interface Props extends HTMLAttributes<'table'> {
+  /** Base size — changes body-row font size and every cell's padding. */
+  size?: DaisySize;
+  /** Stripes even `tbody` rows. `thead` and `tfoot` are unaffected. */
+  zebra?: boolean;
+  /** Sticky `thead` and `tfoot`. Needs a scrolling wrapper **with a height**. */
+  pinRows?: boolean;
+  /**
+   * Sticky columns — and **read this before using it**: the selector is
+   * `tr th`, so it pins *every* `th` in the table and sets both `left: 0` and
+   * `right: 0`, meaning a leading `th` sticks left and a trailing one sticks
+   * right purely from its position.
+   *
+   * To use it you must write your header cells as `<td>` and reserve `<th>` for
+   * the columns you want pinned — the opposite of what semantic HTML suggests,
+   * and exactly what daisyUI's own example does (plan §0c).
+   */
+  pinCols?: boolean;
+}
+
+// Full literal class names. NEVER `table-${size}` — an interpolated class gets
+// no CSS from daisyUI (plans/README.md §1b).
+const SIZE: Record<DaisySize, string> = {
+  xs: 'table-xs',
+  sm: 'table-sm',
+  md: 'table-md',
+  lg: 'table-lg',
+  xl: 'table-xl',
+};
+
+const { size, zebra = false, pinRows = false, pinCols = false, class: className, ...rest } = Astro.props;
 ---
 
-<table class:list={['table', className]} {...rest}>
+<table
+  class:list={[
+    'table',
+    size && SIZE[size],
+    { 'table-zebra': zebra, 'table-pin-rows': pinRows, 'table-pin-cols': pinCols },
+    className,
+  ]}
+  {...rest}
+>
   <slot />
 </table>
