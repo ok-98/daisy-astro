@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/label.css` and the doc page source. §3e lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-09-01), second of the Stage 4 cluster. `Label.astro`, `FloatingLabel.astro` and 14 stories. §3's five findings all held. One correction to §4: its `Label` JSDoc is full of angle brackets, which silently break inference on a **generic** component — the trap `plans/README.md` §5c documents, written into the very listing meant to implement it (§3f). Story markup for `input`, `select` and `textarea` carries `TODO(daisy-astro)` markers, this cluster's pass-2 debt. Step 5 (visual pass) is open, and it carries both animations.
 ---
 
 ## 0. Two unrelated components in one file, and neither is a form label
@@ -110,6 +112,28 @@ So:
 Both classes are presentational. Associating a label with a control is still the caller's job — `for`/`id`, or wrapping. The Fieldset doc page says so in its own headings (*"Add proper id and for attributes for accessibility"*), and `plans/components/fieldset.md` §2 cross-references here.
 
 So there is **no `for` prop shortcut and no id generation**: `for` arrives through `...rest` when the root is a `<label>`, and means nothing on a `<span>`. One JSDoc line, and it is the reason `as="label"` exists at all (§3a).
+
+### 3f. §4's JSDoc would have broken `Label`'s own inference
+
+**Found while implementing, 2026-09-01.** §4 gives `Label` a polymorphic
+`Props`, and §3a even flags the consequence: *"Being polymorphic brings
+`plans/README.md` §5c's silent generic-inference failure; the probe in §4 is
+mandatory."*
+
+The JSDoc §4 supplies **is** that failure. It writes `` `.input` ``, `` `span` ``
+and `` `<label>` `` in prose, and the rule is that **any angle bracket anywhere
+in a generic component's frontmatter** stops `Props` being inferred — not just
+in code, and JSDoc-versus-`//` makes no difference (`plans/README.md` §5c's
+evidence table). Copied as written, the component would have accepted
+`<Label size="lg">` with no error, and the probe would have caught it only
+because the probe was mandatory.
+
+Rewritten without brackets, with the reason stated in the comment itself, the
+way `CardTitle.astro` already does. **Second time a plan's own prose has broken
+the component it describes**, after `plans/components/filter.md`, whose comment
+claimed to contain no markup while containing some. The lesson is narrow and
+worth repeating: in a generic component, the frontmatter is code, comments
+included.
 
 ### 3e. Unverified assumptions
 
@@ -216,27 +240,59 @@ Plus `Playground` and `Passthrough` in each. Three beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3e.1 (direct child of `.input`/`.select`) — blocking for the affix stories. Check §3e.3 (select behaviour) while there.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Label.astro` scaffold and create `FloatingLabel.astro` per §4, then walk the gate. **Run the probe** on `Label`.
-- [ ] **Step 4:** Replace `Label.stories.ts` and create `FloatingLabel.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `ForInput` shows a full-height prefix with a dividing rule on its trailing edge, `ForInputAtEnd` mirrors it; `AffixInTheMiddle` has neither (§3b); `Standalone` is dimmed inline text; `Default` (floating) sits inside the field at rest and rises on focus; typing keeps it risen; `NoPlaceholder` starts risen and stays (§3c); `Sizes` moves the resting position with the field's size; a disabled field hides its label.
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<label class="input[^"]*"><span class="label"' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoE '<label class="floating-label[^"]*"[^>]*><(span|input)' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Label` row in `plans/README.md` to **Implemented**, noting `FloatingLabel` as part of it. Cross-reference from `plans/components/fieldset.md` §2 and `plans/components/checkbox.md` §2.
+- [x] **Step 1: done for §3e.1**, which is blocking for the affix usage only. The build shows the affix as a direct child of its field wrapper in all 6 affix stories, and `AffixInTheMiddle` deliberately renders the failing case (§8). §3e.2 is the cluster's pass-2 debt, marked per `plans/IMPLEMENTATION-ORDER.md` §5.2. §3e.3 (select behaviour) is runtime and moves to Step 5.
+- [x] **Step 2: skipped as planned.** No variant classes at all; `variants.ts` untouched.
+- [x] **Step 3: done, with §3f's correction to §4's JSDoc.** The probe was mandatory and earned it: with brackets in the frontmatter `Label` would have accepted anything. As written, the probe errors on all three intended lines and leaves `as="label" for="email"` clean — which is inference working, since `for` is only valid on the label root.
+- [x] **Step 4: done.** `Label.stories.ts` (8) and `FloatingLabel.stories.ts` (6).
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and both components are animation or state.** Verify: `ForInput` is a full-height prefix with a dividing rule on its trailing edge, `ForInputAtEnd` mirrors it; **`AffixInTheMiddle`'s second field has neither border nor negative margin** (§3b); `Standalone` is dimmed inline text and its wrapped-checkbox variant shows a pointer cursor; `Default` rests inside the field and **rises on focus**, staying risen once typed in; `Sizes` moves the resting position per field size (§3c); the responsive story's **select drops back down on blur** while the input and textarea do not (§3e.3); and **`NoPlaceholder`'s second field starts floated over an empty box** with the third's label hidden entirely (§3c).
+- [x] **Step 6: done — forwarding confirmed on both.** `Label`'s `Passthrough` renders `<label for="passthrough-input" id="label-1" data-test="yes" style="letter-spacing:1px" class="label mine">`, which is also the polymorphic root actually changing. Full output in §8.
+- [x] **Step 7: done — the `Label` row in `plans/README.md` says Implemented** and names `FloatingLabel`. `plans/components/fieldset.md` §2 and `plans/components/checkbox.md` §2 both already point here; they are the ones that will drop their raw `label` markup in pass 2.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] Both daisyUI classes reachable, as two separate components (§0).
-- [ ] `Label` defaults to `<span>`; `as="label"` available; probe passes (§3a).
-- [ ] Affix styling verified as first-child and last-child, and absent in the middle (§3b).
-- [ ] `FloatingLabel`'s span is a direct child and may be either side of the field (§2, §3c).
-- [ ] No invented axis — no colour, size, `for` prop, or id generation (§1, §3c, §3d).
-- [ ] JSDoc states: the two usages of `.label` (§3a, §3b), the required `placeholder` (§3c), select's focus-only behaviour (§3c), disabled hiding the label (§3c), and that association is still the caller's (§3d).
-- [ ] One story per doc-page example, plus `Standalone`, `AffixInTheMiddle` and `NoPlaceholder`.
-- [ ] Every box in §4's gate ticked.
+- [x] Both daisyUI classes reachable, as two separate components (§0).
+- [x] `Label` defaults to `<span>`; `as="label"` available; probe passes (§3a).
+- [x] Affix styling verified as first-child and last-child, and absent in the middle (§3b).
+- [x] `FloatingLabel`'s span is a direct child and may be either side of the field (§2, §3c).
+- [x] No invented axis — no colour, size, `for` prop, or id generation (§1, §3c, §3d).
+- [x] JSDoc states: the two usages of `.label` (§3a, §3b), the required `placeholder` (§3c), select's focus-only behaviour (§3c), disabled hiding the label (§3c), and that association is still the caller's (§3d).
+- [x] One story per doc-page example, plus `Standalone`, `AffixInTheMiddle` and `NoPlaceholder`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01). `astro check`: 199 files, 0 errors, 0 warnings, 0 hints.
+
+```
+ForInput    → <label class="input"><span class="label">https://</span>
+                <input type="text" placeholder="URL" /></label>
+ForInputAtEnd → <label class="input"><input … /><span class="label">.com</span></label>
+Passthrough (Label) → <label for="passthrough-input" id="label-1" data-test="yes"
+                        style="letter-spacing:1px" class="label mine">Passthrough</label>
+Passthrough (Floating) → <label class="floating-label mine w-full max-w-xs" id="floating-1"
+                           data-test="yes" style="letter-spacing:1px">
+                           <span>Passthrough</span><input … placeholder="type here" …/></label>
+```
+
+Counts across the 14 stories:
+
+```
+Label roots: 7 span + 3 label   — the default and the as="label" form (§3a)
+affix as the FIRST child of a .input/.select wrapper   5
+affix as the LAST child                                1
+affix in the middle (AffixInTheMiddle, on purpose)     1
+one label wraps a control, for the `:has(input)` pointer rule
+floating-label roots 14, span written before the field in 6 and after in 8
+all 4 rule blocks present in the built stylesheet, `:placeholder-shown` included
+```
+
+What this settles:
+
+- **§3a's default is the right one**: 7 of 10 labels are the `span` affix form, and the 3 that are real `<label>` elements all asked for it. Had the component defaulted to `label`, the affix examples would have nested a label inside daisyUI's own `label.input` wrapper.
+- **§3b's positional rule is exercised in all three positions** — first, last and middle — and the middle one is a story rather than a footnote, because it is the case that degrades silently.
+- **§2's "either side" claim is true in the output**: the span precedes the field in 6 floating labels and follows it in 8, which is why it is not a named slot.
+- **The polymorphic root really changes**: `Passthrough` emits a `<label for=…>`, an attribute that would be meaningless — and untyped — on the default span.
+- **`Label` and `FloatingLabel` share only a CSS file**: two components, two story files, no shared prop.
+
+Not settled here: the affix borders, the float animation, the select's blur behaviour, and the two `NoPlaceholder` failures. All Step 5.

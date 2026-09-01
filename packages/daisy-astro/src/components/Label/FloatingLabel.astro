@@ -1,0 +1,38 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * Wraps a field and a `<span>`. The span sits inside the field at rest and
+ * floats above it on focus — or whenever the field is no longer showing its
+ * placeholder.
+ *
+ * **The field must have a `placeholder`.** The rule is
+ * `:not(:has(input:placeholder-shown))`, so with no placeholder nothing is ever
+ * "placeholder-shown", the negation is always true, and the label starts
+ * floated and never comes down. Every doc example sets one, including those
+ * that also set a `value` (plan §3c). This is the component's one real trap.
+ *
+ * `:placeholder-shown` exists only on `input` and `textarea`. A `<select>`
+ * therefore reacts to focus alone and drops back down on blur — daisyUI ships
+ * it that way, and the responsive example uses it.
+ *
+ * The span may come **before or after** the field; it is absolutely positioned,
+ * and the doc page writes it both ways. So there is no named slot for it.
+ *
+ * **No `size` prop** — the resting position is computed from `--size-field`, so
+ * it follows the field's own `input-sm` / `select-lg` / `textarea-xl` class.
+ *
+ * A **disabled** field hides the label entirely (`opacity: 0`), which is
+ * surprising enough to be worth knowing before it happens.
+ *
+ * Associating the label with the control is still yours: this wraps the field,
+ * which is one valid way to do it (plan §3d).
+ */
+interface Props extends HTMLAttributes<'label'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<label class:list={['floating-label', className]} {...rest}>
+  <slot />
+</label>

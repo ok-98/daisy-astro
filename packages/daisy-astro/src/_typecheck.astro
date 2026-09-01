@@ -62,6 +62,8 @@ import Mask from './components/Mask/Mask.astro';
 import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
 import PhoneMockupCamera from './components/PhoneMockup/PhoneMockupCamera.astro';
 import PhoneMockupDisplay from './components/PhoneMockup/PhoneMockupDisplay.astro';
+import Label from './components/Label/Label.astro';
+import FloatingLabel from './components/Label/FloatingLabel.astro';
 import Join from './components/Join/Join.astro';
 import Dropdown from './components/Dropdown/Dropdown.astro';
 import Drawer from './components/Drawer/Drawer.astro';
@@ -277,3 +279,8 @@ import Steps from './components/Steps/Steps.astro';
 <Join direction="vertical" class="lg:join-horizontal" id="jn" data-test="y" title="t">
   <button class="btn join-item">A</button><button class="btn join-item">B</button>
 </Join>
+<Label class="mine" id="lb" data-test="y" title="t">https://</Label>
+<Label as="label" for="email">Email</Label>
+<FloatingLabel class="w-full max-w-xs" id="fl" data-test="y" title="t">
+  <span>Your Email</span><input class="input" placeholder="mail@site.com" />
+</FloatingLabel>

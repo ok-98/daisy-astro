@@ -389,7 +389,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Fieldset | `fieldset` | Planned — [`plans/components/fieldset.md`](components/fieldset.md) (`Fieldset`+`FieldsetLegend`; children are grid rows, keep them flat) |
 | File Input | `file-input` | Planned — [`plans/components/file-input.md`](components/file-input.md) (scaffold missing `type="file"`, same bug as Checkbox) |
 | Filter | `filter` | **Implemented** — [`plans/components/filter.md`](components/filter.md) (7 stories; options are `Button as="input"`; label comes from `aria-label`; visual pass open) |
-| Label | `label` | Planned — [`plans/components/label.md`](components/label.md) (`Label`+`FloatingLabel`; neither is a plain form label) |
+| Label | `label` | **Implemented** — [`plans/components/label.md`](components/label.md) (`Label`+`FloatingLabel`, 14 stories; neither is a plain form label; `Label` is polymorphic, default `span`; visual pass open) |
 | Radio | `radio` | **Implemented** — [`plans/components/radio.md`](components/radio.md) (15 stories; scaffold's missing `type` fixed; visual pass open) |
 | Range | `range` | **Implemented** — [`plans/components/range.md`](components/range.md) (20 stories; scaffold's missing `type` fixed; visual pass open) |
 | Rating | `rating` | **Implemented** — [`plans/components/rating.md`](components/rating.md) (12 stories; radio group + Mask shapes; no `value`/`readonly` props; visual pass open) |

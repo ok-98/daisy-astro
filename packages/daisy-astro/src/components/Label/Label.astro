@@ -1,14 +1,40 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/label/
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
 
-interface Props extends HTMLAttributes<'label'> {}
+// `Props` MUST precede every `const` (plans/README.md §5c).
+//
+// NOTE: no angle brackets anywhere in this frontmatter, deliberately — this
+// component has a generic Props type, and one bracket silently stops the props
+// being inferred (plans/README.md §5c).
+//
+// Two usages, one daisyUI class:
+//
+//   Affix inside a field — a DIRECT child of an `input` or `select` wrapper,
+//     rendered full height with a dividing rule and negative margins pulling it
+//     to the field's edge. It must be the FIRST or LAST child: in the middle it
+//     silently degrades to ordinary text with no border (plan §3b). Keep the
+//     default `span` here. The wrapper daisyUI puts around the field is already
+//     a label element, and nesting one label inside another is invalid markup
+//     with an ambiguous click target (plan §3a).
+//
+//   Standalone text — dimmed inline text beside a control, which is how the
+//     Fieldset and Checkbox doc pages use it. Pass as="label" for that, so it
+//     is a real form label.
+//
+// Association is still yours: there is no `for` prop and no id generation.
+// `for` arrives through the attribute spread, and means nothing on a span
+// (plan §3d). daisyUI does add `cursor: pointer` when a control is nested
+// inside, which is what makes the as="label" form feel right.
+//
+// POLYMORPHIC, defaulting to span.
+type Props<Tag extends HTMLTag = 'span'> = Polymorphic<{ as: Tag }>;
 
-const { class: className, ...rest } = Astro.props;
+// No variant class map: daisyUI defines no modifiers for this component (§1).
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const { as: Tag = 'span', class: className, ...rest } = Astro.props;
 ---
 
-<label class:list={['label', className]} {...rest}>
+<Tag class:list={['label', className]} {...rest}>
   <slot />
-</label>
+</Tag>
