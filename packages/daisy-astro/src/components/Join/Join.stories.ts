@@ -1,6 +1,8 @@
 import Join from './Join.astro';
 import Button from '../Button/Button.astro';
 import Badge from '../Badge/Badge.astro';
+import TextInput from '../TextInput/TextInput.astro';
+import Select from '../Select/Select.astro';
 
 // `join-item` is a caller class on components you already have — there is no
 // `JoinItem` (plan §2). Items may be nested inside wrappers; the corner radii
@@ -54,15 +56,21 @@ export const NestedItems = {
   args: {
     slots: {
       default: [
-        // TODO(daisy-astro): compose <TextInput> here once it is implemented — see plans/components/join.md §5
-        '<div><div><input class="input join-item w-[5.3rem] md:w-52" placeholder="Search"/></div></div>',
-        // TODO(daisy-astro): compose <Select> here once it is implemented — see plans/components/join.md §5
-        `<select class="select join-item w-[5.8rem] md:w-auto">
-          <option disabled selected>Filter</option>
-          <option>Sci-fi</option>
-          <option>Drama</option>
-          <option>Action</option>
-        </select>`,
+        '<div><div>',
+        { component: TextInput, props: { class: 'join-item w-[5.3rem] md:w-52', placeholder: 'Search' } },
+        '</div></div>',
+        {
+          component: Select,
+          props: { class: 'join-item w-[5.8rem] md:w-auto' },
+          slots: {
+            default: [
+              '<option disabled selected>Filter</option>',
+              '<option>Sci-fi</option>',
+              '<option>Drama</option>',
+              '<option>Action</option>',
+            ],
+          },
+        },
         // TODO(daisy-astro): compose <Indicator> here once it is implemented — see plans/components/join.md §5
         '<div class="indicator">',
         { component: Badge, props: { color: 'secondary', class: 'indicator-item' }, slots: { default: 'new' } },
@@ -80,8 +88,7 @@ export const CustomRadius = {
   args: {
     slots: {
       default: [
-        // TODO(daisy-astro): compose <TextInput> here once it is implemented — see plans/components/join.md §5
-        '<input class="input join-item w-36 lg:w-52" placeholder="Email"/>',
+        { component: TextInput, props: { type: 'email', class: 'join-item w-36 lg:w-52', placeholder: 'Email' } },
         button('Subscribe', 'join-item rounded-e-full'),
       ],
     },
@@ -133,8 +140,7 @@ export const FocusRaisesItem = {
     slots: {
       default: [
         button('Before'),
-        // TODO(daisy-astro): compose <TextInput> here once it is implemented — see plans/components/join.md §5
-        '<input class="input join-item" placeholder="Focus me" />',
+        { component: TextInput, props: { class: 'join-item', placeholder: 'Focus me' } },
         button('After'),
       ],
     },
