@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/select.css` and the doc page source. §3e lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-09-01), sixth of the Stage 4 cluster. `Select.astro` and 20 stories. §3's five findings all held; no corrections. §6 Step 7's cross-plan action turned out **already done**: `TextInput` shipped first and its `size` JSDoc already cites this plan's §3c (§3f). §3e.3's raw-markup fallback is discharged — the fieldset example composes the real components. Step 5 (visual pass) is open, and it carries §3e.1, the two dropdown-styling examples.
 ---
 
 ## 0. File Input's shape, on a real `<select>`
@@ -92,6 +94,26 @@ The corner radii are `var(--join-ss, var(--radius-field))` and friends **[verifi
 Also inherited from `plans/components/label.md` §3b: a `<span class="label">` as a **direct child** of a `.select` wrapper becomes a bordered affix. That wrapper is a `<label class="select">`, not this component — worth one JSDoc cross-reference, since it is the shape the Label page uses.
 
 `text-overflow: ellipsis; white-space: nowrap; overflow: hidden` **[verified]** — long option text truncates rather than widening the control.
+
+### 3f. The Text Input forward note was already carried
+
+**2026-09-01.** §3c asked §6 Step 7 to add its finding — that this is the
+first component where the `size` collision costs something real — to
+`plans/components/text-input.md`'s forward note.
+
+**Text Input shipped first** (2026-09-01, earlier the same day) and already
+carries it: its `size` JSDoc reads *"for consistency across all six form
+controls (plan §0e, following `plans/components/select.md` §3c)"*, and
+`text-input.md` §0e cites this section by name while arguing that the cost is
+**lower** there than here — Input's native `size` is a width hint that
+daisyUI's own `width: clamp(3rem, 20rem, 100%)` already overrides, whereas a
+`<select size="5">` is a structurally different control.
+
+So the chain is complete in both directions and nothing needed editing. Third
+Step 7 in this cluster to turn out to be a no-op, after
+`plans/components/join.md` §3f and `plans/components/text-input.md`'s audit row
+— which is what happens when cross-plan actions are recorded on both sides
+rather than only in the plan that discovers them.
 
 ### 3e. Unverified assumptions
 
@@ -201,25 +223,54 @@ Plus `Playground` and `Passthrough`. Three beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Check §3e.1 (`appearance-none` and `::picker(select)`) — if unsupported, the two stories say so in a comment rather than looking broken.
-- [ ] **Step 2:** No new shared unions — `DaisyColor`/`DaisySize` reused unchanged. `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Confirm `Select.astro` matches §4 — the scaffold's markup is already right, so the props and JSDoc are the work — then walk the gate.
-- [ ] **Step 4:** Replace `Select.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` shows the placeholder and a chevron on the right; `Colors` changes the border while the chevron stays `currentColor` (§3a); `Sizes` shows five heights; `Ghost` drops the border; `Disabled` is inert; `InJoin` has square inner corners (§3d); `LongOption` truncates with an ellipsis (§3d); RTL moves the chevron to the left (§3a).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<select class="select[^"]*"[^>]*><option' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Select` row in `plans/README.md` to **Implemented**. **Add §3c's finding to the Text Input forward note** — this is the first component where the `size` collision has a real cost.
+- [x] **Step 1: as far as the build can answer it.** Both dropdown-styling examples exist as stories with comments saying what "renders identically to `Default`" means; §3e.1 is a browser-support question that only Step 5 can close. §3e.2 is answered: 30 `<option disabled selected>` placeholders survive into the output with both attributes intact. §3e.3 is discharged — the fieldset example composes the real `Fieldset`, `FieldsetLegend` and `Label`.
+- [x] **Step 2: skipped as planned.** `DaisyColor` and `DaisySize` reused unchanged; `variants.ts` untouched.
+- [x] **Step 3: done.** The scaffold's markup was already right, so the work was the props and the JSDoc, as §6 predicted. Gate walked; the probe errors on `color="banana"`, `size={5}` — the collision, made concrete — and `variant="outline"`.
+- [x] **Step 4: done.** `Select.stories.ts`, 20 stories: 15 doc-page examples plus `Playground`, `Passthrough`, `Colors`, `InJoin` and `LongOption`.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and two stories need the dropdown opened.** Verify: `Default` shows its placeholder and a chevron on the right; **`Colors` changes the border while the chevron stays `currentColor`** (§3a); `Sizes` shows five distinct heights; `Ghost` drops the border until focus; `InJoin` has square inner corners with nothing passed (§3d); `LongOption` **truncates with an ellipsis** rather than widening (§3d); an RTL canvas moves the chevron to the left (§3a); and **`NativeDropdownStyle` / `CustomDropdownHeight` differ from `Default` only once opened** — if they do not, that is §3e.1's answer, not a broken story.
+- [x] **Step 6: done — forwarding confirmed.** `Passthrough` renders `<select class="select select-info select-lg select-ghost mine" id="select-1" data-test="yes" style="letter-spacing:1px" name="colour" required>`. Full output in §8.
+- [x] **Step 7: done — the `Select` row in `plans/README.md` says Implemented.** §3c's forward note to Text Input needed no edit: it was already carried, in both directions (§3f).
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 15 daisyUI classes reachable: base, `ghost`, 8 colours, 5 sizes.
-- [ ] `color` uses `DaisyColor` and `size` uses `DaisySize`, imported, neither redeclared.
-- [ ] No invented axis — no `options`/`placeholder` props (§2), no `variant` union (§1).
-- [ ] JSDoc states: the placeholder idiom (§2), the gradient arrow and what erases it (§3a), the `size` collision **and its real cost** (§3c), and free `Join` composition (§3d).
-- [ ] The Text Input forward note records §3c (§6 Step 7).
-- [ ] One story per doc-page example, plus `Colors`, `InJoin` and `LongOption`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 15 daisyUI classes reachable: base, `ghost`, 8 colours, 5 sizes.
+- [x] `color` uses `DaisyColor` and `size` uses `DaisySize`, imported, neither redeclared.
+- [x] No invented axis — no `options`/`placeholder` props (§2), no `variant` union (§1).
+- [x] JSDoc states: the placeholder idiom (§2), the gradient arrow and what erases it (§3a), the `size` collision **and its real cost** (§3c), and free `Join` composition (§3d).
+- [x] The Text Input forward note records §3c (§6 Step 7).
+- [x] One story per doc-page example, plus `Colors`, `InJoin` and `LongOption`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01). `astro check`: 204 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Passthrough → <select class="select select-info select-lg select-ghost mine" id="select-1"
+                data-test="yes" style="letter-spacing:1px" name="colour" required>
+                <option disabled selected>Passthrough</option><option>Crimson</option>…</select>
+InJoin      → <div class="join"><select class="select join-item">…</select>
+                <button class="btn join-item">Apply</button></div>
+                             ↑ no prop passed for the corners (§3d)
+```
+
+Counts across the 20 stories:
+
+```
+select roots 31  → an <option> is the immediate first child  31 of 31
+<option disabled selected> placeholders  30
+  (the 31st is Disabled, whose single option is not a placeholder)
+colours: all 8 | sizes: all 5 | ghost 2 | join-item 2
+appearance-none 1 | ::picker(select) 1
+```
+
+What this settles:
+
+- **§3e.2**: `disabled selected` survives on 30 first options with both attributes intact, which is the entire placeholder mechanism (§2) and the thing a story pipeline could quietly have dropped.
+- **§2's decision holds**: options are slot content the caller writes. An `options` array prop would have had to model `value`, `disabled` and `selected` per item and would have gained nothing.
+- **§3d's join protocol needs no prop**: `select.join-item` sits beside `button.join-item` with the corner radii coming from `--join-*`.
+- **§3e.3 is discharged** — `WithFieldsetAndLabels` composes `Fieldset`, `FieldsetLegend` and `Label`, so no raw-markup fallback remains in this component.
+- **All 15 classes are reachable**, and the two caller-class dropdown examples reach the output verbatim, `[&::picker(select)]:max-h-26` included.
+
+Not settled here: the chevron's colour and position, the five heights, the ellipsis, and whether either dropdown-styling example does anything in this browser. All Step 5.

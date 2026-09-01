@@ -1,14 +1,85 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/select/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisyColor, DaisySize } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'select'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A styled native `<select>`. The options are slot content, and the placeholder
+ * is the standard first-option idiom rather than a prop — every doc example
+ * writes it that way (plan §2):
+ *
+ *     <Select>
+ *       <option disabled selected>Pick a color</option>
+ *       <option>Crimson</option>
+ *     </Select>
+ *
+ * **The dropdown arrow is a pair of background gradients**, not a pseudo-element
+ * (plan §3a). Two things follow: it is drawn in `currentColor`, so
+ * `class="text-primary"` tints it independently of the border colour; and a
+ * caller's `bg-*` utility replaces the background *colour* harmlessly, while a
+ * background-**image** utility or `bg-none` erases the arrow entirely.
+ *
+ * About 20rem wide with a fixed height, shrinking below that. Long option text
+ * truncates with an ellipsis rather than widening the control (plan §3d).
+ * Inside a `Join` it squares its inner corners with **no prop** — the corner
+ * radii read `--join-*` (`plans/components/join.md` §0). A `Label` as a direct
+ * child of a `label.select` wrapper becomes a bordered affix, which is that
+ * component's shape rather than this one's (`plans/components/label.md` §3b).
+ *
+ * **Styling the open dropdown** is the question this component attracts, and
+ * daisyUI documents two answers, both caller classes:
+ * `class="appearance-none"` hands the option list back to the OS, and
+ * `class="[&::picker(select)]:max-h-26"` sizes it through the very new
+ * customisable-select pseudo-element (plan §3b).
+ */
+interface Props extends HTMLAttributes<'select'> {
+  /** Border and focus-outline colour. The arrow is not affected — it follows `currentColor`. */
+  color?: DaisyColor;
+  /**
+   * Base size.
+   *
+   * **This shadows the native `size` attribute**, and here — unlike on
+   * Checkbox, Radio or File Input — that attribute is meaningful: `size="5"`
+   * on a `<select>` turns it into a scrolling list box of five rows, a
+   * different control. That form is not expressible through this component.
+   *
+   * Kept anyway, for consistency across all six form controls: daisyUI does not
+   * style the list-box form (its fixed `height` fights it), and the escape
+   * hatch is one line of raw `<select>` (plan §3c).
+   */
+  size?: DaisySize;
+  /** No background, border or shadow until focused. */
+  ghost?: boolean;
+}
+
+// Full literal class names. NEVER `select-${color}` — an interpolated class
+// gets no CSS from daisyUI (plans/README.md §1b).
+const COLOR: Record<DaisyColor, string> = {
+  neutral: 'select-neutral',
+  primary: 'select-primary',
+  secondary: 'select-secondary',
+  accent: 'select-accent',
+  info: 'select-info',
+  success: 'select-success',
+  warning: 'select-warning',
+  error: 'select-error',
+};
+
+const SIZE: Record<DaisySize, string> = {
+  xs: 'select-xs',
+  sm: 'select-sm',
+  md: 'select-md',
+  lg: 'select-lg',
+  xl: 'select-xl',
+};
+
+const { color, size, ghost = false, class: className, ...rest } = Astro.props;
 ---
 
-<select class:list={['select', className]} {...rest}>
+<select
+  class:list={['select', color && COLOR[color], size && SIZE[size], { 'select-ghost': ghost }, className]}
+  {...rest}
+>
   <slot />
 </select>

@@ -413,7 +413,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Radio | `radio` | **Implemented** — [`plans/components/radio.md`](components/radio.md) (15 stories; scaffold's missing `type` fixed; visual pass open) |
 | Range | `range` | **Implemented** — [`plans/components/range.md`](components/range.md) (20 stories; scaffold's missing `type` fixed; visual pass open) |
 | Rating | `rating` | **Implemented** — [`plans/components/rating.md`](components/rating.md) (12 stories; radio group + Mask shapes; no `value`/`readonly` props; visual pass open) |
-| Select | `select` | Planned — [`plans/components/select.md`](components/select.md) (first component where the `size` collision has a real cost) |
+| Select | `select` | **Implemented** — [`plans/components/select.md`](components/select.md) (20 stories; placeholder is the first `option`; first component where the `size` collision has a real cost) |
 | Text Input | `text-input` | **Implemented** — [`plans/components/text-input.md`](components/text-input.md) (22 stories; dual root: input or label wrapper; type narrowed to daisyUI's documented twelve; children without `as="label"` throw) |
 | Textarea | `textarea` | **Implemented** — [`plans/components/textarea.md`](components/textarea.md) (9 stories; scaffold whitespace bug fixed and asserted; sizes change font only) |
 | Toggle | `toggle` | Planned — [`plans/components/toggle.md`](components/toggle.md) (size classes select [type=checkbox]; colors only render while checked) |

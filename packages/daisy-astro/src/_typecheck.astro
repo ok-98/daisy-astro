@@ -62,6 +62,7 @@ import Mask from './components/Mask/Mask.astro';
 import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
 import PhoneMockupCamera from './components/PhoneMockup/PhoneMockupCamera.astro';
 import PhoneMockupDisplay from './components/PhoneMockup/PhoneMockupDisplay.astro';
+import Select from './components/Select/Select.astro';
 import Textarea from './components/Textarea/Textarea.astro';
 import TextInput from './components/TextInput/TextInput.astro';
 import Fieldset from './components/Fieldset/Fieldset.astro';
@@ -298,3 +299,6 @@ import Steps from './components/Steps/Steps.astro';
 <Textarea color="success" size="lg" ghost placeholder="Bio" rows={4} maxlength={200} required
           name="bio" id="ta" data-test="y" title="t" class="h-24" />
 <Textarea>Hello</Textarea>
+<Select color="info" size="lg" ghost name="colour" required id="sel" data-test="y" title="t">
+  <option disabled selected>Pick a color</option><option>Crimson</option>
+</Select>
