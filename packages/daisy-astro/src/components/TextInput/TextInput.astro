@@ -1,12 +1,128 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/text-input/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisyColor, DaisySize } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'input'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * daisyUI's own documented list of types for `.input`. `checkbox`, `radio`,
+ * `file` and `range` are excluded on purpose: they have their own components
+ * here, and `.input` actively breaks them — it sets a height, a border and
+ * `display: inline-flex` on a control that is meant to be a small box or a
+ * track (plan §0d).
+ */
+type TextInputType =
+  | 'text'
+  | 'password'
+  | 'email'
+  | 'number'
+  | 'date'
+  | 'datetime-local'
+  | 'week'
+  | 'month'
+  | 'tel'
+  | 'url'
+  | 'search'
+  | 'time';
+
+/**
+ * A text field, in either of the two shapes daisyUI documents (plan §0a):
+ *
+ * - **`as="input"`** (default) — the class on the field itself.
+ * - **`as="label"`** — the class on a wrapper, holding an icon, a **bare**
+ *   `<input>` you write yourself, and affixes like a `Kbd` or a `Badge`. Eight
+ *   of the doc page's examples take this form, so it is not an edge case.
+ *
+ * The wrapper is a flex row with a `.5rem` gap, and daisyUI strips the inner
+ * input's border and background itself — so pass a plain `<input>`, not another
+ * `TextInput`.
+ *
+ * Deliberately **not** `Polymorphic`: the two branches differ in kind, not just
+ * in tag. `<input>` is a void element with no children; `<label>` exists for
+ * its children.
+ *
+ * **`for` is not typed here.** Props extend the input's attributes, and
+ * `htmlFor` is not among them. The doc page's wrapper examples never need it —
+ * nesting the field inside the label is what associates them — but if you want
+ * `for`, use `Label as="label"` (plan §0a).
+ *
+ * Four integrations need no props at all (plan §0f): `join` squares the right
+ * corners through `--join-*`; `floating-label` reads the size class off this
+ * element; `Fieldset` and `Label` are plain composition. **`validator` is a
+ * caller class on this component** — `class="validator"` — with
+ * `validator-hint` as a **sibling** element outside it, and in the `as="label"`
+ * form the `required` / `pattern` / `minlength` attributes belong on the inner
+ * bare input, not on the label.
+ *
+ * On touch devices a focused field renders at 1rem however small its size
+ * class, which is daisyUI stopping Safari from auto-zooming. Not a bug
+ * (plan §0g).
+ */
+interface Props extends HTMLAttributes<'input'> {
+  /** Which element carries `.input`. The default slot renders only when `label` (plan §0a). */
+  as?: 'input' | 'label';
+  /** Border and focus-outline colour. */
+  color?: DaisyColor;
+  /**
+   * Base size — this one really does change the box, scaling height and font
+   * (unlike Textarea, where only the font moves).
+   *
+   * **This shadows the native `size` attribute**, which on a text input is a
+   * character-width hint. Accepted deliberately, for consistency across all six
+   * form controls (plan §0e, following `plans/components/select.md` §3c): the
+   * native value is a rough hint that daisyUI's own `width: clamp(3rem, 20rem,
+   * 100%)` already overrides, and any `w-*` utility replaces it exactly. If you
+   * genuinely need it, the `as="label"` form nests an input that is entirely
+   * yours.
+   *
+   * Responsive sizes are caller classes: `class="input-sm lg:input-lg"`.
+   */
+  size?: DaisySize;
+  /** No background, border or shadow until focused. */
+  ghost?: boolean;
+  /** Narrowed to daisyUI's documented twelve (plan §0d). */
+  type?: TextInputType;
+}
+
+// Full literal class names. NEVER `input-${color}` — an interpolated class gets
+// no CSS from daisyUI (plans/README.md §1b).
+const COLOR: Record<DaisyColor, string> = {
+  neutral: 'input-neutral',
+  primary: 'input-primary',
+  secondary: 'input-secondary',
+  accent: 'input-accent',
+  info: 'input-info',
+  success: 'input-success',
+  warning: 'input-warning',
+  error: 'input-error',
+};
+
+const SIZE: Record<DaisySize, string> = {
+  xs: 'input-xs',
+  sm: 'input-sm',
+  md: 'input-md',
+  lg: 'input-lg',
+  xl: 'input-xl',
+};
+
+const { as = 'input', color, size, ghost = false, class: className, ...rest } = Astro.props;
+
+// Deliberate throw, and the only one in the library. An `<input>` is a void
+// element, so children passed without `as="label"` are dropped by the parser —
+// the caller's icon simply disappears with no signal anywhere (plan §2).
+if (as === 'input' && Astro.slots.has('default')) {
+  throw new Error('<TextInput> children require as="label" — <input> is a void element.');
+}
+
+const classes = ['input', color && COLOR[color], size && SIZE[size], { 'input-ghost': ghost }, className];
 ---
 
-<input class:list={['input', className]} {...rest} />
+{
+  as === 'label' ? (
+    <label class:list={classes} {...rest}>
+      <slot />
+    </label>
+  ) : (
+    <input class:list={classes} {...rest} />
+  )
+}

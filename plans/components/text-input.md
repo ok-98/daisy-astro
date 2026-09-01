@@ -14,6 +14,8 @@
 - One story file, `Playground` + one story per variant axis.
 - `astro check` is the type gate, not `tsc` (§5b).
 
+
+> **Status:** **Implemented** (2026-09-01), fourth of the Stage 4 cluster and the largest component in it. `TextInput.astro` and 22 stories, one per doc-page example. §0's analysis held throughout — no corrections. Two things it flagged as risks are now settled by evidence: **the void-element guard was run and does throw** (§0k), and **inline SVG in a slot survives** (§8), which §5 called the main risk. The missing-`type` audit's Text Input row was already closed clean in `plans/components/file-input.md` §0a. Step 5 (visual pass) is open.
 ---
 
 ## 0. What the evidence actually says
@@ -154,6 +156,25 @@ Do not normalise this while writing stories. Reproduce each example's markup exa
 Root, base class, merge and spread are correct, and there is **no missing-`type` bug**: `<input>` with no `type` defaults to `text`, which is precisely what this component wants. That is the opposite of Checkbox, Radio, Range and File Input, where the daisyUI class is meaningless without its matching `type` — the audit opened in `file-input.md` §0 and closed in `range.md`. Text Input was the last name on that list; it is clean, and the audit is now definitively closed.
 
 What the scaffold *cannot* do is the `as="label"` wrapper form (§0a), which is the actual work.
+
+### 0k. The guard was executed, not just written
+
+**2026-09-01.** §2 argued for throwing when `as="input"` is given children,
+against the library's usual "gate it quietly" rule, on the grounds that the
+alternative is markup that renders while dropping the caller's icon.
+
+A throw nobody has triggered is a claim, so it was triggered: a temporary story
+rendering `<TextInput>oops</TextInput>` was added, the build run, and the story
+removed again.
+
+```
+Error: Failed to render Astro component passed to slot "root":
+<TextInput> children require as="label" — <input> is a void element.
+```
+
+The build **fails**, at build time, with that message. So the guard is a real
+gate rather than defensive decoration — which matters because it is the only
+`throw` in the library and its whole justification is that it fires.
 
 ### 0j. Attribute collisions
 
@@ -399,40 +420,62 @@ export const SearchWithIcon = {
 
 ## 6. Steps
 
-- [ ] **Step 1:** Section 1 is already filled from the shipped CSS and the doc frontmatter — fifteen classes, plus the prose "Input types" section that drives §0d. Nothing to re-derive.
-- [ ] **Step 2:** No shared union needed; `DaisyColor` and `DaisySize` match exactly. `TextInputType` stays **local** to this component — it is genuinely one-component-specific, which is the carve-out the template's Step 2 allows.
-- [ ] **Step 3:** Rewrite `TextInput.astro` per section 4, then walk the idioms gate and run the probe block above. Confirm in the built HTML that `as="input"` emits a self-closing `<input …/>` with no `</input>`.
-- [ ] **Step 4:** Write `TextInput.stories.ts`. **Start with `SearchWithIcon`** to settle the SVG-sanitization question before writing the other nineteen.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/TextInput`, verify:
-  - `Playground` renders and every control changes the markup, including `as`.
-  - `Colors` shows 8 distinct borders, each intensifying on focus.
-  - `Sizes` shows 5 distinct heights (unlike Textarea, the box really does change — §0c).
-  - `LabelInside` puts icon, field and affix on one row with a `.5rem` gap and no border on the inner input — the direct-child check from §2.
-  - `NumberValidator` spinner stays vertically centred at `size="xs"` and `size="xl"` (§0c, `--spin-my`).
-  - `EmailValidatorJoin` squares the input's inner corners with no prop passed (§0f).
-  - `UsernameValidator` turns red only after an invalid entry, and `validator-hint` sits outside the label.
-- [ ] **Step 6:** Attribute forwarding story: `id`, `data-*`, `style`, `class`, plus `name`, `required`, `pattern`, `maxlength` and `list` — real `InputHTMLAttributes` members. Headless check:
-
-```bash
-pnpm build-storybook
-grep -rhoE '<(input|label)[^>]*input[^>]*>' storybook-static/astro-prerendered-stories.json | head
-```
-- [ ] **Step 7:** Update `plans/README.md`'s Text Input row to **Implemented**. Record in `file-input.md` §0 that the missing-`type` audit is **closed with Text Input clean** (§0i).
+- [x] **Step 1: nothing to re-derive.** The fifteen classes and the prose "Input types" list match the shipped CSS and the doc page.
+- [x] **Step 2: done as planned.** `DaisyColor` and `DaisySize` imported unchanged; `TextInputType` stays local, which is the carve-out for a genuinely one-component union.
+- [x] **Step 3: done.** Two explicit branches, not a dynamic tag. The probe errors on `type="checkbox"`, `color="danger"` and `size="huge"`, and accepts `name` / `required` / `pattern` / `maxlength` / `list` through the spread. **The build emits no `</input>` anywhere** (§8).
+- [x] **Step 4: done, starting with the SVG question as §5 instructed.** It is a non-issue — sanitization is off library-wide (`.storybook/main.ts`), and all 10 inline SVGs reach the output intact. `TextInput.stories.ts`, 22 stories, markup copied verbatim including daisyUI's inconsistent `grow` (§0h).
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and one item needs typing into.** Verify: `Colors` shows 8 distinct borders that intensify on focus; **`Sizes` shows 5 distinct heights**, since here the box changes and not just the font (§0c); `LabelInside` puts icon, field and affix on one row with a `.5rem` gap and no border on the inner input; **`NumberValidator`'s spinner stays centred at `xs` and `xl`** — the only place `--spin-my` is visible (§0c); `EmailValidatorJoin` squares the inner corners **with no prop passed** (§0f); and `UsernameValidator` turns red only after an invalid entry, with the hint outside the label.
+- [x] **Step 6: done — forwarding confirmed in both shapes.** `Passthrough` renders `<input class="input input-primary input-lg input-ghost mine" type="email" id="input-1" data-test="yes" style="letter-spacing:1px" name="email" required maxlength="30">` and, beside it, a wrapper form carrying its own id and classes. Full output in §8.
+- [x] **Step 7: done — the `Text Input` row in `plans/README.md` says Implemented.** The missing-`type` audit needed no edit: `plans/components/file-input.md` §0a already records Text Input as **clean**, and that is confirmed here — the component declares no `type` default and does not need one, since `<input>` is `type="text"` per spec.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All three documented class axes have typed props, plus `as` and the narrowed `type`.
-- [ ] Both root forms render correctly, and `as="input"` emits no `</input>` (§0a).
-- [ ] `<TextInput>children</TextInput>` without `as="label"` throws (§2).
-- [ ] `type="checkbox"` is a type error (§0d).
-- [ ] `Props` extends `HTMLAttributes<'input'>`; the `for`-on-label gap is documented in JSDoc (§0a).
-- [ ] `size`'s collision documented with its cost, citing `select.md` §3c (§0e).
-- [ ] `class` from a caller merges through `class:list` on whichever element renders.
-- [ ] `Playground` exposes all five props as controls.
-- [ ] `Colors` and `Sizes` render every value of their axis.
-- [ ] Twenty stories, one per doc-page example, markup copied verbatim — including daisyUI's inconsistent `grow` usage (§0h).
-- [ ] SVG-in-slot sanitization settled and recorded (§5).
-- [ ] `join` / `validator` / `floating-label` / `fieldset` composition verified to work with **no props** (§0f).
-- [ ] The missing-`type` audit closed in `file-input.md` §0 (§0i, §6 Step 7).
-- [ ] Every box in section 4's Astro idioms gate ticked.
+- [x] All three documented class axes have typed props, plus `as` and the narrowed `type`.
+- [x] Both root forms render correctly, and `as="input"` emits no `</input>` (§0a).
+- [x] `<TextInput>children</TextInput>` without `as="label"` throws (§2).
+- [x] `type="checkbox"` is a type error (§0d).
+- [x] `Props` extends `HTMLAttributes<'input'>`; the `for`-on-label gap is documented in JSDoc (§0a).
+- [x] `size`'s collision documented with its cost, citing `select.md` §3c (§0e).
+- [x] `class` from a caller merges through `class:list` on whichever element renders.
+- [x] `Playground` exposes all five props as controls.
+- [x] `Colors` and `Sizes` render every value of their axis.
+- [x] Twenty stories, one per doc-page example, markup copied verbatim — including daisyUI's inconsistent `grow` usage (§0h).
+- [x] SVG-in-slot sanitization settled and recorded (§5).
+- [x] `join` / `validator` / `floating-label` / `fieldset` composition verified to work with **no props** (§0f).
+- [x] The missing-`type` audit closed in `file-input.md` §0 (§0i, §6 Step 7).
+- [x] Every box in section 4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01), SVG elided. `astro check`: 202 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Passthrough → <input class="input input-primary input-lg input-ghost mine" type="email" id="input-1"
+                data-test="yes" style="letter-spacing:1px" name="email" required maxlength="30"
+                placeholder="Passthrough">
+              <label class="input input-accent mine-label validator" id="input-2" data-test="yes">
+                SVG<input type="email" placeholder="wrapper form" /></label>
+                    ↑ the inner field is the caller's own bare input
+```
+
+Counts across the 22 stories:
+
+```
+component roots: 25 as <input>, 11 as <label>
+closing </input> tags: 0            — the void-element check §6 Step 3 asked for
+inline SVG inside a slot: 10, all intact   — §5's "main risk", a non-issue
+input validator wrappers 7 | validator-hint siblings 7 | join-item 2
+colours: all 8 present | sizes: all 5 present | ghost 2
+composed components: Kbd 2, Badge 1, Fieldset, FieldsetLegend, Label, Join, Button
+```
+
+What this settles:
+
+- **§0a's two-branch decision.** Both shapes render, and there is **no `</input>` anywhere in 25 input roots** — the failure mode a single dynamic `<Tag>` risked. The wrapper form appears 11 times, which is why it had to exist at all: without it, half the doc page is unreachable.
+- **§5's SVG worry is closed.** All 10 icons survive, because sanitization is disabled library-wide — a decision made back at Tier 0 that keeps paying off. No wrapper story component was needed.
+- **§0f's four integrations need no props**, and the build shows it: `class="input validator"` on this component with `validator-hint` as a **sibling** 7 times, and `join-item` reaching the wrapper with nothing passed for the corner radii.
+- **§0k**: the void-element guard fails the build with its own message. Verified by triggering it, not by reading it.
+- **§0h is preserved**: the three `LabelInside` fields keep `class="grow"` and the six later wrapper examples do not, exactly as daisyUI writes them. If that difference matters, Step 5 will show it rather than the stories having hidden it.
+
+Not settled here: the focus colours, the five heights, the number spinner's per-size offset, and whether `grow` is load-bearing. All Step 5.
