@@ -415,7 +415,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Rating | `rating` | **Implemented** — [`plans/components/rating.md`](components/rating.md) (12 stories; radio group + Mask shapes; no `value`/`readonly` props; visual pass open) |
 | Select | `select` | Planned — [`plans/components/select.md`](components/select.md) (first component where the `size` collision has a real cost) |
 | Text Input | `text-input` | **Implemented** — [`plans/components/text-input.md`](components/text-input.md) (22 stories; dual root: input or label wrapper; type narrowed to daisyUI's documented twelve; children without `as="label"` throw) |
-| Textarea | `textarea` | Planned — [`plans/components/textarea.md`](components/textarea.md) (scaffold whitespace kills placeholder; sizes change font only) |
+| Textarea | `textarea` | **Implemented** — [`plans/components/textarea.md`](components/textarea.md) (9 stories; scaffold whitespace bug fixed and asserted; sizes change font only) |
 | Toggle | `toggle` | Planned — [`plans/components/toggle.md`](components/toggle.md) (size classes select [type=checkbox]; colors only render while checked) |
 | Validator | `validator` | Planned — [`plans/components/validator.md`](components/validator.md) (**no Validator component**: the class only sets --input-color for other controls; ships `ValidatorHint` only) |
 | OTP | `otp` | **Implemented** — [`plans/components/otp.md`](components/otp.md) (10 stories; scaffold's `div` root fixed to `label`; visual pass open) |

@@ -14,6 +14,8 @@
 - One story file, `Playground` + one story per variant axis.
 - `astro check` is the type gate, not `tsc` (§5b).
 
+
+> **Status:** **Implemented** (2026-09-01), fifth of the Stage 4 cluster. `Textarea.astro` and 9 stories. **§0a's whitespace bug was real** — the scaffold shipped it — and is fixed and asserted: 19 of 20 rendered textareas have zero characters between their tags (§8). §2's slot probe was run and **settles the shared slot-wrapping question in the one place a wrapper could not hide**; recorded in `plans/components/aura.md` §3e.1. No corrections to §0. Step 5 (visual pass) is open.
 ---
 
 ## 0. What the evidence actually says
@@ -282,36 +284,60 @@ export const WithInitialValue = {
 
 ## 6. Steps
 
-- [ ] **Step 1:** Section 1 is already filled from the shipped CSS and the doc frontmatter — they agree on fifteen classes. Nothing to re-derive.
-- [ ] **Step 2:** No new union needed; `DaisyColor` and `DaisySize` match exactly.
-- [ ] **Step 3:** Rewrite `Textarea.astro` per section 4. Then render two probes and read the HTML:
-  - `<Textarea placeholder="Bio" />` → the element must be `<textarea …></textarea>` with **zero** characters between the tags.
-  - `<Textarea><span>x</span></Textarea>` → whatever appears inside is the answer to the shared slot-wrapping question (§2). Record it in `aura.md` §3e.1 either way.
-- [ ] **Step 4:** Write `Textarea.stories.ts` per section 5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Textarea`, verify:
-  - `Default` shows the placeholder (this fails if §0a regressed).
-  - `Colors` shows 8 distinct border colours, and each intensifies on focus.
-  - `Sizes` — check computed `font-size` in devtools, not box size (§0c).
-  - `Ghost` is borderless until focused, then gains a background.
-  - `Disabled` is greyed with a faded placeholder and `cursor: not-allowed`.
-- [ ] **Step 6:** Attribute forwarding story: `id`, `data-*`, `style`, `class`, plus `rows`, `maxlength` and `required` — real `TextareaHTMLAttributes` members, proving the interface is inherited rather than just the base. Headless check:
+- [x] **Step 1: nothing to re-derive.** Fifteen classes, three axes, agreed by the CSS and the frontmatter.
+- [x] **Step 2: skipped as planned.** `DaisyColor` and `DaisySize` match exactly; `variants.ts` untouched.
+- [x] **Step 3: done, and both probes were run.**
+  - `<Textarea placeholder="Bio" />` renders `<textarea class="textarea" placeholder="Bio"></textarea>` — **zero characters between the tags.** The scaffold really did have §0a's bug; the fix is asserted rather than assumed.
+  - `<Textarea><span>x</span></Textarea>` renders `<textarea class="textarea"><span>x</span></textarea>`. **No wrapper is inserted**, which is what §2 predicted would settle the shared question — recorded in `plans/components/aura.md` §3e.1.
 
-```bash
-pnpm build-storybook
-grep -rhoE '<textarea[^>]*>' storybook-static/astro-prerendered-stories.json | head
-```
-- [ ] **Step 7:** Update `plans/README.md`'s Textarea row to **Implemented**.
+  The type probe errors on `color="danger"` and `size="huge"` and accepts `rows`, `maxlength`, `required` and `name` through the spread.
+- [x] **Step 4: done.** `Textarea.stories.ts`, 9 stories — 6 doc-page examples plus `Playground`, `Passthrough` and `WithInitialValue`, the §0a guard.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes and, for one story, devtools.** Verify: `Default` **shows its placeholder** (if it does not, §0a has regressed); `Colors` shows 8 distinct borders that intensify on focus; **`Sizes` looks almost unchanged** and the real check is computed `font-size`, .6875rem to 1.375rem, not the box (§0c) — and on a touch-pointer device a focused field reads 1rem whatever its size (§0d); `Ghost` is borderless until focused; `Disabled` is greyed with `cursor: not-allowed`.
+- [x] **Step 6: done — forwarding confirmed, including textarea-specific attributes.** `Passthrough` renders `<textarea class="textarea textarea-success textarea-lg textarea-ghost mine h-24" id="textarea-1" data-test="yes" style="letter-spacing:1px" name="bio" rows="4" maxlength="200" required placeholder="Passthrough">`, where `rows` and `maxlength` prove the right attribute interface is inherited rather than just the base one. Full output in §8.
+- [x] **Step 7: done — the `Textarea` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All three documented axes have typed props; the undocumented wrapper form (§0f) and responsive variants (§0b) are recorded as caller-side, not silently dropped.
-- [ ] `Props` extends `HTMLAttributes<'textarea'>`.
-- [ ] `class` from a caller merges through `class:list`.
-- [ ] **Rendered output has no whitespace inside `<textarea>`** — verified in the built HTML, not by eye (§0a).
-- [ ] `Playground` exposes all three props as controls.
-- [ ] `Colors` and `Sizes` render every value of their axis.
-- [ ] Six stories, one per doc-page example, plus `WithInitialValue` as the §0a regression guard.
-- [ ] `WithFieldset` composes the real `Fieldset`/`Label` components.
-- [ ] The slot-wrapping probe result recorded in `aura.md` §3e.1 (§2).
-- [ ] Every box in section 4's Astro idioms gate ticked, including the whitespace item.
+- [x] All three documented axes have typed props; the undocumented wrapper form (§0f) and responsive variants (§0b) are recorded as caller-side, not silently dropped.
+- [x] `Props` extends `HTMLAttributes<'textarea'>`.
+- [x] `class` from a caller merges through `class:list`.
+- [x] **Rendered output has no whitespace inside `<textarea>`** — verified in the built HTML, not by eye (§0a).
+- [x] `Playground` exposes all three props as controls.
+- [x] `Colors` and `Sizes` render every value of their axis.
+- [x] Six stories, one per doc-page example, plus `WithInitialValue` as the §0a regression guard.
+- [x] `WithFieldset` composes the real `Fieldset`/`Label` components.
+- [x] The slot-wrapping probe result recorded in `aura.md` §3e.1 (§2).
+- [x] Every box in section 4's Astro idioms gate ticked, including the whitespace item.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01). `astro check`: 203 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Default          → <textarea class="textarea" placeholder="Bio"></textarea>
+                                                                   ↑ nothing between the tags
+WithInitialValue → <textarea class="textarea" placeholder="Bio (should not show)">Hello</textarea>
+slot probe       → <textarea class="textarea"><span>x</span></textarea>   (temporary, removed)
+Passthrough      → <textarea class="textarea textarea-success textarea-lg textarea-ghost mine h-24"
+                     id="textarea-1" data-test="yes" style="letter-spacing:1px" name="bio" rows="4"
+                     maxlength="200" required placeholder="Passthrough"></textarea>
+```
+
+Counts across the 9 stories:
+
+```
+textarea roots 20 → 19 have ZERO characters between their tags
+                    the 20th is WithInitialValue, whose value is exactly `Hello`
+whitespace-only values: none
+colours: all 8 | sizes: all 5 | ghost 2
+```
+
+What this settles:
+
+- **§0a was a real bug and is now guarded.** The scaffold wrote `<slot />` on its own indented line, which on a raw-text element makes the field's value a couple of spaces — enough to suppress `placeholder` on the exact path all six doc examples take, and to submit whitespace instead of an empty string. 19 of 20 rendered textareas are now byte-empty, and the one that is not contains exactly what it was given.
+- **The shared slot-wrapping question, settled where it could not hide.** Everywhere else a wrapper would be invisible structure that a `:nth-child` rule quietly stops matching. Here it would be **literal visible text inside the box**. Nothing was added. Recorded in `plans/components/aura.md` §3e.1.
+- **§0g's warning is not theoretical**: the initial value is the slot, and `Passthrough` shows that `value` was never needed — `rows`, `maxlength`, `required` and `name` all arrive through the spread.
+- All 15 classes are reachable: 8 colours, 5 sizes, ghost, base.
+
+Not settled here: the focus colours, the font-size ladder, and the ghost and disabled states. All Step 5, and `Sizes` needs devtools rather than eyes (§0c).

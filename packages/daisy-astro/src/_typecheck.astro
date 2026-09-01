@@ -62,6 +62,7 @@ import Mask from './components/Mask/Mask.astro';
 import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
 import PhoneMockupCamera from './components/PhoneMockup/PhoneMockupCamera.astro';
 import PhoneMockupDisplay from './components/PhoneMockup/PhoneMockupDisplay.astro';
+import Textarea from './components/Textarea/Textarea.astro';
 import TextInput from './components/TextInput/TextInput.astro';
 import Fieldset from './components/Fieldset/Fieldset.astro';
 import FieldsetLegend from './components/Fieldset/FieldsetLegend.astro';
@@ -294,3 +295,6 @@ import Steps from './components/Steps/Steps.astro';
 <TextInput type="email" color="primary" size="lg" ghost placeholder="mail@site.com" required
            name="email" maxlength={30} list="browsers" id="ti" data-test="y" title="t" class="validator" />
 <TextInput as="label" class="validator"><input type="search" placeholder="Search" /></TextInput>
+<Textarea color="success" size="lg" ghost placeholder="Bio" rows={4} maxlength={200} required
+          name="bio" id="ta" data-test="y" title="t" class="h-24" />
+<Textarea>Hello</Textarea>

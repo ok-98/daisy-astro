@@ -111,6 +111,14 @@ So no `animate={false}` prop, no `<script>`, no `matchMedia` check — `plans/RE
 ### 3e. Unverified assumptions — resolve while building, don't build on them
 
 1. ~~**Does one slot value render as a real direct child?**~~ **Answered 2026-08-29 (while building Button): yes, unwrapped.** A slot value lands as a direct child of the component root with no intervening element, so `.aura > *`, `:has(> .card)` and `:has(> .btn)` all match. Canonical record: `plans/IMPLEMENTATION-ORDER.md` §2, Tier 0.3. Same question as `plans/components/alert.md` §3d.2. Still check it in the rendered HTML for *this* component, since §3b's failure looks plausible by eye either way.
+
+   **Reconfirmed 2026-09-01 by the sharpest test available**, in
+   `plans/components/textarea.md` §2: a `textarea` is a raw-text element, so an
+   injected wrapper would appear as *visible literal text* inside the box
+   rather than as invisible structure. A slot of `<span>x</span>` rendered as
+   `<textarea class="textarea"><span>x</span></textarea>` — the caller's own
+   markup, nothing added. Every build assertion across the library has agreed;
+   this is the one place where a wrapper could not have hidden.
 2. ~~**Slot sanitization vs the child markup.**~~ **Answered 2026-08-29: sanitization is off** (`.storybook/main.ts`, `framework.options.sanitization = { enabled: false }` — Tier 0.3 explains why). `div.card`, `button.btn` and inline `<svg>` all survive verbatim. Left here because the symptom is worth knowing: a stripped child leaves an *empty* `.aura`, which still renders a small animated blob — a working component with missing content, not an error.
 3. **`@property --aura-angle` reaching the Storybook build.** The animation is driven by `@keyframes aura{to{--aura-angle:360deg}}` plus `@property --aura-angle{syntax:"<angle>";inherits:false;initial-value:0deg}`, which live in `daisyui.css`/`base/properties.css`, **not** in `aura.css` **[verified]**. Without the registered custom property the angle cannot animate and the aura renders as a static gradient. It should arrive via `@plugin "daisyui"` in `.storybook/preview.css`, but "component renders, just never rotates" is the exact symptom, so check this before suspecting the component.
 
