@@ -1,12 +1,98 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/toggle/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisyColor, DaisySize } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'input'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A switch: a native checkbox styled as a pill, with no JavaScript anywhere.
+ *
+ * Two shapes, as daisyUI documents (plan §0b):
+ *
+ * - **`as="input"`** (default, and the common case here) — the class on the
+ *   checkbox itself.
+ * - **`as="label"`** — the class on a wrapper holding a **bare** checkbox and
+ *   **exactly two icons**.
+ *
+ * In the wrapper form the icons are addressed **by position**: the checkbox is
+ * child 1, so the first icon is child 2 and the second is child 3. Child 2 is
+ * visible while the toggle is **off** and rotates away when it is on; child 3
+ * does the reverse. A third icon, or a wrapper around them, breaks that
+ * silently (plan §0c).
+ *
+ * **Colour only shows while checked** (plan §0d). Every colour class is gated
+ * on `:checked`, so an unchecked `color="primary"` is the same grey as an
+ * unchecked `color="error"` — which is why daisyUI's own colour example marks
+ * all eight inputs checked.
+ *
+ * **There is no `indeterminate` prop.** It is a DOM property with no attribute
+ * behind it, so there is nothing to render; daisyUI's own example sets
+ * `el.indeterminate = true` from a script, and so must you (plan §0e).
+ *
+ * Responsive sizes and colours are caller classes:
+ * `class="toggle-sm lg:toggle-lg"` (plan §0f).
+ */
+interface Props extends HTMLAttributes<'input'> {
+  /** Which element carries `.toggle`. The default slot renders only when `label` (plan §0b). */
+  as?: 'input' | 'label';
+  /** Knob and track colour — **only visible while checked** (plan §0d). */
+  color?: DaisyColor;
+  /**
+   * Base size, as a multiple of `--size-selector`.
+   *
+   * Shadows the native `size` attribute for the sixth time across this
+   * library's form controls, and this is the cheapest of the six: `size` is
+   * meaningless on a checkbox to begin with (`plans/components/checkbox.md`
+   * §3b).
+   */
+  size?: DaisySize;
+}
+
+// Full literal class names. NEVER `toggle-${color}` — an interpolated class
+// gets no CSS from daisyUI (plans/README.md §1b).
+const COLOR: Record<DaisyColor, string> = {
+  neutral: 'toggle-neutral',
+  primary: 'toggle-primary',
+  secondary: 'toggle-secondary',
+  accent: 'toggle-accent',
+  info: 'toggle-info',
+  success: 'toggle-success',
+  warning: 'toggle-warning',
+  error: 'toggle-error',
+};
+
+const SIZE: Record<DaisySize, string> = {
+  xs: 'toggle-xs',
+  sm: 'toggle-sm',
+  md: 'toggle-md',
+  lg: 'toggle-lg',
+  xl: 'toggle-xl',
+};
+
+const { as = 'input', color, size, class: className, ...rest } = Astro.props;
+
+// Same guard as TextInput, for the same reason: an `<input>` is void, so
+// children passed without `as="label"` are dropped by the parser with no
+// signal anywhere (plan §2).
+if (as === 'input' && Astro.slots.has('default')) {
+  throw new Error('<Toggle> children require as="label" — <input> is a void element.');
+}
+
+const classes = ['toggle', color && COLOR[color], size && SIZE[size], className];
+
+// `type="checkbox"` is not optional and is therefore fixed rather than a prop:
+// the size classes select `.toggle-lg[type=checkbox]` and the checked state
+// selects `:checked`, so without the attribute the pill still renders while
+// **every size class silently does nothing** (plan §0a). Toggle has exactly one
+// legal type, unlike TextInput's documented twelve.
 ---
 
-<input class:list={['toggle', className]} {...rest} />
+{
+  as === 'label' ? (
+    <label class:list={classes} {...rest}>
+      <slot />
+    </label>
+  ) : (
+    <input type="checkbox" class:list={classes} {...rest} />
+  )
+}

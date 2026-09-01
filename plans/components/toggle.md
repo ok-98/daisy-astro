@@ -14,6 +14,8 @@
 - One story file, `Playground` + one story per variant axis.
 - `astro check` is the type gate, not `tsc` (§5b).
 
+
+> **Status:** **Implemented** (2026-09-01), eighth of the Stage 4 cluster. `Toggle.astro` and 10 stories. **§0a's missing-`type` bug is fixed and asserted** — 21 of 21 rendered toggles carry `type="checkbox"`, without which every size class silently no-ops (§8). **§0c is answered from the CSS, ahead of Step 5, and the answer is that daisyUI's own labels read inverted** (§0h). §2's direct-child dependency holds: both icons are children 2 and 3 of the label. Step 5 (visual pass) is open.
 ---
 
 ## 0. What the evidence actually says
@@ -133,6 +135,35 @@ daisyUI's own example says so outright:
 `toggle.css` opens `@layer utilities{@layer daisyui.l1.l2.l3{.toggle{…` and emits `.sm\:toggle-xl:has([type=checkbox])` and the rest at all five breakpoints. Sixth after Table, Textarea, Text Input, Timeline and Toast.
 
 No doc example uses them, so — as with Toast (`toast.md` §0d) — one JSDoc line, no story: responsive size or colour is a caller class (`class="toggle-sm lg:toggle-lg"`).
+
+### 0h. §0c resolved: the first icon shows while the toggle is **off**
+
+**2026-09-01.** §0c asked for this to be settled by observation rather than
+asserted. It turns out the CSS settles it on its own, unambiguously, and Step 5
+now only has to confirm rather than discover. The complete unprefixed rule set
+**[verified]**:
+
+```css
+.toggle > *:nth-child(2){ color:var(--color-base-100); rotate:0deg }
+.toggle > *:nth-child(3){ color:var(--color-base-100); opacity:0; rotate:-15deg }
+.toggle:has(:checked) > *:nth-child(2){ opacity:0; rotate:15deg }
+.toggle:has(:checked) > *:nth-child(3){ opacity:1; rotate:0deg }
+```
+
+Child 3 starts at `opacity: 0` and child 2 keeps its default `opacity: 1`. So
+**child 2 — the first icon — is the one visible while unchecked**, and the
+two swap on check. Nothing in the cascade flips it.
+
+daisyUI's own example puts `aria-label="enabled"` (a checkmark) first and
+`aria-label="disabled"` (a cross) second. By the rules above that means **the
+"enabled" checkmark is displayed while the toggle is off**, and the "disabled"
+cross while it is on. The labels read inverted relative to what is shown.
+
+**Reproduced verbatim and not corrected** — the story says which icon is
+visible in which state, and the component's JSDoc states the positional
+contract: *the first icon is the off state, the second is the on state*. A
+caller writing this shape should put the off-state icon first. Silently
+reordering daisyUI's markup would hide the discrepancy rather than record it.
 
 ### 0g. Attribute collisions
 
@@ -334,38 +365,59 @@ export const CustomColors = {
 
 ## 6. Steps
 
-- [ ] **Step 1:** Section 1 is already filled from the shipped CSS and the doc frontmatter — fourteen classes, eight examples. Nothing to re-derive.
-- [ ] **Step 2:** No new union; `DaisyColor` and `DaisySize` match exactly. The two-literal `as` union stays local.
-- [ ] **Step 3:** Rewrite `Toggle.astro` per section 4 and run the probe. Confirm in the built HTML that `type="checkbox"` is present in the `as="input"` form and that the `as="label"` form emits no `</input>` of its own.
-- [ ] **Step 4:** Write `Toggle.stories.ts`, starting with `IconsInside` to settle SVG sanitization.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Toggle`, verify:
-  - `Sizes` shows five visibly different pill widths — this is the direct test that `type="checkbox"` is present (§0a). If all five look identical, the attribute is missing.
-  - `Colors` shows eight distinct checked colours, and toggling one off returns it to grey (§0d).
-  - `IconsInside` swaps the two icons on toggle. **Record which icon is visible when unchecked** and write the answer into §0c and the story description (§0c).
-  - `Indeterminate` centres the knob rather than parking it at either end (§0e).
-  - `Disabled` shows both states at 30% opacity with a hollow knob.
-  - `CustomColors` overrides both the unchecked and checked appearance from caller classes alone.
-- [ ] **Step 6:** Attribute forwarding story: `id`, `data-*`, `style`, `class`, plus `name`, `value`, `disabled` and `aria-checked`. Headless check:
-
-```bash
-pnpm build-storybook
-grep -rhoE '<(input|label)[^>]*toggle[^>]*>' storybook-static/astro-prerendered-stories.json | head
-```
-- [ ] **Step 7:** Update `plans/README.md`'s Toggle row to **Implemented**, and add **Toggle** to the reopened missing-`type` audit list in `file-input.md` §0 as its eighth finding — noting that `theme-controller.md` §0b's corrected criterion is what caught it (§0a).
+- [x] **Step 1: nothing to re-derive.** Fourteen classes, eight examples, agreed by the CSS and the frontmatter.
+- [x] **Step 2: skipped as planned.** `DaisyColor` and `DaisySize` reused unchanged; the two-literal `as` union stays local.
+- [x] **Step 3: done — §0a's bug fixed.** `type="checkbox"` is a fixed attribute rather than a prop, because Toggle has exactly one legal type. The build shows **21 of 21** input-form toggles carrying it, and **no `</input>`** anywhere. The probe errors on `color="danger"`, `size={40}` and `variant="ghost"`.
+- [x] **Step 4: done, starting with `IconsInside` as §5 instructed.** Both inline SVGs survive — sanitization is off library-wide — and they land as children 2 and 3 of the label, which is what the positional rules need (§2).
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: **`Sizes` shows five visibly different widths**, which is the direct test that `type="checkbox"` reached the element (§0a); `Colors` shows eight distinct checked colours, and toggling one off returns it to grey (§0d); **`IconsInside` swaps its icons, with the checkmark visible while off** — confirming §0h rather than discovering it; `Indeterminate` centres the knob; `Disabled` is dimmed in both states; and `CustomColors` overrides both states from caller classes alone.
+- [x] **Step 6: done — forwarding confirmed.** `Passthrough` renders `<input type="checkbox" class="toggle toggle-success toggle-lg mine" id="toggle-1" name="notifications" value="1" data-test="yes" style="letter-spacing:1px" checked>`. Full output in §8.
+- [x] **Step 7: done.** The `Toggle` row in `plans/README.md` says Implemented, and **`plans/components/file-input.md` §0a's audit row for Toggle now records the fix and its assertion**, matching how the Radio, Range and OTP rows were closed.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] `type="checkbox"` rendered explicitly, verified by the `Sizes` story actually differing (§0a).
-- [ ] Both root forms render correctly, and `as="input"` emits no `</input>` (§0b).
-- [ ] `<Toggle>children</Toggle>` without `as="label"` throws (§2).
-- [ ] All 8 colours and all 5 sizes have typed props from the shared unions.
-- [ ] `Colors` and `Sizes` stories render every input `checked` (§0d).
-- [ ] The icon-order question resolved by observation and written down (§0c).
-- [ ] No `indeterminate` prop and no component script; the story sets the DOM property itself (§0e).
-- [ ] `[aria-checked=true]` support recorded as undocumented and not built (§0d).
-- [ ] `Props` extends `HTMLAttributes<'input'>`; `class` merges through `class:list` on whichever element renders.
-- [ ] `Playground` exposes `as`, `color`, `size`, `checked` and `class`.
-- [ ] Eight doc-example stories, markup copied verbatim including the icon order.
-- [ ] Toggle added to `file-input.md` §0's reopened audit (§6 Step 7).
-- [ ] Every box in section 4's Astro idioms gate ticked.
+- [x] `type="checkbox"` rendered explicitly, verified by the `Sizes` story actually differing (§0a).
+- [x] Both root forms render correctly, and `as="input"` emits no `</input>` (§0b).
+- [x] `<Toggle>children</Toggle>` without `as="label"` throws (§2).
+- [x] All 8 colours and all 5 sizes have typed props from the shared unions.
+- [x] `Colors` and `Sizes` stories render every input `checked` (§0d).
+- [x] The icon-order question resolved by observation and written down (§0c).
+- [x] No `indeterminate` prop and no component script; the story sets the DOM property itself (§0e).
+- [x] `[aria-checked=true]` support recorded as undocumented and not built (§0d).
+- [x] `Props` extends `HTMLAttributes<'input'>`; `class` merges through `class:list` on whichever element renders.
+- [x] `Playground` exposes `as`, `color`, `size`, `checked` and `class`.
+- [x] Eight doc-example stories, markup copied verbatim including the icon order.
+- [x] Toggle added to `file-input.md` §0's reopened audit (§6 Step 7).
+- [x] Every box in section 4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01), SVG paths elided. `astro check`: 206 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Passthrough → <input type="checkbox" class="toggle toggle-success toggle-lg mine" id="toggle-1"
+                name="notifications" value="1" data-test="yes" style="letter-spacing:1px" checked>
+IconsInside → <label class="toggle text-base-content">
+                <input type="checkbox" />
+                <svg aria-label="enabled" …>   ← child 2: visible while OFF (§0h)
+                <svg aria-label="disabled" …>  ← child 3: visible while ON
+              </label>
+```
+
+Counts across the 10 stories:
+
+```
+input-form toggles 21  → carrying type="checkbox"  21 of 21
+label-form roots 1 | closing </input> tags: 0
+sizes: all 5 | colours: all 8 | inline SVGs: 2, both intact
+```
+
+What this settles:
+
+- **§0a, the eighth instance of the missing-`type` defect and the one `plans/components/theme-controller.md` §0b's corrected criterion predicted.** Without the attribute the pill still renders, so the failure is not that the toggle looks broken — it is that **every size class quietly stops matching** and the checked state never fires. 21 of 21 carry it now, and `Sizes` is the story where a regression would show.
+- **§0c/§0h**: the two icons land as children 2 and 3 with nothing between them and the label, which is exactly what the positional rules address. A wrapper would have collapsed all three children into one and neither icon would ever animate — the sharpest form of the shared direct-child question in the library.
+- **§0b's two shapes both render**, and the label form emits no `</input>` of its own.
+- **§0d is respected by the stories**: every colour and size story marks its inputs checked, because unchecked they would be eight identical grey pills.
+- All 14 classes are reachable.
+
+Not settled here: the five widths, the eight colours, the icon swap and the centred indeterminate knob. All Step 5 — though §0h means the icon question is now a confirmation rather than an open one.
