@@ -1,4 +1,5 @@
 import Fieldset from './Fieldset.astro';
+import TextInput from '../TextInput/TextInput.astro';
 import FieldsetLegend from './FieldsetLegend.astro';
 import Label from '../Label/Label.astro';
 import Join from '../Join/Join.astro';
@@ -23,9 +24,10 @@ const label = (text: string, as = 'label'): Item => ({
   slots: { default: text },
 });
 
-// TODO(daisy-astro): compose <TextInput> here once it is implemented — see plans/components/fieldset.md §5
-const input = (placeholder: string, type = 'text', cls = 'input') =>
-  `<input type="${type}" class="${cls}" placeholder="${placeholder}" />`;
+const input = (placeholder: string, type = 'text', cls?: string): Item => ({
+  component: TextInput,
+  props: { type, placeholder, ...(cls ? { class: cls } : {}) },
+});
 
 export default {
   title: 'Components/Fieldset',
@@ -107,7 +109,7 @@ export const WithJoin = {
           component: Join,
           slots: {
             default: [
-              input('Product name', 'text', 'input join-item'),
+              input('Product name', 'text', 'join-item'),
               { component: Button, props: { class: 'join-item' }, slots: { default: 'save' } },
             ],
           },
