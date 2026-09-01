@@ -36,6 +36,9 @@ importers:
       '@types/node':
         specifier: 26.2.0
         version: 26.2.0
+      cally:
+        specifier: 0.9.2
+        version: 0.9.2
       daisyui:
         specifier: 5.7.22
         version: 5.7.22
@@ -1614,6 +1617,9 @@ packages:
       '@astrojs/markdown-remark':
         optional: true
 
+  atomico@1.79.2:
+    resolution: {integrity: sha512-mshhLRMeIltNYbnQnqgnrvJ/uDa8XDfTQcjw3ymOygQqwHIQ4Sp0LcNYMCbACkV3DtV+eDXb9szwU4qMUuGwYQ==}
+
   axobject-query@4.1.0:
     resolution: {integrity: sha512-qIj0G9wZbMGNLjLmg1PT6v2mE9AH2zlnADJD/2tC6E00hgmhUOfEB6greHPAfLRSufHqROIUTkw6E+M3lH0PTQ==}
     engines: {node: '>= 0.4'}
@@ -1631,6 +1637,9 @@ packages:
   cac@7.0.0:
     resolution: {integrity: sha512-tixWYgm5ZoOD+3g6UTea91eow5z6AAHaho3g0V9CNSNb45gM8SmflpAc+GRd1InC4AqN/07Unrgp56Y94N9hJQ==}
     engines: {node: '>=20.19.0'}
+
+  cally@0.9.2:
+    resolution: {integrity: sha512-zY/Ueh+p6O+LKPYqNB13dATgNuazAHS0n3JbtKyUmMoQfRq5mC2/zFI3UV2X3g+2lZn2BBwr1Z+HxyG9Dt/6lw==}
 
   ccount@2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
@@ -4237,6 +4246,8 @@ snapshots:
       - uploadthing
       - yaml
 
+  atomico@1.79.2: {}
+
   axobject-query@4.1.0: {}
 
   bail@2.0.2: {}
@@ -4248,6 +4259,10 @@ snapshots:
       run-applescript: 7.1.0
 
   cac@7.0.0: {}
+
+  cally@0.9.2:
+    dependencies:
+      atomico: 1.79.2
 
   ccount@2.0.1: {}
 

@@ -47,3 +47,33 @@ plugin:
 A component cannot style `:root`, so this is the app's to own. If opening a
 drawer shifts your layout, this paragraph is the answer.
 See `plans/components/drawer.md` §3g.
+
+### 4. Install `cally` only if you use `Calendar`
+
+daisyUI's Calendar is **theme CSS for other people's calendar libraries** — it
+ships no calendar of its own. `Calendar` here wraps
+[Cally](https://github.com/WickyNilliams/cally), which is an **optional peer
+dependency**: this package never imports it, so you install and register it
+yourself.
+
+```bash
+pnpm add cally
+```
+
+```js
+// once, in your layout
+import 'cally';
+```
+
+**Forget it and nothing errors** — an unregistered custom element renders as an
+empty gap. That is the whole reason this note exists.
+
+**You may not need it.** daisyUI's own page leads with the native option, and so
+does this library:
+
+```astro
+<TextInput type="date" />
+```
+
+No dependency, no custom element, no registration. See
+`plans/components/calendar.md` §0a.

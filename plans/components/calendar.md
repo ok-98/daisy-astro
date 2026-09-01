@@ -14,6 +14,8 @@
 
 > **Status:** Planned, and **scoped down on purpose** — read §0a before implementing. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/calendar.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/calendar/+page.md` in `saadeghi/daisyui`). §3f lists what is **unverified** — this plan has more unverified than any other so far, because the behaviour lives in a third-party library rather than in daisyUI.
 
+
+> **Status:** **Implemented** (2026-09-01) at **§0a option 2 — Cally only**, which is the scope decision §6 Step 1 asked to confirm. `Calendar.astro`, a first-of-its-kind custom-element declaration in `src/env.d.ts`, `cally` as an optional peer, and 6 stories. **§3f.1 is answered from Cally's own `dist/cally.d.ts`**, not from this plan's guesses (§3g), and **§3f.2 and §3f.3 are both clear**: `slot="previous"` reaches the output in 6 of 6 calendars (§8). Step 5 (visual pass) is open and matters more here than usual — nothing in the build proves the calendar *renders*.
 ---
 
 ## 0. daisyUI's "Calendar" is not a component — it is a theme for three other people's calendars
@@ -155,6 +157,41 @@ Note also that anchor positioning has real browser-support limits; the doc page 
 3. **Whether `@storybook-astro/framework`'s slot sanitization strips `<svg slot="previous">`.** Two independent ways to lose the same arrows (`plans/README.md` §4, and the same inline-SVG question as `plans/components/alert.md` §3d.1). If the arrows vanish, eliminate this before §3f.2.
 4. **Whether Cally registers in time in the Storybook sandbox**, given the framework injects SSR'd HTML and then runs scripts (`plans/README.md` §7). Custom-element upgrade is normally order-independent, but this framework's injection path is exactly the kind of thing that breaks that assumption.
 5. **daisyUI version skew.** The doc page is fetched from `master`; the installed daisyUI is 5.7.22. Both agree on `cally`/`react-day-picker`/`vc`, and 5.7.22 additionally still ships the undocumented `pika-*` rules **[verified]**. Recheck if daisyUI is upgraded — this is the one component whose supported-library list can change under a patch release.
+
+### 3g. Cally's real API, read from the package
+
+**2026-09-01.** §3f.1 required the element and attribute list to come from
+Cally's own docs rather than from this plan's inferences. Read instead from the
+installed `cally@0.9.2`'s `dist/cally.d.ts`, which is better than docs — it is
+what the code actually declares:
+
+```ts
+declare global { interface HTMLElementTagNameMap {
+  "calendar-month": …; "calendar-date": …; "calendar-range": …;
+}}
+
+CalendarDate:  months, value, min, max, today, locale, firstDayOfWeek,
+               focusedDate, formatWeekday, showOutsideDays, showWeekNumbers,
+               pageBy, isDateDisallowed, focus()
+CalendarMonth: offset, onSelectDay, onFocusDay, onHoverDay
+CalendarRange: the CalendarDate list, plus range behaviour
+```
+
+Three things this settles:
+
+1. **`<calendar-range>` is real**, which §3d had only inferred from the
+   `range-start` / `range-inner` / `range-end` parts in daisyUI's CSS. It is
+   declared in `env.d.ts` alongside the other two, so a caller can use it; it
+   gets no wrapper component, since it would be the same wrapper with a
+   different tag and daisyUI's doc page never shows it.
+2. **The attribute names are kebab-cased props** — `first-day-of-week`,
+   `show-outside-days`, `format-weekday` — which is what the declaration types.
+   §4's guessed list was right about `value`/`min`/`max`/`locale` and missing
+   half the rest.
+3. **`months` lives on `calendar-date`, and `offset` on `calendar-month`**,
+   which confirms §2's decision to leave `<calendar-month>` in the default slot:
+   a multi-month calendar is several `calendar-month` children with different
+   offsets, and hardcoding one would have made that unreachable.
 
 ## 4. Component implementation
 
@@ -306,37 +343,56 @@ export const Passthrough = {
 
 ## 6. Steps
 
-- [ ] **Step 1:** **Confirm §0a's scope decision**, then read Cally's own docs and settle §3f.1 — element names, attribute list, event names, multi-month usage, and whether `<calendar-range>` is worth exposing. Everything in §2, §3c and §4 depends on it. Do not start from this file's guesses.
-- [ ] **Step 2:** No new shared unions — there are no variant axes (§1). `variants.ts` untouched. Instead: add `cally` to `peerDependencies` (optional via `peerDependenciesMeta`) **and** `devDependencies`, and `import 'cally'` in `.storybook/preview.ts` (§3a).
-- [ ] **Step 3:** Add the `astroHTML.JSX.IntrinsicElements` declaration to `src/env.d.ts` (§3c), then replace the `Calendar.astro` scaffold per §4 and walk the Astro idioms gate. Run `astro check` — the custom-element declaration is the thing it exists to catch.
-- [ ] **Step 4:** Replace `Calendar.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Calendar`, verify:
-  - `Default` renders an actual month grid — if it is an empty box, Cally is not registered (§3a) or did not upgrade in this sandbox (§3f.4).
-  - **Both arrows are visible and clickable**, and the month changes. Missing arrows means §3f.2 or §3f.3; check the rendered HTML for `slot="previous"` before touching the component.
-  - Today's date is `--color-primary` and a selected date is `--color-base-content` — proving the `::part()` theming reaches the shadow DOM (§3d).
-  - Switch the Storybook theme: the calendar follows it with no prop (§1).
-  - `CustomArrows` shows the caller's icons, not the fallbacks (§2, §3b).
-  - `InDropdown` opens on click — and note whether anchor positioning works in this browser rather than assuming (§3e).
-- [ ] **Step 6:** Confirm forwarding via `Passthrough`, and confirm the slot attributes survived. Headless check:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<calendar-date[^>]*>' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoc 'slot="previous"' storybook-static/astro-prerendered-stories.json
-  ```
-  A zero count on the second command means §3f.2 is real and the arrows are being swallowed.
-- [ ] **Step 7:** Update the `Calendar` row in `plans/README.md` to **Implemented**, annotated with the §0a scope (Cally only) so the checklist doesn't imply React Day Picker and Vanilla Calendar Pro are covered. Add the `<input type="date">` note and the `cally` install step to the package README (§0a).
+- [x] **Step 1: done — §0a option 2 confirmed, and §3f.1 answered** from `cally@0.9.2`'s own type declarations rather than this plan's guesses. See §3g.
+- [x] **Step 2: done.** `cally` is a `devDependency` (so the stories render) **and** an optional `peerDependency` via `peerDependenciesMeta`, and `.storybook/preview.ts` imports it. `variants.ts` untouched — there are no variant axes.
+- [x] **Step 3: done.** `src/env.d.ts` gained the library's **first non-standard element declarations**, and the `div`-based scaffold — which rendered an inert element that looked intentional — is gone. `astro check` passes with the declaration, which is the thing it exists to catch; the probe errors on `size` and `variant`.
+- [x] **Step 4: done.** `Calendar.stories.ts`, 6 stories, with the omission of React Day Picker and Vanilla Calendar Pro explained at the top.
+- [ ] **Step 5:** `pnpm storybook`. **Still open, and it carries more than usual: nothing in the build proves the calendar renders at all.** Verify: `Default` shows a real month grid — an empty box means Cally is unregistered (§3a) or did not upgrade in this sandbox (§3f.4); **both arrows are visible and change the month**; today is `--color-primary` and a selection `--color-base-content`, which is `::part()` theming reaching the shadow DOM (§3d); switching the Storybook theme moves the calendar with it, with no prop; `CustomArrows` shows the caller's icons instead of the fallbacks; and `InDropdown` opens on click — noting whether anchor positioning works in this browser rather than assuming (§3e).
+- [x] **Step 6: done — and it answers the two questions that could have silently cost the arrows.** `slot="previous"` and `slot="next"` each reach the rendered HTML **6 times out of 6**, so Astro does not swallow the attribute (§3f.2) and the story pipeline does not strip the SVGs (§3f.3). `Passthrough` forwards `id`, `data-*`, `style`, `class` **and Cally's own `value` / `locale`**. Full output in §8.
+- [x] **Step 7: done.** The `Calendar` row in `plans/README.md` records the Cally-only scope, and the **package README gained a fourth setup item** carrying both halves of §0a: the `cally` install and register step, and daisyUI's own `<input type="date">` recommendation as the zero-dependency answer.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] §0a's scope decision is recorded in this file, and the checklist row in `plans/README.md` reflects it.
-- [ ] The `div`-based scaffold is gone; the root is `calendar-date` (§0b).
-- [ ] `cally` is an **optional** peer dependency, is **not** imported by the component, and the requirement appears in the JSDoc, the package README and the story file (§3a).
-- [ ] `calendar-date` / `calendar-month` are declared in `env.d.ts` and `astro check` passes (§3c).
-- [ ] `slot="previous"` and `slot="next"` reach the rendered HTML as attributes (§3b) — confirmed in the build output.
-- [ ] Fallback arrows render when the slots are unused; caller icons replace them when used (§2).
-- [ ] Caller `class` merges onto the host element, and no `innerClass` is offered (§3d).
-- [ ] No invented axis — no colour, size, `picker` or `popover` prop (§1, §3e).
-- [ ] The package README carries daisyUI's own `<input type="date">` recommendation, cross-referenced from the future `text-input` plan (§0a).
-- [ ] Stories cover both Cally doc examples, plus `CustomArrows` and `NativeDateInput`; the omission of the other two libraries is explained in a comment.
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] §0a's scope decision is recorded in this file, and the checklist row in `plans/README.md` reflects it.
+- [x] The `div`-based scaffold is gone; the root is `calendar-date` (§0b).
+- [x] `cally` is an **optional** peer dependency, is **not** imported by the component, and the requirement appears in the JSDoc, the package README and the story file (§3a).
+- [x] `calendar-date` / `calendar-month` are declared in `env.d.ts` and `astro check` passes (§3c).
+- [x] `slot="previous"` and `slot="next"` reach the rendered HTML as attributes (§3b) — confirmed in the build output.
+- [x] Fallback arrows render when the slots are unused; caller icons replace them when used (§2).
+- [x] Caller `class` merges onto the host element, and no `innerClass` is offered (§3d).
+- [x] No invented axis — no colour, size, `picker` or `popover` prop (§1, §3e).
+- [x] The package README carries daisyUI's own `<input type="date">` recommendation, cross-referenced from the future `text-input` plan (§0a).
+- [x] Stories cover both Cally doc examples, plus `CustomArrows` and `NativeDateInput`; the omission of the other two libraries is explained in a comment.
+- [x] Every box in §4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01), SVG paths elided. `astro check`: 198 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Default     → <calendar-date class="cally bg-base-100 border border-base-300 shadow-lg rounded-box">
+                <svg aria-label="Previous" class="fill-current size-4" … slot="previous">…</svg>
+                <svg aria-label="Next" … slot="next">…</svg>
+                <calendar-month></calendar-month></calendar-date>
+CustomArrows→ …<span slot="previous" class="px-1">←</span><span slot="next" class="px-1">→</span>…
+Passthrough → <calendar-date id="cal-1" data-test="yes" style="letter-spacing:1px" value="2026-09-01"
+                locale="en-GB" class="cally mine bg-base-100 …">
+```
+
+Counts across the 6 stories:
+
+```
+<calendar-date> roots 6 | <calendar-month> 6
+slot="previous" 6 | slot="next" 6      ← §3f.2 and §3f.3, both clear
+```
+
+What this settles:
+
+- **§3f.2, which was the most likely silent failure in the plan.** `slot` means one thing to Astro and another to the web component, and a swallowed attribute would have produced a calendar with no arrows and no error. It survives in both forms: on the component's own fallback SVGs, and on a caller's `<span slot="previous">` in `CustomArrows`.
+- **§3f.3 with it**: the fallback arrows are inline SVG and reach the output intact.
+- **§0b's scaffold really was wrong rather than unfinished.** `<div class="cally">` gets one `font-size` rule and nothing else — a dead element that looks deliberate. The root is now Cally's own tag, which is the only thing `::part()` styling can attach to.
+- **§3d has no escape hatch to offer, and the output shows why**: the light DOM holds two arrows and a `calendar-month`, and nothing else. Every day, header and button lives in the shadow DOM, so `innerClass` would have nothing to class.
+- **Cally's attributes pass through untyped-by-props but typed-by-element**: `value` and `locale` land on the host from `...rest`, declared in `src/env.d.ts` rather than as component props.
+
+Not settled here: whether Cally registers and renders a month at all. That is Step 5, and unusually, **the build cannot substitute for it** — an unregistered custom element produces exactly this markup and shows an empty box.

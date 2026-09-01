@@ -1,14 +1,76 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/calendar/
 import type { HTMLAttributes } from 'astro/types';
 
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+
+/**
+ * **daisyUI's "Calendar" is theme CSS for other people's calendar libraries**,
+ * not a daisyUI component — its own page says so. `calendar.css` styles Cally,
+ * React Day Picker and Vanilla Calendar Pro, and ships nothing of its own
+ * (plan §0).
+ *
+ * This wraps **Cally**, the only one of the three that is framework-agnostic
+ * custom elements and declarative — the other two need React or a per-instance
+ * `init()` call (plan §0a).
+ *
+ * **Cally is an optional peer dependency and this package never imports it.**
+ * Install `cally` and `import "cally"` **once** in your layout. Forget it and
+ * an unregistered custom element renders as an empty gap with **no error at
+ * all** (plan §3a).
+ *
+ * **For a date picker with no dependency, use `<input type="date">`** — which
+ * is daisyUI's own first recommendation on that page, and which `TextInput`
+ * already styles.
+ *
+ * The days, header and arrows live in Cally's **shadow DOM**, and daisyUI
+ * styles them through `::part()`. So Tailwind classes on this element reach the
+ * host only — `bg-base-100 border rounded-box` works, anything aimed at a day
+ * does not, and there is no `innerClass` to offer because there is no inner
+ * element in the light DOM (plan §3d).
+ *
+ * The theme is wired straight in: today is `--color-primary`, the selection is
+ * `--color-base-content`, so the calendar follows the active daisyUI theme with
+ * no prop.
+ *
+ * Cally's own attributes — `value`, `min`, `max`, `locale`, `months`,
+ * `first-day-of-week` and the rest — pass through and are typed in
+ * `src/env.d.ts`.
+ */
 interface Props extends HTMLAttributes<'div'> {}
 
+// No variant class map: daisyUI defines one entry class for Cally and no
+// modifiers at all (plan §1).
+
 const { class: className, ...rest } = Astro.props;
+
+// `slot="previous"` on the arrows below is the WEB COMPONENT slot attribute,
+// not Astro's — `<calendar-date>` is a plain element to Astro, so it passes
+// through. A caller overriding these has to set it on their own element, where
+// the same word means both things at once (plan §3b):
+//
+//     <Calendar><MyIcon slot="previous" /></Calendar>
+//
+// The fallback arrows are daisyUI's own, copied from its example.
 ---
 
-<div class:list={['cally', className]} {...rest}>
-  <slot />
-</div>
+<calendar-date class:list={['cally', className]} {...rest}>
+  <slot name="previous">
+    <svg
+      aria-label="Previous"
+      class="fill-current size-4"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      slot="previous"><path fill="currentColor" d="M15.75 19.5 8.25 12l7.5-7.5"></path></svg
+    >
+  </slot>
+  <slot name="next">
+    <svg
+      aria-label="Next"
+      class="fill-current size-4"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      slot="next"><path fill="currentColor" d="m8.25 4.5 7.5 7.5-7.5 7.5"></path></svg
+    >
+  </slot>
+  <slot><calendar-month></calendar-month></slot>
+</calendar-date>

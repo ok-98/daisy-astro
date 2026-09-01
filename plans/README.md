@@ -435,7 +435,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 ### Data Input
 | Component | Slug | Status |
 |---|---|---|
-| Calendar | `calendar` | Planned — [`plans/components/calendar.md`](components/calendar.md) (daisyUI Calendar is theme CSS for 3rd-party calendars, not a component; plan scopes to Cally only) |
+| Calendar | `calendar` | **Implemented — Cally only** — [`plans/components/calendar.md`](components/calendar.md) (daisyUI ships theme CSS for 3 third-party libraries; `cally` is an **optional peer**; React Day Picker and Vanilla Calendar Pro out of scope — §0a) |
 | Checkbox | `checkbox` | **Implemented** — [`plans/components/checkbox.md`](components/checkbox.md) (10 stories; scaffold's missing `type="checkbox"` fixed and asserted; no slot, no `indeterminate` prop) |
 | Fieldset | `fieldset` | **Implemented** — [`plans/components/fieldset.md`](components/fieldset.md) (`Fieldset`+`FieldsetLegend`, 9 stories; keep children flat; `disabled` cascades natively; visual pass open) |
 | File Input | `file-input` | **Implemented** — [`plans/components/file-input.md`](components/file-input.md) (10 stories; missing `type="file"` fixed and asserted; `multiple={false}` normalised — §5d) |
