@@ -1,12 +1,86 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/file-input/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisyColor, DaisySize } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'input'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * The native file picker.
+ *
+ * **The "Choose file" button is `::file-selector-button`** — a pseudo-element,
+ * not markup. daisyUI styles it with Button's own custom properties so it
+ * matches a `btn`, which has three consequences worth knowing (plan §3c):
+ * there is nothing to slot into it; its **text is browser- and
+ * locale-controlled** and cannot be changed from markup at all; and its colour
+ * follows `--btn-color`, so `style="--btn-color: …"` is a supported override
+ * that no prop exposes.
+ *
+ * A caller who needs a custom trigger builds the usual label-wrapping-a-hidden
+ * -input pattern themselves — daisyUI's File Input is deliberately the plain
+ * native control.
+ *
+ * **No slot**: `<input>` is a void element. The label and helper text are
+ * siblings inside a `Fieldset` (plan §2).
+ *
+ * About 20rem wide by default rather than full-width, shrinking below that;
+ * pass `class="w-full"` if you want it to fill. Inside a `Join` it squares its
+ * edges with **no prop**, since the corner radii read `--join-*`
+ * (plan §3d).
+ */
+interface Props extends HTMLAttributes<'input'> {
+  /** Border and focus-outline colour, via `--input-color`. */
+  color?: DaisyColor;
+  /**
+   * daisyUI's control height.
+   *
+   * Shadows the native `size` attribute, which per the HTML spec applies only
+   * to text, search, tel, url, email and password inputs — so browsers ignore
+   * it on `type="file"` and nothing real is lost. That is **not** true of
+   * `TextInput` (plan §3b, `plans/components/select.md` §3c).
+   */
+  size?: DaisySize;
+  /** daisyUI's only style modifier for this component (plan §1). */
+  ghost?: boolean;
+}
+
+// Full literal class names. NEVER `file-input-${color}` — an interpolated class
+// gets no CSS from daisyUI (plans/README.md §1b).
+const COLOR: Record<DaisyColor, string> = {
+  neutral: 'file-input-neutral',
+  primary: 'file-input-primary',
+  secondary: 'file-input-secondary',
+  accent: 'file-input-accent',
+  info: 'file-input-info',
+  success: 'file-input-success',
+  warning: 'file-input-warning',
+  error: 'file-input-error',
+};
+
+const SIZE: Record<DaisySize, string> = {
+  xs: 'file-input-xs',
+  sm: 'file-input-sm',
+  md: 'file-input-md',
+  lg: 'file-input-lg',
+  xl: 'file-input-xl',
+};
+
+// `type` is on the input attribute interface and would otherwise stay in
+// `...rest`, leaving an `<input>` with no type — `type="text"` per spec, i.e. a
+// text field wearing file-input styling, with no "Choose file" button at all.
+// Destructured with a default so it stays overridable (plan §0, §3a).
+const { type = 'file', color, size, ghost = false, multiple, class: className, ...rest } = Astro.props;
+// `multiple` is not in Astro's boolean-attribute list, so `multiple={false}`
+// serializes as `multiple="false"` — and in HTML **any** value of `multiple`
+// enables multi-select, including "false". A caller writing
+// `multiple={someFlag}` would therefore get multi-select whichever way the flag
+// went. Normalised to `undefined` so it is omitted, which is what `disabled`
+// and `required` already do on their own (plans/README.md §5d).
+
 ---
 
-<input class:list={['file-input', className]} {...rest} />
+<input
+  type={type}
+  multiple={multiple ? true : undefined}
+  class:list={['file-input', color && COLOR[color], size && SIZE[size], { 'file-input-ghost': ghost }, className]}
+  {...rest}
+/>

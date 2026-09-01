@@ -298,6 +298,37 @@ Button and Badge both shipped with this defect and were fixed when Mask found it
 
 The third line is not filler: it is the only one that catches the missing default type parameter above.
 
+### 5d. `multiple={false}` renders as enabled — normalise it
+
+Astro serialises **most** boolean attributes correctly: `disabled={false}`,
+`required={false}` and `checked={false}` are omitted from the output entirely.
+**`multiple` is not in that list.** Measured on 2026-09-01 while implementing
+File Input:
+
+```
+<FileInput multiple={false} />   → <input type="file" multiple="false">
+<FileInput disabled={false} />   → <input type="file">
+<FileInput required={false} />   → <input type="file">
+```
+
+And HTML treats **any** value of `multiple` as enabled — `multiple="false"`
+selects multiple files. So a caller writing `multiple={someFlag}` gets
+multi-select whichever way the flag goes: the failure is silent, and it is the
+**opposite** of what was asked for.
+
+Both components that take it — `FileInput` and `Select` — destructure it and
+normalise:
+
+```astro
+const { multiple, … } = Astro.props;
+…
+<input multiple={multiple ? true : undefined} … />
+```
+
+**Any future component accepting a native attribute that is enumerated rather
+than boolean needs the same treatment.** The general check: if an attribute's
+mere *presence* enables it, a `false` prop must produce no attribute at all.
+
 **A throwaway probe is not enough on its own — keep `src/_typecheck.astro` current.** Once the probe is deleted, nothing in `src` uses the component: story files are `.ts`, and `astro check` does not type-check story args against component props. So a component whose `Props` broke afterwards passes a clean `astro check` while every real call site fails. Mask shipped exactly that way for one commit — its frontmatter comment contained `<img>`, and the breakage only surfaced when the next component's probe went looking.
 
 `packages/daisy-astro/src/_typecheck.astro` closes that: one file, never imported, holding valid usages of every implemented component — including at least one native attribute of each default element passed **without** `as`. Add lines as components land. Lines that must *not* compile still belong in a throwaway probe; this file only holds what should pass. Verified 2026-08-30 that it fails when the bug is reintroduced and passes when it is not.
@@ -407,7 +438,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Calendar | `calendar` | Planned — [`plans/components/calendar.md`](components/calendar.md) (daisyUI Calendar is theme CSS for 3rd-party calendars, not a component; plan scopes to Cally only) |
 | Checkbox | `checkbox` | **Implemented** — [`plans/components/checkbox.md`](components/checkbox.md) (10 stories; scaffold's missing `type="checkbox"` fixed and asserted; no slot, no `indeterminate` prop) |
 | Fieldset | `fieldset` | **Implemented** — [`plans/components/fieldset.md`](components/fieldset.md) (`Fieldset`+`FieldsetLegend`, 9 stories; keep children flat; `disabled` cascades natively; visual pass open) |
-| File Input | `file-input` | Planned — [`plans/components/file-input.md`](components/file-input.md) (scaffold missing `type="file"`, same bug as Checkbox) |
+| File Input | `file-input` | **Implemented** — [`plans/components/file-input.md`](components/file-input.md) (10 stories; missing `type="file"` fixed and asserted; `multiple={false}` normalised — §5d) |
 | Filter | `filter` | **Implemented** — [`plans/components/filter.md`](components/filter.md) (7 stories; options are `Button as="input"`; label comes from `aria-label`; visual pass open) |
 | Label | `label` | **Implemented** — [`plans/components/label.md`](components/label.md) (`Label`+`FloatingLabel`, 14 stories; neither is a plain form label; `Label` is polymorphic, default `span`; visual pass open) |
 | Radio | `radio` | **Implemented** — [`plans/components/radio.md`](components/radio.md) (15 stories; scaffold's missing `type` fixed; visual pass open) |

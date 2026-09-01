@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/fileinput.css` and the doc page source. §3e lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-09-01), ninth of the Stage 4 cluster. `FileInput.astro` and 10 stories. §0's missing-`type` bug — the one that opened this plan's audit — is fixed and asserted: 21 of 21 rendered file inputs carry `type="file"` (§8). **A new library-wide defect was found here and fixed in two components** (§3f): `multiple={false}` serialises as `multiple="false"`, which HTML treats as enabled. Now recorded as `plans/README.md` §5d. Step 5 (visual pass) is open.
 ---
 
 ## 0. The scaffold renders a text input
@@ -109,6 +111,38 @@ Keep the name, for the same reasons as `plans/components/checkbox.md` §3b: it i
 `width: clamp(3rem, 20rem, 100%)` **[verified]** — so a File Input is ~20rem wide by default, not full-width, and shrinks only below that. `w-full` is the caller's if they want it; the doc's Sizes example uses a flex column to keep them centred.
 
 The corner radii are written as `var(--join-ss, var(--radius-field))` and friends **[verified]**, which is daisyUI's join protocol: a File Input inside a `join` squares off the right edges automatically. So it composes with the Join component with **no prop and no `join` boolean** — unlike `plans/components/accordion.md` §3c, where the item needed one. Worth one JSDoc line and a story.
+
+### 3f. `multiple={false}` renders as enabled — found here, fixed library-wide
+
+**Found while implementing, 2026-09-01**, and not predicted by any section of
+this plan.
+
+§4 lets `multiple` flow through `...rest` untouched, on the reasonable
+assumption that Astro serialises boolean attributes the way it does everywhere
+else. It does not, for this one:
+
+```
+<FileInput multiple={false} />   → <input type="file" multiple="false">
+<FileInput disabled={false} />   → <input type="file">
+<FileInput required={false} />   → <input type="file">
+```
+
+`disabled` and `required` are in Astro's boolean-attribute list; `multiple` is
+not, so it is serialised as an ordinary value attribute. And HTML enables
+multi-select on the **presence** of `multiple`, whatever its value — so
+`multiple="false"` selects multiple files.
+
+The consequence is worse than a cosmetic leak: a caller writing
+`multiple={allowMany}` gets multi-select when `allowMany` is `false`, silently,
+which is the **opposite** of what they asked for. Nothing errors and nothing
+looks wrong until a user picks two files.
+
+**Fixed in both components that accept it** — `FileInput` and `Select` — by
+destructuring `multiple` and emitting `multiple={multiple ? true : undefined}`.
+`MultipleFalse` (§5) is the guard, and its rendered markup must contain no
+`multiple` at all. Recorded library-wide as `plans/README.md` §5d, with the
+general rule: **if an attribute's presence alone enables it, a `false` prop must
+produce no attribute.**
 
 ### 3e. Unverified assumptions
 
@@ -213,29 +247,58 @@ Plus `Playground` and `Passthrough`. Three beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Nothing to re-read. Check §3e.1 (`::file-selector-button` support) before judging any story's appearance.
-- [ ] **Step 2:** No new shared unions — `DaisyColor`/`DaisySize` reused unchanged. `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, **fixing the missing `type`** (§0), then walk the gate. **Also open the Radio, Range, Text Input and OTP scaffolds and note whether they have the same bug** — record the answer in their plans.
-- [ ] **Step 4:** Replace `FileInput.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` shows a **"Choose file" button** styled like a `btn` and opens a file dialog on click — a bare text field means §0; `Sizes` shows five heights with the button scaling too; `Colors` changes the border via `--input-color`; `Ghost` drops the border; `Disabled` is inert; `InJoin` has square inner corners (§3d).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoc 'type="file"' storybook-static/astro-prerendered-stories.json
-  ```
-  Every rendered file input must carry it (§0).
-- [ ] **Step 7:** Update the `File Input` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done.** §3e.1 is a browser question and moves to Step 5, with the story saying what a plain OS button means. §3e.2 is answered, and answered *badly* for one attribute — see §3f. §3e.3 is discharged: the fieldset example composes the real components.
+- [x] **Step 2: skipped as planned.** `DaisyColor` and `DaisySize` reused unchanged; `variants.ts` untouched.
+- [x] **Step 3: done — §0's bug fixed**, via a destructured default so `type` stays overridable. The probe errors on `color="banana"`, `size={40}` and `variant="outline"`. The scaffold audit this plan opened is long since complete and now closed for Toggle too (`plans/components/toggle.md` §0a).
+- [x] **Step 4: done.** `FileInput.stories.ts`, 10 stories — 6 doc-page examples plus `Playground`, `Passthrough`, `InJoin`, `Multiple` and `MultipleFalse`, the §3f guard.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes and a click.** Verify: `Default` shows a **"Choose file" button styled like a `btn`** and opens a file dialog — a plain grey OS button means `::file-selector-button` is unsupported here (§3e.1), and a bare text field with no button at all would mean §0 had regressed; `Sizes` shows five heights with the button scaling too; `Colors` changes the border while the button keeps its own colours; `Ghost` drops the border; `Disabled` is inert; and `InJoin` has square inner corners with nothing passed (§3d).
+- [x] **Step 6: done — forwarding confirmed, and the type attribute asserted.** `Passthrough` renders `<input type="file" multiple="true" class="file-input file-input-success file-input-lg file-input-ghost mine w-full" id="file-1" name="files" accept=".pdf,.txt" required data-test="yes" style="letter-spacing:1px">`. Full output in §8.
+- [x] **Step 7: done — the `File Input` row in `plans/README.md` says Implemented**, and **`plans/README.md` gained §5d** for §3f's serialisation defect, which is not this component's alone.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 15 daisyUI classes reachable: base, `ghost`, 8 colours, 5 sizes.
-- [ ] **`type="file"` present in every rendered story** (§0) — asserted in the build output.
-- [ ] `color` uses `DaisyColor` and `size` uses `DaisySize`, imported, neither redeclared.
-- [ ] No slot, no wrapping label, no icon prop (§2, §3c).
-- [ ] No invented axis — no `variant` union (§1), no `join` prop (§3d), no `disabled` branching.
-- [ ] `size`'s native collision documented, and the Text Input forward note re-stated (§3b).
-- [ ] JSDoc states: the button is a pseudo-element with browser-controlled text (§3c), the ~20rem intrinsic width (§3d), and free `join` composition (§3d).
-- [ ] The scaffold audit for Radio / Range / Text Input / OTP is done and recorded (§0).
-- [ ] One story per doc-page example, plus `InJoin` and `Multiple`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 15 daisyUI classes reachable: base, `ghost`, 8 colours, 5 sizes.
+- [x] **`type="file"` present in every rendered story** (§0) — asserted in the build output.
+- [x] `color` uses `DaisyColor` and `size` uses `DaisySize`, imported, neither redeclared.
+- [x] No slot, no wrapping label, no icon prop (§2, §3c).
+- [x] No invented axis — no `variant` union (§1), no `join` prop (§3d), no `disabled` branching.
+- [x] `size`'s native collision documented, and the Text Input forward note re-stated (§3b).
+- [x] JSDoc states: the button is a pseudo-element with browser-controlled text (§3c), the ~20rem intrinsic width (§3d), and free `join` composition (§3d).
+- [x] The scaffold audit for Radio / Range / Text Input / OTP is done and recorded (§0).
+- [x] One story per doc-page example, plus `InJoin` and `Multiple`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01). `astro check`: 207 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Multiple      → <input type="file" multiple="true" class="file-input" accept="image/*">
+MultipleFalse → <input type="file" class="file-input">
+                              ↑ no `multiple` at all — §3f's fix, and its guard
+InJoin        → <div class="join"><input type="file" class="file-input join-item">
+                  <button class="btn join-item">Upload</button></div>
+Passthrough   → <input type="file" multiple="true" class="file-input file-input-success
+                  file-input-lg file-input-ghost mine w-full" id="file-1" name="files"
+                  accept=".pdf,.txt" required data-test="yes" style="letter-spacing:1px">
+```
+
+Counts across the 10 stories:
+
+```
+file inputs 21  → carrying type="file"  21 of 21
+sizes: all 5 | colours: all 8 | ghost 2 | join-item 2
+`multiple` in the Select stories: 0 occurrences (its own normalisation, §3f)
+.file-input, .file-input-ghost and ::file-selector-button all have rules in the built stylesheet
+```
+
+What this settles:
+
+- **§0's bug, in the component that opened the audit.** A file input with no `type` is a text field wearing file-input styling with **no "Choose file" button at all** — louder than Checkbox's version of the same defect, but still not an error. 21 of 21 carry the attribute.
+- **§3f, which no plan predicted.** `multiple={false}` reached the output as `multiple="false"` and HTML reads that as enabled. Both components that take the attribute now normalise it, `MultipleFalse` guards it, and `plans/README.md` §5d carries the general rule.
+- **§3c is visible in the stylesheet**: `::file-selector-button` has rules, styled with Button's own custom properties. There is still nothing to slot into — the button's *text* is the browser's.
+- **§3d's join protocol needs no prop**: `input.file-input.join-item` beside `button.btn.join-item`, corners from `--join-*`.
+- **§3e.3 is discharged** — the fieldset example composes `Fieldset`, `FieldsetLegend` and `Label`.
+
+Not settled here: whether the button is styled like a `btn` in this browser, the five heights, and the join's inner corners. All Step 5.

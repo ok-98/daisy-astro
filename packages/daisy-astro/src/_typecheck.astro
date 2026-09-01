@@ -62,6 +62,7 @@ import Mask from './components/Mask/Mask.astro';
 import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
 import PhoneMockupCamera from './components/PhoneMockup/PhoneMockupCamera.astro';
 import PhoneMockupDisplay from './components/PhoneMockup/PhoneMockupDisplay.astro';
+import FileInput from './components/FileInput/FileInput.astro';
 import Toggle from './components/Toggle/Toggle.astro';
 import Checkbox from './components/Checkbox/Checkbox.astro';
 import Select from './components/Select/Select.astro';
@@ -309,3 +310,5 @@ import Steps from './components/Steps/Steps.astro';
 <Toggle color="success" size="lg" checked name="n" value="1" aria-checked="true"
         id="tg" data-test="y" title="t" class="mine" />
 <Toggle as="label" class="text-base-content"><input type="checkbox" /></Toggle>
+<FileInput color="success" size="lg" ghost accept="image/*" multiple name="files" required
+           disabled id="fi" data-test="y" title="t" class="w-full" />

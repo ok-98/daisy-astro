@@ -74,10 +74,18 @@ const SIZE: Record<DaisySize, string> = {
   xl: 'select-xl',
 };
 
-const { color, size, ghost = false, class: className, ...rest } = Astro.props;
+const { color, size, ghost = false, multiple, class: className, ...rest } = Astro.props;
+// `multiple` is not in Astro's boolean-attribute list, so `multiple={false}`
+// serializes as `multiple="false"` — and in HTML **any** value of `multiple`
+// enables multi-select, including "false". A caller writing
+// `multiple={someFlag}` would therefore get multi-select whichever way the flag
+// went. Normalised to `undefined` so it is omitted, which is what `disabled`
+// and `required` already do on their own (plans/README.md §5d).
+
 ---
 
 <select
+  multiple={multiple ? true : undefined}
   class:list={['select', color && COLOR[color], size && SIZE[size], { 'select-ghost': ghost }, className]}
   {...rest}
 >
