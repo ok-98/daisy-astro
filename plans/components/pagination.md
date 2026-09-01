@@ -10,6 +10,8 @@
 
 > **Status:** Planned, and **scoped to nothing** — read §0. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22` and the doc page source.
 
+
+> **Status:** **Done** (2026-09-01) — and "done" here means **`Pagination.astro` is deleted** and 7 stories compose `Join` and `Button` instead (§0). §0's central claim re-verified: `grep -r pagination` across the installed package returns **zero** hits. One thing §0b could not have known: the story framework **requires** a `component` in the default export, so a story file with no component at all prerenders nothing, silently (§0c). Step 5 (visual pass) is open.
 ---
 
 ## 0. Pagination is the Join component with different content
@@ -55,6 +57,33 @@ A `Pagination.astro` wrapping `Join` would add an import, an indirection, and a 
 That keeps the sidebar entry and the examples with **zero component code**, which is the point. The file's header comment says so, so the missing `.astro` reads as a decision rather than an oversight.
 
 **Delete `Pagination.astro`.** Leaving a dummy scaffold that renders `<div class="pagination">` would emit a class that matches no CSS at all — the exact silent failure `plans/README.md` §1b exists to prevent, and worse than Calendar's inert `<div class="cally">` (`plans/components/calendar.md` §0b) because the class does not exist in any form.
+
+### 0c. A story file with no component prerenders nothing — silently
+
+**Found while implementing, 2026-09-01.** §0b's plan was a story file with
+"**zero component code**" — no `component` field, since there is no component to
+name. The file indexed, the build succeeded, and **zero stories were
+prerendered**. No warning, no error; the sidebar entry simply had nothing in it.
+
+The framework's own source says why:
+
+```
+`Unable to prerender story "${options.story.id}". Missing component in ${options.story.importPath}.`
+```
+
+— `@storybook-astro/framework`'s `preset.js`. Every story file needs a
+`component` in its default export, because that is what the prerenderer renders
+through.
+
+**Resolution: `component: Join`.** It is the honest answer — these compositions
+*are* joins — and it keeps the sidebar entry under `Components/Pagination`
+without inventing an `.astro` file. The story file says so where the field is
+set, so the next reader does not take it as a leftover.
+
+Worth carrying: **a story file that renders only compositions still needs to
+name one component.** Any future stories-only entry (there is one more shape of
+this, `plans/components/calendar.md` §0) hits the same rule, and the failure is
+silent rather than loud.
 
 ## 1. Variant audit
 
@@ -122,25 +151,53 @@ No `Passthrough` story: there is no component to forward props through. That abs
 
 ## 6. Steps
 
-- [ ] **Step 1:** Confirm §0 by grepping the installed package for `pagination` in any CSS — expect zero hits.
-- [ ] **Step 2:** Nothing. No shared unions, no component.
-- [ ] **Step 3:** **Delete `Pagination.astro`** (§0b). Do not replace it.
-- [ ] **Step 4:** Write `Pagination.stories.ts` per §5, with a header comment explaining why there is no component.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Components/Pagination` appears in the sidebar; `Default` renders one connected group with the second button highlighted; `Sizes` shows five heights; `EqualWidthPrevNext` gives two exactly equal buttons; `RadioInputs` shows labels and behaves as one radio group (§3c).
-- [ ] **Step 6:** Headless check that the rendered markup is Join's, not an invented class:
-  ```bash
-  pnpm build-storybook
-  grep -rhoc 'class="pagination' storybook-static/astro-prerendered-stories.json   # must be 0
-  grep -rhoE '<div class="join[^"]*"[^>]*><button class="join-item btn' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Pagination` row in `plans/README.md` — **not** to "Implemented", but to a note that it is served by Join, with a link here. The checklist tracks daisyUI's 68 doc pages, and this one has no component behind it.
+- [x] **Step 1: confirmed.** `grep -rl pagination` across `daisyui@5.7.22` returns **0 files** — no `.pagination` class exists in any form.
+- [x] **Step 2: nothing to do.**
+- [x] **Step 3: `Pagination.astro` deleted**, and not replaced. The directory survives holding only the story file, per `plans/README.md` §3b.
+- [x] **Step 4: done**, with §0c's correction. `Pagination.stories.ts`, 7 stories, composing the real `Join` and `Button`, plus a header comment explaining why there is no component.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: `Components/Pagination` appears in the sidebar; `Default` is one connected group with the second button highlighted; `Sizes` shows five heights; **`EqualWidthPrevNext` gives two exactly equal buttons**, which is the grid-on-the-join trick and the one non-obvious thing on the page; and `RadioInputs` shows its labels and behaves as a single radio group.
+- [x] **Step 6: done.** `class="pagination"` appears **0 times** in the rendered stories — the assertion this plan exists for — and every story renders `div.join` around `btn join-item` children. Full output in §8.
+- [x] **Step 7: done — the `Pagination` row in `plans/README.md` says "served by Join"**, not Implemented, since the checklist tracks daisyUI's doc pages and this one has no component behind it.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] `Pagination.astro` is deleted and not replaced (§0b).
-- [ ] No `pagination` class appears in any rendered story (§6 Step 6).
-- [ ] `Pagination.stories.ts` exists, titled `Components/Pagination`, composing `Join` and `Button`.
-- [ ] Its header comment explains why there is no component.
-- [ ] One story per doc-page example, with `aria-current="page"` added to the active button (§3a) and the ellipsis note recorded (§3b).
-- [ ] `plans/README.md`'s row says "served by Join", not "Implemented" (§6 Step 7).
+- [x] `Pagination.astro` is deleted and not replaced (§0b).
+- [x] No `pagination` class appears in any rendered story (§6 Step 6).
+- [x] `Pagination.stories.ts` exists, titled `Components/Pagination`, composing `Join` and `Button`.
+- [x] Its header comment explains why there is no component.
+- [x] One story per doc-page example, with `aria-current="page"` added to the active button (§3a) and the ellipsis note recorded (§3b).
+- [x] `plans/README.md`'s row says "served by Join", not "Implemented" (§6 Step 7).
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01). `astro check`: 197 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Default   → <div class="join"><button class="btn join-item">1</button>
+              <button aria-current="page" class="btn btn-active join-item">2</button>…
+                        ↑ added by these stories; daisyUI's example has only btn-active (§3a)
+Ellipsis  → …<button disabled class="btn join-item">...</button>…
+                        ↑ the native attribute, not btn-disabled (§3b)
+EqualWidth→ <div class="join grid grid-cols-2"><button class="btn btn-outline join-item">Previous page</button>…
+Radio     → <input type="radio" name="pagination-options" autocomplete="off" aria-label="1" checked
+              class="btn btn-square join-item"/> ×4
+```
+
+Counts across the 7 stories:
+
+```
+class="pagination" … 0        ← the assertion this plan exists for
+div.join roots 11 | join-item buttons 14
+aria-current="page" 7 | btn-active 7   — one of each per group, always together
+```
+
+What this settles:
+
+- **§0**: nothing named `pagination` reaches the output, because nothing named `pagination` exists. The deleted scaffold would have emitted a class with no CSS behind it in any form — worse than an incomplete component, since it could never be finished.
+- **§3a is applied rather than just noted**: every active page carries `aria-current="page"` beside `btn-active`, 7 of each. daisyUI's examples have only the visual half.
+- **§3b**: the ellipsis renders `disabled` — the native attribute — rather than `btn-disabled`, because `Button`'s root here really is a `<button>`. The story records that a non-interactive `<span>` would be better still.
+- **§3c's two oddities are both preserved**: the grid on the join, and `aria-label` carrying the visible text on the radio pager — without which those four render as empty squares.
+- **§0c**: the file needs `component: Join` to prerender at all. With no `component` field the build succeeded and produced **0 stories**.
+
+Not settled here: whether the two prev/next buttons are actually equal width, and whether the radio group behaves as one. Both Step 5.

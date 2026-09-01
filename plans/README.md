@@ -417,7 +417,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Megamenu | `megamenu` | Planned — [`plans/components/megamenu.md`](components/megamenu.md) (Popover API + anchor positioning; max 10 items) |
 | Menu | `menu` | **Implemented** — [`plans/components/menu.md`](components/menu.md) (`Menu`+`MenuTitle`, one row for both; 20 stories; items are bare `<li>` with no class; visual pass open) |
 | Navbar | `navbar` | Planned — [`plans/components/navbar.md`](components/navbar.md) (`Navbar`+start/center/end; 50%/50% halves) |
-| Pagination | `pagination` | Planned — [`plans/components/pagination.md`](components/pagination.md) (**no component**: daisyUI has no pagination class; served by `Join` + `Button`) |
+| Pagination | `pagination` | **Served by Join** — [`plans/components/pagination.md`](components/pagination.md) (no component and no `.pagination` class exists; 7 stories composing `Join`+`Button`) |
 | Steps | `steps` | **Implemented** — [`plans/components/steps.md`](components/steps.md) (`Steps`+`Step`+`StepIcon`, one row for all three; 18 stories; visual pass open) |
 | Tab | `tab` | **Implemented** — [`plans/components/tab.md`](components/tab.md) (`Tabs`/`Tab`/`TabContent`, one row for all three; 22 stories; `tabs` is the component; panels need the radio shape; visual pass open) |
 
