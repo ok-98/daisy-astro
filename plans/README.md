@@ -410,7 +410,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Indicator | `indicator` | Planned — [`plans/components/indicator.md`](components/indicator.md) (`Indicator`+`IndicatorItem`; placement is two axes, on the item) |
 | Join (group items) | `join` | Planned — [`plans/components/join.md`](components/join.md) (a *utility*, not a component; items may be nested) |
 | Mask | `mask` | **Implemented** — [`plans/components/mask.md`](components/mask.md) (21 stories; `shape` required; found the two §5c inference rules; visual pass open) |
-| Stack | `stack` | Planned — [`plans/components/stack.md`](components/stack.md) (first child is the front; only 3 distinct layers) |
+| Stack | `stack` | **Implemented** — [`plans/components/stack.md`](components/stack.md) (13 stories; first child is the front; only 3 distinct layers; visual pass open) |
 
 ### Mockup
 | Component | Slug | Status |

@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/stack.css` and the doc page source. §3e lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-09-01). `Stack.astro` and 13 stories. §3e.1 is answered — 17 of 17 stacks hold their children directly (§8) — and §3e.3's raw-markup fallback is discharged: the four Card examples compose the real `Card`, `CardBody` and `CardTitle`. §3's five findings all survived contact with the implementation; nothing needed correcting. Step 5 (visual pass) is open, and it carries every one of them.
 ---
 
 ## 0. A 5×5 grid where three children get three different grid areas
@@ -175,24 +177,53 @@ Plus `Playground` and `Passthrough`. Three beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3e.1 (direct children) — blocking, and total: a wrapper leaves no stack at all. Settle §3e.2 (image URLs) with the eight other plans.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, then walk the gate.
-- [ ] **Step 4:** Replace `Stack.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `ThreeDivs` shows three offset layers with the **first** on top (§3b); `Directions` leans four different ways (§3d); `FourChildren` still looks like three (§3a); `ChildTriesToSize` ignores the child's width (§3c); `NotificationCards` sizes itself from the cards with no `w-*` (§3c).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="stack[^"]*"[^>]*><div' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Stack` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done for §3e.1**, where the failure would have been total rather than partial — a wrapper becomes the single first child and there is no stack left, just one full-size box. 17 of 17 stacks hold an element child directly. §3e.3 is discharged (the Card examples compose the real components); §3e.2 stays with the eight other plans.
+- [x] **Step 2: skipped as planned.** `StackDirection` is local; `variants.ts` untouched.
+- [x] **Step 3: done.** Scaffold replaced per §4; gate walked; the probe errored on both intended lines.
+- [x] **Step 4: done.** `Stack.stories.ts`, 13 stories — 8 doc-page examples plus `Playground`, `Passthrough`, `Directions`, `FourChildren` and `ChildTriesToSize`.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and every one of §3's findings is visual.** Verify: `ThreeDivs` shows three offset layers with the **first on top** (§3b); `Directions` leans four different ways, with `bottom` indistinguishable from the base (§3d); **`FourChildren`'s two stacks look identical** even though the second has a fourth card in the DOM (§3a); `ChildTriesToSize`'s `w-16` card fills the container anyway (§3c); and `CardsWithShadow` and `NotificationCards` size themselves from their tallest child with no `w-*` at all (§3c).
+- [x] **Step 6: done — forwarding confirmed.** `Passthrough` renders `<div class="stack stack-end mine size-28" id="stack-1" data-test="yes" style="letter-spacing:1px">`. Full output in §8.
+- [x] **Step 7: done — the `Stack` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 5 daisyUI classes reachable: base and 4 directions.
-- [ ] Children render as direct children (§3e.1) — checked in the build output.
-- [ ] No invented axis — no colour, size or count prop.
-- [ ] JSDoc states: first child is the front (§3b), only three layers are distinct (§3a), size the container not the children (§3c), and what the direction names mean (§3d).
-- [ ] One story per doc-page example, plus `Directions`, `FourChildren` and `ChildTriesToSize`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 5 daisyUI classes reachable: base and 4 directions.
+- [x] Children render as direct children (§3e.1) — checked in the build output.
+- [x] No invented axis — no colour, size or count prop.
+- [x] JSDoc states: first child is the front (§3b), only three layers are distinct (§3a), size the container not the children (§3c), and what the direction names mean (§3d).
+- [x] One story per doc-page example, plus `Directions`, `FourChildren` and `ChildTriesToSize`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01). `astro check`: 193 files, 0 errors, 0 warnings, 0 hints.
+
+```
+ThreeDivs   → <div class="stack h-20 w-32">
+                <div class="grid rounded-box bg-primary text-primary-content place-content-center">1</div>
+                <div class="…bg-accent…">2</div><div class="…bg-secondary…">3</div></div>
+                 ↑ "1" is written first, so it is the front of the pile (§3b)
+FourChildren → stack 1: 3 cards | stack 2: 4 cards, the fourth marked border-error
+Passthrough → <div class="stack stack-end mine size-28" id="stack-1" data-test="yes"
+                style="letter-spacing:1px"><div class="card text-center border border-base-content
+                bg-base-100"><div class="card-body">A</div></div>…
+```
+
+Counts across the 13 stories:
+
+```
+stack roots 17  → first child is an element child of .stack  17
+stack-top 2 | stack-bottom 1 | stack-start 2 | stack-end 3
+all 5 classes have rules in the built stylesheet, plus the shared `.stack>*` block
+```
+
+What this settles:
+
+- **§3e.1**: every rule in this component is `.stack > *` with `:nth-child` positions, so a wrapper would not have degraded the layout — it would have removed it. 17 of 17 stacks hold their children directly.
+- **§3a is in the DOM, ready for the eye**: `FourChildren`'s second stack really has four cards. There is no `:nth-child(4)` rule, so the fourth is expected to sit exactly on the third; the markup check proves it was not dropped, and Step 5 proves it is invisible.
+- **§3e.3 is discharged**: `NotificationCards` composes `Card` → `CardBody` → `CardTitle` rather than the doc page's hand-written `h2.card-title`, and the four card examples do the same. No raw-markup fallback left in this component.
+- **§3d's default is expressible**: `stack-bottom` appears once, from `Directions`, and shares its rule block with the bare `.stack` — a class that changes nothing, kept because the default should be sayable.
+- `ChildTriesToSize` really does emit `class="card w-16 …"`, so the override is the CSS's doing rather than the story quietly not asking.
+
+Not settled here: which layer is on top, which way each pile leans, and whether the fourth card is invisible. All Step 5.

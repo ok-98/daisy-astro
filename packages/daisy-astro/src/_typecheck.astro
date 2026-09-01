@@ -62,6 +62,7 @@ import Mask from './components/Mask/Mask.astro';
 import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
 import PhoneMockupCamera from './components/PhoneMockup/PhoneMockupCamera.astro';
 import PhoneMockupDisplay from './components/PhoneMockup/PhoneMockupDisplay.astro';
+import Stack from './components/Stack/Stack.astro';
 import Toast from './components/Toast/Toast.astro';
 import Accordion from './components/Accordion/Accordion.astro';
 import Collapse from './components/Collapse/Collapse.astro';
@@ -255,3 +256,6 @@ import Steps from './components/Steps/Steps.astro';
 </Accordion>
 <Toast align="center" position="middle" class="absolute" id="tst" data-test="y" title="t">msg</Toast>
 <Toast aria-live="polite" role="status">msg</Toast>
+<Stack direction="end" class="size-28" id="stk" data-test="y" title="t">
+  <div>A</div><div>B</div><div>C</div>
+</Stack>

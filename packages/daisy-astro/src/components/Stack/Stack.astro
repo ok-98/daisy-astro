@@ -1,14 +1,58 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/stack/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type StackDirection = 'top' | 'bottom' | 'start' | 'end';
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * Piles its children on top of each other with a peeking offset, as a 5×5 grid
+ * where the outer tracks are 3px and 4px — those are the peeking edges.
+ *
+ * **The first child is the front of the pile.** Source order runs front to
+ * back, which is the opposite of the usual later-paints-on-top instinct, so
+ * prepend to add on top — for a notifications stack the newest goes first
+ * (plan §3b).
+ *
+ * **Only the first three children get a position of their own.** A fourth and
+ * beyond land in exactly the same grid area as the third at the same opacity,
+ * so the pile looks like three layers however many you pass. They still render;
+ * they are just indistinguishable (plan §3a).
+ *
+ * **Size the Stack, not the children.** It is an `inline-grid` with no
+ * dimensions, and every child is stretched to `width: 100%; height: 100%` — so
+ * a child's own `w-*` is overridden, and that is what makes the pile read as
+ * one object. Either give the container `class="size-28"`, or give it nothing
+ * and let it take the size of its tallest child, as the Card examples do
+ * (plan §3c).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * Which way the pile leans — the direction of the **peeking edges**, not of
+   * the front card. `stack-top` puts the edges above, which moves the front
+   * child to the bottom of the group; easy to read backwards.
+   *
+   * `bottom` is daisyUI's default and shares one rule block with the base
+   * class, so passing it emits a class that changes nothing (plan §3d).
+   */
+  direction?: StackDirection;
+}
+
+// Full literal class names. NEVER `stack-${direction}` — an interpolated class
+// gets no CSS from daisyUI (plans/README.md §1b).
+const DIRECTION: Record<StackDirection, string> = {
+  top: 'stack-top',
+  bottom: 'stack-bottom',
+  start: 'stack-start',
+  end: 'stack-end',
+};
+
+const { direction, class: className, ...rest } = Astro.props;
+
+// Every rule here is `.stack > *` with `:nth-child` positions, so the children
+// must be direct children: a wrapper around the slot becomes the single first
+// child and there is no stack at all, just one full-size box (plan §3e.1).
 ---
 
-<div class:list={['stack', className]} {...rest}>
+<div class:list={['stack', direction && DIRECTION[direction], className]} {...rest}>
   <slot />
 </div>
