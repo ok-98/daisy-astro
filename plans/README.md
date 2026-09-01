@@ -328,7 +328,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Component | Slug | Status |
 |---|---|---|
 | Button | `button` | **Implemented** — [`plans/components/button.md`](components/button.md) (21 stories; Step 6, the visual pass, still open) |
-| Dropdown | `dropdown` | Planned — [`plans/components/dropdown.md`](components/dropdown.md) (3 methods; component covers 2, popover is composition) |
+| Dropdown | `dropdown` | **Implemented** — [`plans/components/dropdown.md`](components/dropdown.md) (28 stories; 3 methods, component covers 2, popover is composition; `dropdown-content` is caller-applied; visual pass open) |
 | FAB / Speed Dial | `fab` | **Implemented** — [`plans/components/fab.md`](components/fab.md) (10 stories; focus-driven, no JS; `triggerClass` added in §3g; visual pass open) |
 | Modal | `modal` | **Implemented** — [`plans/components/modal.md`](components/modal.md) (`Modal`/`ModalBox`/`ModalAction`, one row for all three; 12 stories; 4 methods, one component; `open` is not the same as modal; visual pass open) |
 | Swap | `swap` | **Implemented** — [`plans/components/swap.md`](components/swap.md) (`Swap`+on/off/indeterminate, one row for all four; 17 stories; two drivers, don't combine; visual pass open) |

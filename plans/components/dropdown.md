@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/dropdown.css` and the doc page source (`components/dropdown/+page.md` in `saadeghi/daisyui`). §3f lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-09-01). `Dropdown.astro` and 28 stories. **§3f.1 is answered against §4** — the `display: contents` wrapper it proposed would have broken two sibling rules, so the slot is rendered bare (§3h). §4 was also missing a `triggerClass`, without which not one of the 24 doc examples can be reproduced (§3g). Both were caught by reading the CSS and the examples before writing code, which is what §6 Step 1 asked for. Step 5 (visual pass) is open, and it carries all 12 placements.
 ---
 
 ## 0. Three methods, two of which share a wrapper
@@ -107,6 +109,60 @@ The open/close transition uses `@starting-style` and `transition-behavior: allow
 `.dropdown.dropdown-close .dropdown-content` is listed first in the hide rule and every show rule is guarded with `:not(.dropdown-close)` **[verified]**, so `force="close"` wins over hover, focus and `dropdown-open` alike. `force="open"` bypasses focus but is still beaten by `close`.
 
 daisyUI's success box notes there is no built-in close-on-click: `onclick="document.activeElement.blur()"` is its suggestion. **Not implemented here** — that is a runtime behaviour and `plans/README.md` §6 rules out a script for it. Named in the JSDoc so the answer is one line away.
+
+### 3g. The trigger needs a class prop — correction to §4
+
+**Found while implementing, 2026-09-01.** §4 renders the trigger as
+`<summary>` or `<div tabindex="0" role="button">` with no way to class it, and
+**every one of the doc page's 24 examples puts a class there**:
+
+```html
+<summary class="m-1 btn">open or close</summary>
+<div tabindex="0" role="button" class="m-1 btn">Click to open</div>
+<div tabindex="0" role="button" class="btn btn-ghost rounded-field">Dropdown</div>
+<div tabindex="0" role="button" class="btn btn-circle btn-ghost btn-xs text-info">…</div>
+```
+
+The trigger is the visible control; unclassed it is bare text. So `Dropdown`
+takes a **`triggerClass`**.
+
+Fourth component in a row where §4 could not reproduce a doc example without
+one more class prop for an element the caller cannot reach — after
+`plans/components/fab.md` §3g, `plans/components/collapse.md` §3h and
+`plans/components/drawer.md` §3i, whose §3i states the check that found this
+one first time: **when a component renders an element on the caller's behalf,
+read every doc example for a class on that element before deciding it needs no
+prop.**
+
+### 3h. §3f.1 resolved: no wrapper, and none was needed — correction to §4
+
+§4 proposed wrapping the default slot in
+`<div tabindex="-1" style="display:contents">`, with a note to confirm it does
+not disturb `:first-child`. **It does worse than that**, and the CSS says so
+before any browser has to:
+
+```css
+.dropdown > :not(:has(~ [class*=dropdown-content])):focus { outline-style: none }
+.dropdown.dropdown-hover:not(:hover) [tabindex]:first-child:focus:not(:focus-visible)
+  ~ .dropdown-content { display: none; opacity: 0 }
+```
+
+**[verified]** — both are **sibling** selectors between the trigger and the
+content. `display: contents` affects layout, not selector matching, so any
+wrapper makes the content stop being the trigger's sibling: the first rule
+would strip the trigger's focus outline (its guard can no longer see a
+`dropdown-content` sibling), and the second would stop a hover dropdown hiding
+correctly after a mouse click.
+
+**So the default slot is rendered bare in both branches**, and the `tabindex`
+§4 wanted to put on the wrapper goes on the caller's own content element —
+which is what daisyUI's examples do anyway, and which cannot be defaulted
+because the value varies: `-1` for a menu panel, `0` for a card panel
+**[verified across examples 3 and 22]**.
+
+That makes §2's rule stronger rather than weaker: the caller's element carries
+`dropdown-content` **and** its `tabindex`, and this component adds nothing
+around it.
 
 ### 3f. Unverified assumptions
 
@@ -223,27 +279,59 @@ Every story needs vertical room (`mb-32` / `mt-32` in the doc examples) or the c
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3f.1 (`[tabindex]:first-child` vs the `display:contents` wrapper) — it decides §4's focus branch.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the scaffold per §4, then walk the gate.
-- [ ] **Step 4:** Replace `Dropdown.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: focus method opens on click and closes on blur; details method opens with **no disclosure triangle**; all 12 placement combinations point where their name says; `hover` opens without a click; `force="close"` refuses to open even on hover; `ClippedByOverflow` shows the clipping and the popover fix.
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="dropdown[^"]*"[^>]*><div tabindex="0" role="button">' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Dropdown` row in `plans/README.md` to **Implemented**.
+- [x] **Step 1: done, and it changed §4** — which is what this step exists for. §3f.1's answer is §3h: the `display: contents` wrapper had to go, because two of daisyUI's rules are sibling selectors between the trigger and the content. Reading the examples for the same question also produced §3g. §3f.2 (`position-area` support) and §3f.3 (focus inside the canvas iframe) are browser questions and move to Step 5.
+- [x] **Step 2: skipped as planned.** All four unions local; `variants.ts` untouched.
+- [x] **Step 3: done, with §3g's added prop and §3h's removed wrapper.** Gate walked; the probe errored on all five intended lines, including `method="popover"` — the method this component deliberately does not cover.
+- [x] **Step 4: done.** `Dropdown.stories.ts`, 28 stories: 24 doc-page examples plus `Playground`, `Passthrough`, `ClippedByOverflow` and `ForceCloseBeatsOpen`. Two of them are raw popover markup on purpose (§3b).
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes and a mouse.** Verify: `FocusMethod` opens on click and closes on blur (§3f.3 — check the canvas iframe before filing a bug); `DetailsMethod` opens with **no disclosure triangle**; **all 12 placement stories point where their names say**, remembering that `align` is horizontal for top/bottom and vertical for left/right (§3c); `OnHover` opens without a click and still opens on one; `ForceClose` refuses; **`ForceCloseBeatsOpen`'s second dropdown stays shut under the mouse** (§3e); and **`ClippedByOverflow` shows the clipped panel beside the popover one that escapes** (§3d).
+- [x] **Step 6: done — forwarding confirmed, and the sibling structure asserted.** `Passthrough` renders `<div class="dropdown dropdown-top dropdown-end dropdown-hover dropdown-open mine mt-32" id="dropdown-1" data-test="yes" style="letter-spacing:1px">` with `trigger-marker` on the trigger and the panel as its next sibling. Full output in §8.
+- [x] **Step 7: done — the `Dropdown` row in `plans/README.md` says Implemented.**
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 12 daisyUI classes reachable; `dropdown-content` documented as caller-applied (§2).
-- [ ] `method` picks the right trigger element, and the focus method uses `div[role=button]` (§3a).
-- [ ] `from` and `align` are independent, and all 12 documented combinations render (§3c).
-- [ ] `force="close"` beats `hover` and `force="open"` (§3e).
-- [ ] Method 2 is documented and storied, not componentised (§3b).
-- [ ] JSDoc states the overflow/top-layer tradeoff (§3d) and that close-on-click is the caller's (§3e).
-- [ ] No invented axis — no colour, no size, no `contentClass` (§2).
-- [ ] One story per doc-page example, plus `ClippedByOverflow` and `ForceCloseBeatsOpen`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 12 daisyUI classes reachable; `dropdown-content` documented as caller-applied (§2).
+- [x] `method` picks the right trigger element, and the focus method uses `div[role=button]` (§3a).
+- [x] `from` and `align` are independent, and all 12 documented combinations render (§3c).
+- [x] `force="close"` beats `hover` and `force="open"` (§3e).
+- [x] Method 2 is documented and storied, not componentised (§3b).
+- [x] JSDoc states the overflow/top-layer tradeoff (§3d) and that close-on-click is the caller's (§3e).
+- [x] No invented axis — no colour, no size, no `contentClass` (§2).
+- [x] One story per doc-page example, plus `ClippedByOverflow` and `ForceCloseBeatsOpen`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01). `astro check`: 196 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Passthrough → <div class="dropdown dropdown-top dropdown-end dropdown-hover dropdown-open mine mt-32"
+                id="dropdown-1" data-test="yes" style="letter-spacing:1px">
+                <div tabindex="0" role="button" class="m-1 btn trigger-marker">Passthrough</div>
+                <ul class="menu dropdown-content z-1 bg-base-100 rounded-box w-52 p-2 shadow-sm"
+                    tabindex="-1">…</ul></div>
+                 ↑ the panel is the trigger's next sibling, with nothing between (§3h)
+```
+
+Counts across the 28 stories:
+
+```
+.dropdown roots 30 = 28 component-rendered + 2 raw popover markup (§3b)
+component-rendered triggers 28 = 27 role="button" divs + 1 <summary>
+  → next sibling carries dropdown-content   28 of 28
+  → carrying a `btn` class                  28 of 28   (§3g)
+top 4 | bottom 3 | left 3 | right 3 | start 1 | center 5 | end 8
+hover 4 | open 3 | close 2
+all 12 classes have rules in the built stylesheet, with `position-area` and
+`@starting-style` present
+```
+
+What this settles:
+
+- **§3h, structurally.** All 28 panels are the **immediate next sibling** of their trigger. That is what daisyUI's two sibling rules require, and it is why §4's `display: contents` wrapper could not ship — `display: contents` changes layout, not selector matching, so the wrapper would have left both rules unmatched while looking correct in a screenshot.
+- **§3g**: 28 of 28 triggers carry `btn` classes on the element the component renders. Under §4's listing every one of them would have been unstyled text.
+- **§3c's two axes really are independent**: the stories emit `top`+`center`, `top`+`end`, `left`+`center`, `right`+`end` and the rest as separate classes on one root. A single seven-value union would have made those combinations unexpressible.
+- **§2 holds**: `dropdown-content` is always on the caller's own element — a `Menu` or a `Card` — never on a div this component added, and the `tabindex` beside it varies between `-1` and `0` exactly as daisyUI's examples do.
+- **§3b stays composition**: the two popover roots are raw markup with `popovertarget` / `anchor-name` wiring, which has no wrapper for a component to be.
+
+Not settled here: whether any of it opens, where each of the 12 placements lands, and whether the clipped example is visibly clipped. All Step 5.

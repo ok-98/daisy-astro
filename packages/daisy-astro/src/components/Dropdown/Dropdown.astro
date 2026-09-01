@@ -1,14 +1,129 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/dropdown/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type DropdownMethod = 'focus' | 'details';
+type DropdownFrom = 'top' | 'bottom' | 'left' | 'right';
+type DropdownAlign = 'start' | 'center' | 'end';
+type DropdownForce = 'open' | 'close';
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A trigger and a panel that opens beside it, positioned with CSS anchor
+ * positioning and no JavaScript.
+ *
+ * **The default slot's own element carries `dropdown-content`** — this
+ * component does not wrap it. daisyUI's class is a positioning mixin applied to
+ * a Menu or a Card, and the show/hide rules match it as a **sibling of the
+ * trigger**, so anything wrapped around it stops the dropdown working
+ * (plan §2, §3f.1). Give that element `tabindex` too, as every doc example
+ * does: `-1` for a menu, `0` for a card:
+ *
+ *     <Dropdown triggerClass="btn">
+ *       <Fragment slot="trigger">Click to open</Fragment>
+ *       <Menu tabindex="-1" class="dropdown-content bg-base-100 rounded-box w-52 p-2 shadow-sm">…</Menu>
+ *     </Dropdown>
+ *
+ * **If the dropdown sits inside anything with `overflow: hidden`** — a Card, a
+ * Table cell — it will be clipped, and no `z-index` fixes that. Use daisyUI's
+ * popover method instead, which renders in the browser's top layer. It is two
+ * siblings with no wrapper, so it is composition rather than a component
+ * (plan §3b, §3d).
+ *
+ * **There is no close-on-click.** daisyUI's own answer is
+ * `onclick="document.activeElement.blur()"` on the items; this library adds no
+ * script for it (plan §3e).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * `focus` renders `<div tabindex="0" role="button">` — deliberately not a
+   * `<button>`, which Safari will not focus on click, so the dropdown would
+   * never open. `details` renders native `<details>`/`<summary>`, whose marker
+   * daisyUI hides itself (plan §3a).
+   */
+  method?: DropdownMethod;
+  /**
+   * Which side the panel opens on. Independent of `align`, and the two combine
+   * freely — daisyUI's frontmatter lists all seven placement classes together,
+   * but the CSS drives them through two separate variables (plan §3c).
+   *
+   * `bottom` is the default.
+   */
+  from?: DropdownFrom;
+  /**
+   * Cross-axis alignment: **horizontal** for `from="top"`/`"bottom"`,
+   * **vertical** for `from="left"`/`"right"`. `start` is the default.
+   */
+  align?: DropdownAlign;
+  /** Opens on hover **in addition to** click and focus, not instead of them. */
+  hover?: boolean;
+  /**
+   * Forces the state. `close` wins over everything — hover, focus and
+   * `force="open"` alike — because every show rule is guarded with
+   * `:not(.dropdown-close)` (plan §3e).
+   */
+  force?: DropdownForce;
+  /**
+   * Classes for the trigger element, which this component renders: the
+   * `<summary>` or the `role="button"` div. Every doc example puts `btn` there,
+   * usually with `m-1` (plan §3g).
+   */
+  triggerClass?: string;
+}
+
+// Full literal class names. NEVER `dropdown-${from}` — an interpolated class
+// gets no CSS from daisyUI (plans/README.md §1b).
+const FROM: Record<DropdownFrom, string> = {
+  top: 'dropdown-top',
+  bottom: 'dropdown-bottom',
+  left: 'dropdown-left',
+  right: 'dropdown-right',
+};
+
+const ALIGN: Record<DropdownAlign, string> = {
+  start: 'dropdown-start',
+  center: 'dropdown-center',
+  end: 'dropdown-end',
+};
+
+const FORCE: Record<DropdownForce, string> = {
+  open: 'dropdown-open',
+  close: 'dropdown-close',
+};
+
+const { method = 'focus', from, align, hover = false, force, triggerClass, class: className, ...rest } = Astro.props;
+
+const classes = [
+  'dropdown',
+  from && FROM[from],
+  align && ALIGN[align],
+  { 'dropdown-hover': hover },
+  force && FORCE[force],
+  className,
+];
+
+// The default slot is rendered bare in both branches, deliberately. Two of
+// daisyUI's rules are sibling selectors between the trigger and the content —
+// `[tabindex]:first-child:focus:not(:focus-visible) ~ .dropdown-content` and
+// `.dropdown > :not(:has(~ [class*=dropdown-content])):focus` — so a wrapper
+// around the slot, `display: contents` included, breaks them (plan §3f.1).
+// Kept as a frontmatter comment: an HTML comment in the template would ship
+// into every rendered dropdown.
 ---
 
-<div class:list={['dropdown', className]} {...rest}>
-  <slot />
-</div>
+{
+  method === 'details' ? (
+    <details class:list={classes} {...rest}>
+      <summary class:list={[triggerClass]}>
+        <slot name="trigger" />
+      </summary>
+      <slot />
+    </details>
+  ) : (
+    <div class:list={classes} {...rest}>
+      <div tabindex="0" role="button" class:list={[triggerClass]}>
+        <slot name="trigger" />
+      </div>
+      <slot />
+    </div>
+  )
+}
