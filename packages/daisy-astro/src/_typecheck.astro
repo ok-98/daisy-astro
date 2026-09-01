@@ -62,6 +62,7 @@ import Mask from './components/Mask/Mask.astro';
 import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
 import PhoneMockupCamera from './components/PhoneMockup/PhoneMockupCamera.astro';
 import PhoneMockupDisplay from './components/PhoneMockup/PhoneMockupDisplay.astro';
+import Checkbox from './components/Checkbox/Checkbox.astro';
 import Select from './components/Select/Select.astro';
 import Textarea from './components/Textarea/Textarea.astro';
 import TextInput from './components/TextInput/TextInput.astro';
@@ -302,3 +303,5 @@ import Steps from './components/Steps/Steps.astro';
 <Select color="info" size="lg" ghost name="colour" required id="sel" data-test="y" title="t">
   <option disabled selected>Pick a color</option><option>Crimson</option>
 </Select>
+<Checkbox color="success" size="lg" checked disabled name="remember" value="1" required
+          aria-checked="true" id="cb" data-test="y" title="t" class="mine" />

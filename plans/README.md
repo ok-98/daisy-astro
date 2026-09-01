@@ -405,7 +405,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Component | Slug | Status |
 |---|---|---|
 | Calendar | `calendar` | Planned — [`plans/components/calendar.md`](components/calendar.md) (daisyUI Calendar is theme CSS for 3rd-party calendars, not a component; plan scopes to Cally only) |
-| Checkbox | `checkbox` | Planned — [`plans/components/checkbox.md`](components/checkbox.md) (scaffold is missing `type="checkbox"` — renders a text input) |
+| Checkbox | `checkbox` | **Implemented** — [`plans/components/checkbox.md`](components/checkbox.md) (10 stories; scaffold's missing `type="checkbox"` fixed and asserted; no slot, no `indeterminate` prop) |
 | Fieldset | `fieldset` | **Implemented** — [`plans/components/fieldset.md`](components/fieldset.md) (`Fieldset`+`FieldsetLegend`, 9 stories; keep children flat; `disabled` cascades natively; visual pass open) |
 | File Input | `file-input` | Planned — [`plans/components/file-input.md`](components/file-input.md) (scaffold missing `type="file"`, same bug as Checkbox) |
 | Filter | `filter` | **Implemented** — [`plans/components/filter.md`](components/filter.md) (7 stories; options are `Button as="input"`; label comes from `aria-label`; visual pass open) |

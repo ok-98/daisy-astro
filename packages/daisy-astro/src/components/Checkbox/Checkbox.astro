@@ -1,12 +1,83 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/checkbox/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisyColor, DaisySize } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'input'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A checkbox. **No slot** — `<input>` is a void element, so this is the one
+ * component in the library with no content at all (plan §2). The label is a
+ * *sibling*, inside daisyUI's own `label` class:
+ *
+ *     <Label as="label">
+ *       <Checkbox checked />
+ *       Remember me
+ *     </Label>
+ *
+ * **There is no `indeterminate` prop.** `indeterminate` is a DOM property with
+ * no HTML attribute behind it, so there is nothing to render — daisyUI's own
+ * example sets `el.indeterminate = true` in a script, and so must you. It is
+ * runtime state rather than render-time state, which is also why a bundled
+ * script would be wrong here: it would run once and then fight whatever drives
+ * the form (plan §3c).
+ *
+ * `disabled` needs no prop and no branching: daisyUI styles the native
+ * `:disabled` pseudo-class, unlike Button, which has to fake it for its
+ * non-button roots (plan §3d).
+ *
+ * Two behaviours worth knowing, neither needing a prop (plan §3e):
+ * `[aria-checked=true]` shares every rule with `:checked`, so a JS-driven
+ * checkbox can look checked without being checked; and the tick is a
+ * `clip-path` on a pseudo-element, with daisyUI already swapping in a literal
+ * "✔︎" under forced-colors and print — do not add a fallback, and do not
+ * restore `appearance: auto`.
+ *
+ * The colour classes work by setting `--input-color`, which is also the seam
+ * the doc page's custom-colours example uses from the other side with Tailwind
+ * `checked:` variants. Caller classes, no prop.
+ */
+interface Props extends HTMLAttributes<'input'> {
+  /** Fill and border colour when checked. */
+  color?: DaisyColor;
+  /**
+   * daisyUI's box size, not a character width.
+   *
+   * This shadows the native `size` attribute, which exists on `<input>` — but
+   * per the HTML spec it applies only to text, search, tel, url, email and
+   * password inputs, so browsers ignore it on a checkbox and nothing real is
+   * lost. That is **not** true of `TextInput`, which had to decide separately
+   * (plan §3b, and `plans/components/select.md` §3c where the cost is real).
+   */
+  size?: DaisySize;
+}
+
+// Full literal class names. NEVER `checkbox-${color}` — an interpolated class
+// gets no CSS from daisyUI (plans/README.md §1b).
+const COLOR: Record<DaisyColor, string> = {
+  neutral: 'checkbox-neutral',
+  primary: 'checkbox-primary',
+  secondary: 'checkbox-secondary',
+  accent: 'checkbox-accent',
+  info: 'checkbox-info',
+  success: 'checkbox-success',
+  warning: 'checkbox-warning',
+  error: 'checkbox-error',
+};
+
+const SIZE: Record<DaisySize, string> = {
+  xs: 'checkbox-xs',
+  sm: 'checkbox-sm',
+  md: 'checkbox-md',
+  lg: 'checkbox-lg',
+  xl: 'checkbox-xl',
+};
+
+// `type` is on the input attribute interface and would otherwise stay in
+// `...rest`, leaving an `<input>` with no type — which is `type="text"` per
+// spec, i.e. a text field wearing checkbox styling that looks right, accepts
+// typing and never checks. Destructured with a default so it is deterministic
+// and still overridable (plan §0, §3a).
+const { type = 'checkbox', color, size, class: className, ...rest } = Astro.props;
 ---
 
-<input class:list={['checkbox', className]} {...rest} />
+<input type={type} class:list={['checkbox', color && COLOR[color], size && SIZE[size], className]} {...rest} />

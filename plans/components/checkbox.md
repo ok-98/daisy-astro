@@ -16,6 +16,8 @@
 
 > **Status:** Planned. Nothing in §4 is implemented. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/checkbox.css`), the doc page source (`packages/docs/src/routes/(routes)/components/checkbox/+page.md` in `saadeghi/daisyui`), and `astro@7.2.4`'s `astro-jsx.d.ts`. §3f lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-09-01), seventh of the Stage 4 cluster. `Checkbox.astro` and 10 stories. **§0's missing-`type` bug is fixed and asserted** — 23 of 23 rendered checkboxes carry `type="checkbox"` (§8). §3f.1 is answered: boolean attributes survive the story pipeline correctly, appearing only when true. §3f.3's raw-markup fallback is discharged — the fieldset example composes the real components. §6 Step 7's forward note was already carried by `plans/components/text-input.md` §0e. Step 5 (visual pass) is open.
 ---
 
 ## 0. The scaffold renders a text input
@@ -276,38 +278,56 @@ export const Passthrough = {
 
 ## 6. Steps
 
-- [ ] **Step 1:** Nothing to re-read — §1 and §2 are filled from the doc page and the shipped CSS. Check §3f.1 (boolean attributes through story args) before writing the rest of §5, since every story here is driven by `checked`.
-- [ ] **Step 2:** No new shared unions — `color` and `size` reuse `DaisyColor`/`DaisySize` unchanged (§1). `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Checkbox.astro` scaffold per §4 — **fixing the missing `type`** (§0) — then walk the Astro idioms gate.
-- [ ] **Step 4:** Replace `Checkbox.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Checkbox`, verify:
-  - `Default` **toggles when clicked** — the §0 check. A box that never checks is a text input.
-  - `Playground`'s `checked` control actually changes the rendered state (§3f.1).
-  - `Sizes` shows five distinct box sizes; `Colors` shows eight distinct fills with a visible tick in each.
-  - `Disabled`: dimmed, `not-allowed` cursor, and genuinely not clickable.
-  - `Indeterminate` shows a **dash**, not a tick (§3c) — if the script does not run, say so in the story rather than pretending.
-  - `AriaChecked`: the two look identical (§3e).
-  - `CustomColors`: orange when checked, indigo when not — proving `--input-color` and the `checked:` variants both reach the element (§3e).
-  - Optional, cheap: enable forced-colors / print preview once and confirm the `"✔︎"` fallback appears (§3e). Nothing to fix either way — just confirming daisyUI's fallback is live.
-- [ ] **Step 6:** Confirm forwarding via `Passthrough`, and assert the type attribute. Headless check:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<input[^>]*class="[^"]*checkbox[^"]*"[^>]*>' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoc 'type="checkbox"' storybook-static/astro-prerendered-stories.json
-  ```
-  Every rendered checkbox must carry `type="checkbox"` — §0's bug is invisible otherwise.
-- [ ] **Step 7:** Update the `Checkbox` row in `plans/README.md` to **Implemented**. Add the §3b cross-reference note to the (not yet written) `plans/components/text-input.md` — or record it in `plans/README.md` if that file does not exist yet, so the `size` decision is not inherited silently.
+- [x] **Step 1: done, and §3f.1 is answered.** Boolean attributes come through the story pipeline correctly: `checked` appears in the output only where a story sets it, and the unchecked stories carry none. Had it leaked, every story here would have looked checked — which is why it was checked before the other nine were written.
+- [x] **Step 2: skipped as planned.** `DaisyColor` and `DaisySize` reused unchanged; `variants.ts` untouched.
+- [x] **Step 3: done — §0's bug fixed.** `type` is destructured with a default rather than hardcoded beside the spread, so it stays overridable. Gate walked; the probe errors on all four intended lines, `indeterminate` included, which is the prop this component deliberately does not have.
+- [x] **Step 4: done.** `Checkbox.stories.ts`, 10 stories — 7 doc-page examples plus `Playground`, `Passthrough` and `AriaChecked`. §3f.3 is discharged: the fieldset example composes the real `Fieldset`, `FieldsetLegend` and `Label`.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes and a mouse.** Verify: `Default` **ticks when clicked** (the §0 check — a box that never checks is a text input); `Playground`'s `checked` control changes the rendered state; `Sizes` shows five distinct boxes and `Colors` eight distinct fills each with a visible tick; `Disabled` is dimmed, `not-allowed` and genuinely inert; **`Indeterminate` shows a dash rather than a tick** — and if the inline script does not run in the canvas, that is §3f.2, the story failing to demonstrate rather than the component failing; **`AriaChecked`'s two boxes look identical** (§3e); and `CustomColors` is indigo unchecked, orange checked. Cheap extra: forced-colors or print preview once, to see daisyUI's "✔︎" fallback (§3e).
+- [x] **Step 6: done — forwarding confirmed, and the type attribute asserted.** `Passthrough` renders `<input type="checkbox" class="checkbox checkbox-success checkbox-lg mine" id="cb-1" name="remember" value="1" required data-test="yes" style="letter-spacing:1px" checked>`. Full output in §8.
+- [x] **Step 7: done — the `Checkbox` row in `plans/README.md` says Implemented.** §3b's forward note needed no edit: `plans/components/text-input.md` §0e already opens *"Fifth appearance after Checkbox (§3b)…"* and decides deliberately rather than inheriting. Fourth Step 7 in this cluster to be a no-op for the same reason (`plans/components/select.md` §3f).
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 14 daisyUI classes from §1 are reachable: `checkbox` always, 8 colours via `color`, 5 sizes via `size`.
-- [ ] `color` uses `DaisyColor` and `size` uses `DaisySize`, both imported, neither redeclared.
-- [ ] **`type="checkbox"` is present in the rendered HTML of every story** (§0) — asserted in the build output, not by eye.
-- [ ] No slot, no wrapping `<label>`, no `label` prop (§2).
-- [ ] No invented axis — no style/variant prop (§1), no `indeterminate` prop (§3c), no `disabled` branching (§3d).
-- [ ] `size`'s native-attribute collision is documented in the JSDoc, and the forward note for Text Input is recorded (§3b).
-- [ ] `checked`, `disabled`, `name`, `value`, `required` and `aria-checked` all work through `...rest` with no declarations.
-- [ ] `Playground` exposes every prop as a control.
-- [ ] One story per doc-page example, reproducing that example's markup, plus `AriaChecked`.
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] All 14 daisyUI classes from §1 are reachable: `checkbox` always, 8 colours via `color`, 5 sizes via `size`.
+- [x] `color` uses `DaisyColor` and `size` uses `DaisySize`, both imported, neither redeclared.
+- [x] **`type="checkbox"` is present in the rendered HTML of every story** (§0) — asserted in the build output, not by eye.
+- [x] No slot, no wrapping `<label>`, no `label` prop (§2).
+- [x] No invented axis — no style/variant prop (§1), no `indeterminate` prop (§3c), no `disabled` branching (§3d).
+- [x] `size`'s native-attribute collision is documented in the JSDoc, and the forward note for Text Input is recorded (§3b).
+- [x] `checked`, `disabled`, `name`, `value`, `required` and `aria-checked` all work through `...rest` with no declarations.
+- [x] `Playground` exposes every prop as a control.
+- [x] One story per doc-page example, reproducing that example's markup, plus `AriaChecked`.
+- [x] Every box in §4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01). `astro check`: 205 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Default       → <input type="checkbox" class="checkbox" checked>
+Passthrough   → <input type="checkbox" class="checkbox checkbox-success checkbox-lg mine" id="cb-1"
+                  name="remember" value="1" required data-test="yes" style="letter-spacing:1px" checked>
+Indeterminate → <input type="checkbox" class="checkbox" id="my-checkbox">
+                <script>document.getElementById("my-checkbox").indeterminate = true</script>
+AriaChecked   → …<input type="checkbox" class="checkbox" aria-checked="true">…
+```
+
+Counts across the 10 stories:
+
+```
+checkbox inputs 23  → carrying type="checkbox"  23 of 23
+checked present only where a story asks for it | disabled 2 | aria-checked 2
+sizes: all 5 | colours: all 8
+```
+
+What this settles:
+
+- **§0's bug, which is invisible by eye.** A checkbox with no `type` is a text field wearing checkbox styling: it renders as a convincing unchecked box, accepts typing, and never checks. 23 of 23 now carry the attribute, asserted in the build rather than in a screenshot — which is the whole reason §5 replaced a `TypeIsSet` story with this grep.
+- **§3f.1**: `checked` reaches the output only where a story sets it. A leak would have made all ten stories look checked and none of them wrong-looking.
+- **§3c holds without a prop**: the indeterminate story ships daisyUI's own one-line script, because the state has no attribute to render. Whether the canvas runs it is Step 5's business.
+- **§3e's two accommodations are exercised**: `aria-checked="true"` on an unchecked input, and the `checked:` Tailwind variants layered over `--input-color`.
+- **§3f.3 is discharged** — no raw-markup fallback remains here; the fieldset example is `Fieldset` → `FieldsetLegend` → `Label` → `Checkbox`, with the checkbox a sibling of its own label text (§2).
+- All 14 classes are reachable.
+
+Not settled here: whether it ticks, whether the dash appears, and whether the two `AriaChecked` boxes really match. All Step 5.
