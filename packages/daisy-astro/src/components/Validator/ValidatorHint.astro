@@ -1,0 +1,45 @@
+---
+import type { HTMLTag, Polymorphic } from 'astro/types';
+
+// `Props` MUST precede every `const` (plans/README.md §5c).
+//
+// NOTE: no angle brackets anywhere in this frontmatter, deliberately — this
+// component has a generic Props type, and one bracket silently stops the props
+// being inferred (plans/README.md §5c).
+//
+// The error message that appears under an invalid field.
+//
+// PLACEMENT IS THE WHOLE COMPONENT. daisyUI reveals it with a GENERAL sibling
+// combinator, so this must be a sibling that comes AFTER the validator element,
+// in the same parent. Two consequences (plan §0e):
+//
+//   - Any earlier invalid validator in the same parent reveals EVERY later hint
+//     in that parent. Wrap each control in its own Fieldset or Label to scope
+//     it, which is what daisyUI's own form example does — see the HintScopeTrap
+//     story for what happens otherwise.
+//   - A hidden hint still RESERVES SPACE, by design: it is visibility:hidden,
+//     not display:none, so the layout does not shift when the message appears.
+//     Pass `collapse` to opt out of that.
+//
+// There is no `Validator` component: `validator` sets one custom property that
+// the form controls already read, so it is a caller class on the control
+// itself, never a component of its own (plan §0a, §0b).
+//
+// POLYMORPHIC, defaulting to p — the doc page uses p, div and span.
+type Props<Tag extends HTMLTag = 'p'> = Polymorphic<{ as: Tag }> & {
+  /**
+   * Reserve no space while the field is valid, by adding Tailwind's `hidden`.
+   * It still appears when invalid, because daisyUI ships a second rule setting
+   * `display: revert-layer` on the reveal — without which a hidden hint could
+   * never come back (plan §0e).
+   */
+  collapse?: boolean;
+};
+
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const { as: Tag = 'p', collapse = false, class: className, ...rest } = Astro.props;
+---
+
+<Tag class:list={['validator-hint', { hidden: collapse }, className]} {...rest}>
+  <slot />
+</Tag>

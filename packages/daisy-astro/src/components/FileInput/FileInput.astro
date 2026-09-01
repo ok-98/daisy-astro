@@ -26,6 +26,12 @@ import type { DaisyColor, DaisySize } from '../../lib/variants';
  * pass `class="w-full"` if you want it to fill. Inside a `Join` it squares its
  * edges with **no prop**, since the corner radii read `--join-*`
  * (plan §3d).
+ *
+ * **Validation styling is a caller class**, not a prop: add `class="validator"`
+ * here and put a `ValidatorHint` **after this element, as a sibling in the same
+ * parent** — daisyUI reveals the hint with a general sibling combinator, and
+ * `validator` itself only sets `--input-color`, which this component already
+ * reads (`plans/components/validator.md` §0b).
  */
 interface Props extends HTMLAttributes<'input'> {
   /** Border and focus-outline colour, via `--input-color`. */

@@ -16,6 +16,12 @@ import type { DaisyColor, DaisySize } from '../../lib/variants';
  *
  * The disabled state is styled from the native attribute, so there is no
  * disabled class and no branching to do.
+ *
+ * **Validation styling is a caller class**, not a prop: add `class="validator"`
+ * here and put a `ValidatorHint` **after this element, as a sibling in the same
+ * parent** — daisyUI reveals the hint with a general sibling combinator, and
+ * `validator` itself only sets `--input-color`, which this component already
+ * reads (`plans/components/validator.md` §0b).
  */
 interface Props extends HTMLAttributes<'input'> {
   color?: DaisyColor;

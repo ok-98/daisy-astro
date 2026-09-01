@@ -448,7 +448,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Text Input | `text-input` | **Implemented** — [`plans/components/text-input.md`](components/text-input.md) (22 stories; dual root: input or label wrapper; type narrowed to daisyUI's documented twelve; children without `as="label"` throw) |
 | Textarea | `textarea` | **Implemented** — [`plans/components/textarea.md`](components/textarea.md) (9 stories; scaffold whitespace bug fixed and asserted; sizes change font only) |
 | Toggle | `toggle` | **Implemented** — [`plans/components/toggle.md`](components/toggle.md) (10 stories; missing `type` fixed and asserted; colour is `:checked`-only; icons are positional) |
-| Validator | `validator` | Planned — [`plans/components/validator.md`](components/validator.md) (**no Validator component**: the class only sets --input-color for other controls; ships `ValidatorHint` only) |
+| Validator | `validator` | **Implemented** — [`plans/components/validator.md`](components/validator.md) (17 stories; **no Validator component**: the class only sets --input-color for other controls; ships `ValidatorHint` only) |
 | OTP | `otp` | **Implemented** — [`plans/components/otp.md`](components/otp.md) (10 stories; scaffold's `div` root fixed to `label`; visual pass open) |
 
 ### Layout

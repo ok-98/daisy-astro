@@ -14,6 +14,8 @@
 - One story file, `Playground` + one story per variant axis.
 - `astro check` is the type gate, not `tsc` (§5b).
 
+
+> **Status:** **Implemented** (2026-09-01), **last of the Stage 4 cluster's pass 1**. `ValidatorHint.astro` and 17 stories; **`Validator.astro` is deleted** (§0a). §0b's library-wide decision is now carried in code: all eight form controls have the caller-class JSDoc line. §5's wrapper-story-component requirement turned out unnecessary (§0g). Step 5 (visual pass) is open and matters more here than anywhere else — **almost nothing in this component shows its state without interaction** (§0c).
 ---
 
 ## 0. What the evidence actually says
@@ -112,6 +114,25 @@ The doc page's INFO box spells out three behaviours, and all three are non-obvio
 That third behaviour is the typed home this component gets: **`collapse?: boolean`**, adding `hidden`. Naming it `hidden` would collide with the global `hidden` HTML attribute on `HTMLAttributes`; `collapse` says what it does (no reserved space) without shadowing anything.
 
 Root element: the examples use `<div>` (2), `<p>` (7) and `<span>` (1). No class is element-specific, so `ValidatorHint` is **polymorphic** via `Polymorphic<{ as: Tag }>`, defaulting to `'p'` — the majority. This makes it the one component in this plan subject to `plans/README.md` §5c: `type Props` **must** precede every `const`, and the destructure must be annotated `as Props<HTMLTag>`, or Astro silently accepts no props.
+
+### 0g. The stories needed no wrapper components
+
+**2026-09-01.** §5 opens *"none of them can be expressed by `args` on a single
+component … all twelve need wrapper story components holding the real composed
+markup"*, citing the route `plans/components/timeline.md` §5 and
+`plans/components/theme-controller.md` §5 took.
+
+That is no longer true, and has not been for a while: `@storybook-astro/framework`
+takes an **array** of slot values, each of which may itself be a component
+descriptor with its own props and nested slots. So a structural story is an
+array — a form string, a `TextInput` with `class="validator"`, a
+`ValidatorHint`, a closing string — written inline in the `.ts` file with no
+extra `.astro` files at all.
+
+All 17 stories here are built that way, including the two-column comparisons.
+Worth recording because two other plans still carry the same instruction: when
+they are implemented, check this first rather than writing wrapper components
+nobody needs.
 
 ### 0f. Attribute collisions
 
@@ -274,39 +295,58 @@ export const AriaInvalid = {
 
 ## 6. Steps
 
-- [ ] **Step 1:** Section 1 is already filled — the CSS file is six blocks long and quoted in full above, and the frontmatter lists two classes. Nothing to re-derive.
-- [ ] **Step 2:** No union needed anywhere; `HTMLTag` comes from `astro/types`.
-- [ ] **Step 3:** **Delete `packages/daisy-astro/src/components/Validator/Validator.astro`** (§0a) and create `ValidatorHint.astro` per section 4. Run the probe — the §5c generic failure is silent, so a probe that *fails to error* on `<ValidatorHint as="p" href="/x">` means the typing did not take.
-- [ ] **Step 4:** Write `Validator.stories.ts` plus the wrapper story components. Start with `WithHint`, then `HintScopeTrap`.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Validator`, verify **by interacting**, not by looking:
-  - `Default` stays neutral on load, turns red only after typing an invalid address and blurring, and green after a valid one — this is the `:user-*` behaviour and the whole point (§0c).
-  - `WithHint`'s hint reserves space while invisible, then appears in error colour.
-  - `FormValidation`'s `collapse` hints reserve no space, then appear on submit — proving `display: revert-layer` (§0e trap 3).
-  - `HintScopeTrap` reproduces the leak in the unwrapped pair and not in the wrapped one (§0e trap 1).
-  - `AriaInvalid` is red on load with no interaction (§0d).
-  - `SelectRequired` turns red only after clicking Submit, matching the doc's own caption.
-  - `CheckboxRequired` / `ToggleRequired` colour the box and track, confirming `--input-color` reaches components other than `.input`.
-- [ ] **Step 6:** Attribute forwarding story on `ValidatorHint`: `id`, `data-*`, `style`, `class`, plus `role="alert"` — worth showing, since an error message is a reasonable live region and daisyUI ships no semantics of its own. Headless check:
-
-```bash
-pnpm build-storybook
-grep -rhoE '<(p|div|span)[^>]*validator-hint[^>]*>' storybook-static/astro-prerendered-stories.json | head
-```
-- [ ] **Step 7:** Documentation, in `plans/README.md` unless stated:
-  1. Set the Validator row to **Implemented**, noting that no `Validator` component exists.
-  2. Add the one-line `validator` JSDoc note to **TextInput, Select, Textarea, Checkbox, Toggle, Radio, FileInput and Range** — caller class on the control, `ValidatorHint` as a sibling after it (§0b).
+- [x] **Step 1: nothing to re-derive.** Six declaration blocks, two classes, twelve examples.
+- [x] **Step 2: skipped as planned.** `HTMLTag` comes from `astro/types`; `variants.ts` untouched.
+- [x] **Step 3: done. `Validator.astro` is deleted**, and `ValidatorHint.astro` created per §4. The probe matters here more than usual because the generic failure is silent, and it earned its place: `<ValidatorHint as="p" href="/x">` errors, which is the proof the polymorphic typing took.
+- [x] **Step 4: done, and simpler than §5 expected** (§0g). `Validator.stories.ts`, 17 stories — 12 doc-page examples plus `Playground`, `Passthrough`, `AriaInvalid`, `HintScopeTrap` and `CollapseComparison` — with **no wrapper `.astro` components**.
+- [ ] **Step 5:** `pnpm storybook`. **Still open, and this is the component where it matters most: verify by interacting, not by looking.** Almost every story is neutral on load, which is `:user-invalid` working as intended (§0c). Verify: `Default` turns red only after typing an invalid address **and blurring**, green after a valid one; `WithHint`'s hint **reserved its space** while invisible; `FormValidation`'s `collapse` hints reserve none, then appear on submit — which is `display: revert-layer` doing its job (§0e); **`HintScopeTrap` shows both hints in the unwrapped column and one in the wrapped one**; `AriaInvalid` is red **on load, with no interaction** (§0d); `SelectRequired` turns red only after Submit; and `CheckboxRequired` / `ToggleRequired` colour the box and the track, which is the proof `--input-color` reaches beyond `.input`.
+- [x] **Step 6: done — forwarding confirmed, `role="alert"` included.** `Passthrough` renders `<div role="alert" id="hint-1" data-test="yes" style="letter-spacing:1px" class="validator-hint hidden mine">`, which also shows the polymorphic root changing and `collapse` reaching the class list. Full output in §8.
+- [x] **Step 7: done, both parts.** The `Validator` row in `plans/README.md` says Implemented and records that no `Validator` component exists; and **all eight form controls now carry the caller-class JSDoc line** — `TextInput` already had it from its own §0f, and `Select`, `Textarea`, `Checkbox`, `Toggle`, `Radio`, `FileInput` and `Range` gained it here, in one pass as §6 intended rather than eight deferred edits.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] `Validator.astro` deleted; no component emits a bare `validator` class (§0a).
-- [ ] The caller-class decision is recorded here with its reasoning, and the eight form controls carry the JSDoc line (§0b, §6 Step 7).
-- [ ] `ValidatorHint` is polymorphic with `p` as the default, and **`type Props` precedes every `const`** with the `as Props<HTMLTag>` annotation (§0e, §5c).
-- [ ] The probe confirms the generic typing actually took — an invalid attribute must error (§6 Step 3).
-- [ ] `collapse` adds `hidden` and is verified to reappear when invalid (§0e trap 3).
-- [ ] The `~` general-sibling scoping trap is documented in JSDoc **and** demonstrated by `HintScopeTrap` (§0e trap 1).
-- [ ] The reserved-space-by-default behaviour is documented as intentional, not a bug (§0e trap 2).
-- [ ] `aria-invalid` recorded as an undocumented-but-supported trigger and used by `AriaInvalid` (§0d).
-- [ ] Every story description says what interaction to perform (§0c).
-- [ ] Twelve doc-example stories, composing the real form-control components.
-- [ ] Every box in section 4's Astro idioms gate ticked.
+- [x] `Validator.astro` deleted; no component emits a bare `validator` class (§0a).
+- [x] The caller-class decision is recorded here with its reasoning, and the eight form controls carry the JSDoc line (§0b, §6 Step 7).
+- [x] `ValidatorHint` is polymorphic with `p` as the default, and **`type Props` precedes every `const`** with the `as Props<HTMLTag>` annotation (§0e, §5c).
+- [x] The probe confirms the generic typing actually took — an invalid attribute must error (§6 Step 3).
+- [x] `collapse` adds `hidden` and is verified to reappear when invalid (§0e trap 3).
+- [x] The `~` general-sibling scoping trap is documented in JSDoc **and** demonstrated by `HintScopeTrap` (§0e trap 1).
+- [x] The reserved-space-by-default behaviour is documented as intentional, not a bug (§0e trap 2).
+- [x] `aria-invalid` recorded as an undocumented-but-supported trigger and used by `AriaInvalid` (§0d).
+- [x] Every story description says what interaction to perform (§0c).
+- [x] Twelve doc-example stories, composing the real form-control components.
+- [x] Every box in section 4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01). `astro check`: 207 files, 0 errors, 0 warnings, 0 hints.
+
+```
+WithHint    → <form class="w-full max-w-xs" autocomplete="off" onsubmit="return false">
+                <input class="input validator" type="email" required placeholder="mail@site.com">
+                <div class="validator-hint">Enter valid email address</div></form>
+                 ↑ a SIBLING after the control, in the same parent — the whole contract
+Passthrough → …<div role="alert" id="hint-1" data-test="yes" style="letter-spacing:1px"
+                  class="validator-hint hidden mine">Passthrough</div>
+```
+
+Counts across the 17 stories:
+
+```
+controls carrying `validator`  43   → bare `class="validator"` with no partner class:  0
+validator-hint elements 21 — as p 18, as div 2, as span 1
+collapse (rendering `hidden`) 4 | aria-invalid="true" 7
+partners other than .input: select 1, checkbox 1, toggle 1
+```
+
+What this settles:
+
+- **§0a, in the strongest form available**: **no element anywhere carries `validator` alone.** A bare one would be a completely unstyled control, since the class sets a single custom property and nothing else — which is why `Validator.astro` is deleted rather than finished.
+- **§0b is now code, not an assumption repeated in five plans.** 43 controls take the class from the caller, and the eight components that read `--input-color` each say so in their own JSDoc.
+- **§0a reaches past `.input`**: the checkbox, toggle and select examples put `validator` on their own classes, which is the integration this plan exists to check.
+- **§0e's three traps are all represented**: the hint is always a following sibling; `collapse` emits `hidden` four times; and `HintScopeTrap` renders the leak and the fix side by side.
+- **§0e's polymorphism is exercised across all three documented elements** — 18 `p`, 2 `div`, 1 `span` — which is why it is polymorphic rather than fixed.
+- **§0d gives the stories something to show**: 7 `aria-invalid="true"` attributes, the only way to render the error state without typing.
+
+Not settled here: everything that requires typing, blurring or submitting — which is most of this component. Step 5.

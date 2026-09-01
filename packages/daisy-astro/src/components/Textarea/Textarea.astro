@@ -31,6 +31,12 @@ import type { DaisyColor, DaisySize } from '../../lib/variants';
  * adornments, but documents no example of it, so this component does not build
  * it (plan §0f). Responsive sizes are caller classes:
  * `class="textarea-sm lg:textarea-lg"`.
+ *
+ * **Validation styling is a caller class**, not a prop: add `class="validator"`
+ * here and put a `ValidatorHint` **after this element, as a sibling in the same
+ * parent** — daisyUI reveals the hint with a general sibling combinator, and
+ * `validator` itself only sets `--input-color`, which this component already
+ * reads (`plans/components/validator.md` §0b).
  */
 interface Props extends HTMLAttributes<'textarea'> {
   /** Border and focus-outline colour. */

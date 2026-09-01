@@ -31,6 +31,12 @@ import type { DaisyColor, DaisySize } from '../../lib/variants';
  *
  * Responsive sizes and colours are caller classes:
  * `class="toggle-sm lg:toggle-lg"` (plan §0f).
+ *
+ * **Validation styling is a caller class**, not a prop: add `class="validator"`
+ * here and put a `ValidatorHint` **after this element, as a sibling in the same
+ * parent** — daisyUI reveals the hint with a general sibling combinator, and
+ * `validator` itself only sets `--input-color`, which this component already
+ * reads (`plans/components/validator.md` §0b).
  */
 interface Props extends HTMLAttributes<'input'> {
   /** Which element carries `.toggle`. The default slot renders only when `label` (plan §0b). */

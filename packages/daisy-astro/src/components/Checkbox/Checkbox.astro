@@ -35,6 +35,12 @@ import type { DaisyColor, DaisySize } from '../../lib/variants';
  * The colour classes work by setting `--input-color`, which is also the seam
  * the doc page's custom-colours example uses from the other side with Tailwind
  * `checked:` variants. Caller classes, no prop.
+ *
+ * **Validation styling is a caller class**, not a prop: add `class="validator"`
+ * here and put a `ValidatorHint` **after this element, as a sibling in the same
+ * parent** — daisyUI reveals the hint with a general sibling combinator, and
+ * `validator` itself only sets `--input-color`, which this component already
+ * reads (`plans/components/validator.md` §0b).
  */
 interface Props extends HTMLAttributes<'input'> {
   /** Fill and border colour when checked. */

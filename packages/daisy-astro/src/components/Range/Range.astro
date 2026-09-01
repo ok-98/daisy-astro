@@ -28,6 +28,12 @@ import type { DaisyColor, DaisySize } from '../../lib/variants';
  *
  * Tick marks are sibling markup below the input, hand-aligned; daisyUI provides
  * no tick class and there is no `ticks` prop (plan §2).
+ *
+ * **Validation styling is a caller class**, not a prop: add `class="validator"`
+ * here and put a `ValidatorHint` **after this element, as a sibling in the same
+ * parent** — daisyUI reveals the hint with a general sibling combinator, and
+ * `validator` itself only sets `--input-color`, which this component already
+ * reads (`plans/components/validator.md` §0b).
  */
 interface Props extends HTMLAttributes<'input'> {
   color?: DaisyColor;
