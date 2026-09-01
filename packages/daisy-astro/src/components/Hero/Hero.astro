@@ -1,9 +1,29 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/hero/
 import type { HTMLAttributes } from 'astro/types';
 
+/**
+ * A full-width banner. A **single-cell grid**: every direct child is placed in
+ * the same cell, which is how an overlay sits behind the content without any
+ * absolute positioning — and why **child order does not matter** (plan §3d).
+ * The doc examples write the overlay first for readability; nothing depends on
+ * it, so do not "fix" a working hero by reordering.
+ *
+ * A third child lands in that same cell too, stacked over both. A Hero holds an
+ * optional `HeroOverlay` and one `HeroContent`.
+ *
+ * **Give it a height** — `class="min-h-[30rem]"` or `min-h-screen`. daisyUI
+ * sets a width and no height at all, so without one the hero is exactly as tall
+ * as its content and the centring has nothing to centre. That is correct rather
+ * than broken (plan §3c).
+ *
+ * **A background photo is an inline style**, not a prop: daisyUI provides no
+ * class for it, and an `image` prop would shadow `style` while leaving
+ * `background-size`, `position` and `repeat` to the caller anyway (plan §3b):
+ *
+ *     <Hero style="background-image: url(/photo.webp)">
+ *
+ * Half the doc examples use an `<img>` inside `HeroContent` instead.
+ */
 interface Props extends HTMLAttributes<'div'> {}
 
 const { class: className, ...rest } = Astro.props;

@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/hero.css` and the doc page source. §3e lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-09-01). `Hero.astro`, `HeroContent.astro`, `HeroOverlay.astro` and 9 stories. §3e.1 is answered — a part is the direct child in 10 of 10 heroes (§8) — and §3e.3's raw-markup fallback is discharged: the form example composes `Card`, `Fieldset`, `Label`, `TextInput`, `Link` and `Button`. One addition to §4: **§3a's "no slot" cannot be typed, so `HeroOverlay` throws** (§3f). Step 5 (visual pass) is open.
 ---
 
 ## 0. A one-cell grid that stacks its children
@@ -80,6 +82,33 @@ Two things follow:
 
 - **A third child also lands in the same cell**, stacked over both. Usually a mistake; the JSDoc says a Hero holds an optional overlay and one content block.
 - **The overlay does not need to come first.** The doc examples write it first for readability; nothing depends on it. Stated so nobody "fixes" a working hero by reordering.
+
+### 3f. "Takes no slot" needs a guard — addition to §4
+
+**Found while walking the gate, 2026-09-01.** §3a says `HeroOverlay` takes no
+children and §7 asks to verify that it "accepts no slot". The probe showed it
+cannot be verified that way: **`<HeroOverlay>oops</HeroOverlay>` is not a type
+error.** `children` is not part of `Props`, so TypeScript has nothing to reject;
+the content is simply dropped, because there is no `<slot />` to render it.
+
+Two silent losses in one: the caller's markup disappears, and even if it were
+rendered it would sit behind `HeroContent`'s `isolation: isolate` and be
+invisible.
+
+**So the component throws**, the library's second such guard after
+`plans/components/text-input.md` §2's and for the same reason — the alternative
+is markup that renders while quietly discarding what the caller wrote:
+
+```
+Error: <HeroOverlay> takes no children — it is an empty tint layer; put content in <HeroContent>.
+```
+
+Fired once to prove it does, the way §0k of the Text Input plan established:
+a temporary story, a failing build, and the story removed again.
+
+Worth generalising: **a component that renders no `<slot />` should say so at
+runtime**, because the type system cannot. That is now two components; a third
+would justify a shared helper.
 
 ### 3e. Unverified assumptions
 
@@ -198,25 +227,57 @@ Every story uses `min-h-[30rem]` rather than the doc page's `min-h-screen`, exac
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3e.1 (direct grid children) — blocking, and the failure is a tint over the text rather than a layout glitch. Settle §3e.2 (image URLs) with Avatar/Card/Carousel/Diff.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Hero.astro` scaffold and create `HeroContent.astro` and `HeroOverlay.astro` per §4, then walk the gate.
-- [ ] **Step 4:** Replace `Hero.stories.ts` and add the two sub-component story files per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Centered` centres its content both ways; `WithFigure` stacks below `lg` and sits side by side above it; `WithOverlay` shows the photo dimmed **behind readable text** — text hidden behind the tint means §3e.1; `OverlayOrder` looks identical to `WithOverlay` (§3d); `NoHeight` collapses to its content (§3c).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="hero[^"]*"[^>]*><div class="hero-(overlay|content)' storybook-static/astro-prerendered-stories.json | head
-  ```
-- [ ] **Step 7:** Update the `Hero` row in `plans/README.md` to **Implemented**, noting `HeroContent`/`HeroOverlay` as part of it.
+- [x] **Step 1: done for §3e.1**, where the failure would have been a tint over the text rather than a layout glitch: `.hero > *` is what puts every child in one cell, so a wrapper would take the cell and the overlay would end up in the same stacking context as the content. A part is the direct child in **10 of 10** heroes. §3e.3 is discharged; §3e.2 stays with the other image plans.
+- [x] **Step 2: skipped as planned.** No variant classes at all; `variants.ts` untouched.
+- [x] **Step 3: done, with §3f's guard added.** The probe errors on `image` and `size`; its third line, children on `HeroOverlay`, **cannot** error — which is what §3f is about.
+- [x] **Step 4: done.** `Hero.stories.ts`, 9 stories — 5 doc-page examples plus `Playground`, `Passthrough`, `OverlayOrder` and `NoHeight`, all at `min-h-[30rem]` as daisyUI's own demos are. **No sub-component story files**: `HeroContent` and `HeroOverlay` have no props, and `Passthrough` asserts all three levels at once.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes and a resize.** Verify: `Centered` centres both ways; `WithFigure` stacks below `lg` and sits side by side above it; **`WithOverlay` shows the photo dimmed behind *readable* text** — text lost under the tint would mean §3e.1; **`OverlayOrder` looks identical to it** (§3d); and `NoHeight`'s second hero collapses to its content (§3c).
+- [x] **Step 6: done — forwarding confirmed at three levels.** `Passthrough` renders `<div class="hero mine min-h-[30rem] rounded" id="hero-1" data-test="yes" style="background-image: url(…); letter-spacing:1px">` around a marked overlay and a marked content block. Full output in §8.
+- [x] **Step 7: done — the `Hero` row in `plans/README.md` says Implemented** and names both parts.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 3 daisyUI classes reachable.
-- [ ] `HeroOverlay` renders empty and accepts no slot (§3a).
-- [ ] Children render as direct grid children and share one cell (§3d, §3e.1).
-- [ ] No invented axis — no `image`, `height` or overlay-colour prop (§3a–§3c).
-- [ ] JSDoc states: give it a height (§3c), background image is an inline style (§3b), `hero-content` is a flex row needing `flex-col lg:flex-row` (§3c), and child order is irrelevant (§3d).
-- [ ] One story per doc-page example, plus `NoHeight` and `OverlayOrder`, all using `min-h-[30rem]` (§5).
-- [ ] Every box in §4's gate ticked.
+- [x] All 3 daisyUI classes reachable.
+- [x] `HeroOverlay` renders empty and accepts no slot (§3a).
+- [x] Children render as direct grid children and share one cell (§3d, §3e.1).
+- [x] No invented axis — no `image`, `height` or overlay-colour prop (§3a–§3c).
+- [x] JSDoc states: give it a height (§3c), background image is an inline style (§3b), `hero-content` is a flex row needing `flex-col lg:flex-row` (§3c), and child order is irrelevant (§3d).
+- [x] One story per doc-page example, plus `NoHeight` and `OverlayOrder`, all using `min-h-[30rem]` (§5).
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01). `astro check`: 203 files, 0 errors, 0 warnings, 0 hints.
+
+```
+WithOverlay  → <div class="hero min-h-[30rem] rounded" style="background-image: url(…);">
+                 <div class="hero-overlay rounded"></div>
+                 <div class="hero-content text-center text-neutral-content">…
+OverlayOrder → <div class="hero …" style="background-image: url(…);">
+                 <div class="hero-content …">…</div><div class="hero-overlay rounded"></div>
+                            ↑ reversed, and identical on screen — §3d
+Passthrough  → <div class="hero mine min-h-[30rem] rounded" id="hero-1" data-test="yes"
+                 style="background-image: url(…); letter-spacing:1px">
+                 <div class="hero-overlay overlay-marker rounded" id="overlay-1" data-test="overlay"></div>
+                 <div class="hero-content content-marker …" id="content-1" data-test="content">…
+```
+
+Counts across the 9 stories:
+
+```
+.hero roots 10  → a hero-content or hero-overlay is the direct child  10 of 10
+hero-overlay elements 3  → all 3 render EMPTY
+inline background-image styles 3  — no `image` prop anywhere (§3b)
+built CSS: .hero, the `.hero > *` single-cell rule, .hero-overlay, .hero-content
+```
+
+What this settles:
+
+- **§3e.1**: `.hero > *` is the single-cell rule, so a wrapper would have taken the cell itself and put the overlay in the same stacking context as the content — a tint over the text rather than a visible layout break. 10 of 10 are clean.
+- **§3a, twice over**: all three overlays render as `<div class="hero-overlay …"></div>` with nothing inside, and passing children now fails the build rather than dropping them (§3f).
+- **§3b**: the background photo is an inline `style` on the hero in all three overlay stories, and `Passthrough` shows it coexisting with a caller's own `letter-spacing` in the same attribute — which is exactly the merge an `image` prop would have had to do.
+- **§3d is in the markup**: `OverlayOrder` writes the overlay after the content and is otherwise identical to `WithOverlay`. Whether they *look* identical is Step 5, but the DOM difference is the whole story.
+- **§3e.3 is discharged** — the form example is `Card` → `CardBody` → `Fieldset` → `Label` + `TextInput` + `Link` + `Button`, with no raw markup left.
+
+Not settled here: the centring, the responsive stack, and whether the overlaid text is readable. All Step 5.

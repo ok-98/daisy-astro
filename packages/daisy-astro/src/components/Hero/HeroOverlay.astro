@@ -1,0 +1,29 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * A translucent layer over the hero's background image. **Empty by design —
+ * it takes no children**, and this is the only component in the library with
+ * no slot for that reason rather than because its element is void (plan §3a).
+ *
+ * Anything placed inside would render behind `HeroContent`'s isolation and be
+ * unreachable.
+ *
+ * The tint is `--color-neutral` at 50% with no variable to override, so a
+ * different one is a caller class: `class="bg-black/60"`.
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+
+// Deliberate throw, the library's second after `TextInput`'s and for the same
+// reason: children here are **silently dropped**, since there is no slot to
+// render them, and TypeScript cannot catch it — `children` is not part of
+// `Props`. Anything placed inside would be invisible behind `HeroContent`'s
+// isolation anyway (plan §3a).
+if (Astro.slots.has('default')) {
+  throw new Error('<HeroOverlay> takes no children — it is an empty tint layer; put content in <HeroContent>.');
+}
+---
+
+<div class:list={['hero-overlay', className]} {...rest}></div>

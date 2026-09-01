@@ -1,0 +1,21 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The hero's content block. A **flex row** capped at `80rem`, with
+ * `isolation: isolate` — which is what keeps it above a `HeroOverlay` with no
+ * `z-index` anywhere (plan §0).
+ *
+ * For the usual stack-on-mobile, side-by-side-on-desktop layout add
+ * `class="flex-col lg:flex-row"` (or `lg:flex-row-reverse`). daisyUI has no
+ * prop for it, and it is the single most common thing a caller changes here
+ * (plan §3c).
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['hero-content', className]} {...rest}>
+  <slot />
+</div>

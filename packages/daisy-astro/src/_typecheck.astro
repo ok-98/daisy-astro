@@ -62,6 +62,9 @@ import Mask from './components/Mask/Mask.astro';
 import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
 import PhoneMockupCamera from './components/PhoneMockup/PhoneMockupCamera.astro';
 import PhoneMockupDisplay from './components/PhoneMockup/PhoneMockupDisplay.astro';
+import Hero from './components/Hero/Hero.astro';
+import HeroContent from './components/Hero/HeroContent.astro';
+import HeroOverlay from './components/Hero/HeroOverlay.astro';
 import Footer from './components/Footer/Footer.astro';
 import FooterTitle from './components/Footer/FooterTitle.astro';
 import Calendar from './components/Calendar/Calendar.astro';
@@ -333,3 +336,7 @@ import Steps from './components/Steps/Steps.astro';
 <Footer direction="horizontal" center class="sm:footer-horizontal p-10" id="ft" data-test="y" title="t">
   <nav><FooterTitle as="h3" class="mine" id="ftt">Services</FooterTitle></nav>
 </Footer>
+<Hero class="min-h-[30rem] rounded" style="background-image:url(/p.webp)" id="hr" data-test="y" title="t">
+  <HeroOverlay class="rounded" id="ho" data-test="y" />
+  <HeroContent class="text-center" id="hc">Hello</HeroContent>
+</Hero>
