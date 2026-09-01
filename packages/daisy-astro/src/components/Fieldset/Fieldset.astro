@@ -1,9 +1,35 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/fieldset/
 import type { HTMLAttributes } from 'astro/types';
 
+/**
+ * Groups related form controls. A real `<fieldset>`, never a div, because the
+ * native element is what makes assistive technology announce "you are in the
+ * *Login* group" when focus enters any control inside — and it brings two
+ * behaviours with no props at all (plan §3a):
+ *
+ * - **`disabled` cascades** to every control it contains.
+ * - **`form="…"`** associates the whole group with a form elsewhere in the
+ *   document.
+ *
+ * Both arrive through the attribute spread.
+ *
+ * **It is a single-column grid, and its children are the rows.** Keep the
+ * legend, labels, inputs and helper text as **flat siblings**: wrapping a
+ * label and its input in a div for convenience makes the pair one grid row and
+ * collapses the `.375rem` gap between them, which is the vertical rhythm of
+ * every daisyUI form. The doc page's multiple-inputs example is deliberately
+ * flat for this reason (plan §3c).
+ *
+ * Put the `FieldsetLegend` first, as HTML requires of a `legend`.
+ *
+ * daisyUI gives it no box of its own — `class="bg-base-200 border
+ * border-base-300 p-4 rounded-box w-xs"` is what four of the five doc examples
+ * add. A bare one is an unstyled column, which is correct rather than broken.
+ *
+ * The labels inside are the `Label` component, not a prop here (plan §2).
+ * daisyUI also ships a legacy label class, but documents `label` instead
+ * and uses it in every example, so it is deliberately not exposed (plan §3b).
+ */
 interface Props extends HTMLAttributes<'fieldset'> {}
 
 const { class: className, ...rest } = Astro.props;

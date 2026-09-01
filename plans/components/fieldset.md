@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/fieldset.css` and the doc page source. §3d lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-09-01), third of the Stage 4 cluster. `Fieldset.astro`, `FieldsetLegend.astro` and 9 stories. §3d.1 and §3d.2 are both answered — the legend is the first child in 10 of 10 fieldsets (§8). §3's four findings all held. One thing the plan could not have predicted turned up in the build and is library-wide: **naming a class in a comment emits its CSS** (§3e), now recorded in `plans/README.md` §1b. Story markup for `input` carries `TODO(daisy-astro)` markers. Step 5 (visual pass) is open.
 ---
 
 ## 0. Three classes ship, two are documented
@@ -81,6 +83,30 @@ Consequence: wrapping a label and its input in a `<div>` for convenience **break
 The background, border, padding, radius and width are all caller classes (`bg-base-200 border border-base-300 p-4 rounded-box w-xs`) — daisyUI gives the fieldset no box of its own **[verified]**. A bare `<Fieldset>` is an unstyled column, which is correct rather than broken; the same shape as `plans/components/browser-mockup.md` §3b.
 
 `.fieldset-legend` carries `margin-bottom: -.25rem` and `margin-inline-end: auto` **[verified]** — it deliberately pulls the first field up and shrinks to its content, which is why it looks correct with `justify-content: space-between` even as a lone child.
+
+### 3e. Naming `fieldset-label` in a comment shipped its CSS
+
+**Found while implementing, 2026-09-01**, and it is not really about this
+component.
+
+§3b says to mention `fieldset-label` in the JSDoc *"so its existence in a
+class dump is not mistaken for an omission"*. Written that way, the built
+stylesheet gained three `.fieldset-label` rule blocks — from a comment, with
+nothing in the library rendering the class:
+
+```
+JSDoc names the class, nothing uses it   → .fieldset-label in output CSS: yes
+class name reworded out of the comment   → .fieldset-label in output CSS: no
+```
+
+Tailwind scans source **text**, not parsed source, so a comment is indexed like
+markup. `plans/README.md` §1b's tree-shaking evidence was gathered for
+interpolated versus literal class names and never covered this case.
+
+The comment now explains the situation **without writing the literal class
+name**, which keeps the documentation and drops the dead CSS — and is now more
+accurate anyway, since the class is genuinely absent from the built stylesheet
+rather than present-but-unused. Recorded library-wide in `plans/README.md` §1b.
 
 ### 3d. Unverified assumptions
 
@@ -178,27 +204,56 @@ The doc examples' `label` and `input` classes are written as raw markup until `p
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3d.1 (direct grid children) — blocking for spacing. Confirm §3d.2 (`<legend>` first) at the same time.
-- [ ] **Step 2:** No new shared unions; `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Fieldset.astro` scaffold and create `FieldsetLegend.astro` per §4, then walk the gate.
-- [ ] **Step 4:** Replace `Fieldset.stories.ts` and create `FieldsetLegend.stories.ts` per §5.
-- [ ] **Step 5:** `pnpm storybook`, verify: `Default` has even `.375rem` gaps between legend, input and helper text; `WithBox` is a bordered card with the legend inside it; `MultipleInputs` keeps a consistent rhythm across all six children; `WrappedPair` visibly loses it (§3c); `Disabled` greys out and blocks every control (§3a).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<fieldset class="fieldset[^"]*"[^>]*><legend' storybook-static/astro-prerendered-stories.json | head
-  ```
-  Confirms the legend is the first child with no wrapper between (§3d).
-- [ ] **Step 7:** Update the `Fieldset` row in `plans/README.md` to **Implemented**, noting `FieldsetLegend` as part of it.
+- [x] **Step 1: done for both.** §3d.1 — slot content lands as direct grid children, so the `.375rem` rhythm is intact; §3d.2 — the `<legend>` is the first child in **10 of 10** fieldsets, with nothing between it and the root (§8). Both were checked in the build rather than assumed, since a collapsed gap and a reparented legend both look plausible.
+- [x] **Step 2: skipped as planned.** No variant classes at all; `variants.ts` untouched.
+- [x] **Step 3: done.** Scaffold replaced and `FieldsetLegend.astro` created per §4; gate walked; the probe errored on all three intended lines, including `as="h2"` — neither component is polymorphic, and the native elements are the point.
+- [x] **Step 4: done.** `Fieldset.stories.ts`, 9 stories. **No `FieldsetLegend.stories.ts`**: it has no props, and `Fieldset`'s own nested `Passthrough` asserts its forwarding — the same call `plans/components/stat.md` §3g.2 and `plans/components/chat-bubble.md` §3h made. The labels compose the real `Label`, the join the real `Join` and `Button`; only `input` is still raw, marked per `plans/IMPLEMENTATION-ORDER.md` §5.2.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes.** Verify: `Default` has even `.375rem` gaps between legend, input and helper text; `WithBox` is a bordered card with the legend inside it; `MultipleInputs` keeps that rhythm across all seven children; **`WrappedPair`'s right-hand fieldset visibly loses it** (§3c); and `Disabled` greys out and blocks every control including the Button, with nothing passed to them (§3a).
+- [x] **Step 6: done — forwarding confirmed at both levels, `form` included.** `Passthrough` renders `<fieldset class="fieldset mine w-xs …" id="fieldset-1" data-test="yes" style="letter-spacing:1px" form="some-form">` around a marked legend. Full output in §8.
+- [x] **Step 7: done — the `Fieldset` row in `plans/README.md` says Implemented** and names `FieldsetLegend`. **`plans/README.md` §1b also gained the comment-scanning rule** from §3e, which is library-wide rather than this component's.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] Both documented classes reachable; `fieldset-label` deliberately not exposed (§0, §3b).
-- [ ] Roots are native `<fieldset>`/`<legend>`; `disabled` cascades and `form` associates, with no props (§3a).
-- [ ] Slot content renders as direct grid children (§3c, §3d.1) — checked in the build output.
-- [ ] `<legend>` renders first (§3d.2).
-- [ ] No invented axis — no colour, size, `legend` prop, or box defaults (§1, §2, §3c).
-- [ ] JSDoc states: keep children flat (§3c), the box is caller-supplied (§3c), and `disabled`/`form` come free (§3a).
-- [ ] One story per doc-page example, plus `Disabled` and `WrappedPair`.
-- [ ] Every box in §4's gate ticked.
+- [x] Both documented classes reachable; `fieldset-label` deliberately not exposed (§0, §3b).
+- [x] Roots are native `<fieldset>`/`<legend>`; `disabled` cascades and `form` associates, with no props (§3a).
+- [x] Slot content renders as direct grid children (§3c, §3d.1) — checked in the build output.
+- [x] `<legend>` renders first (§3d.2).
+- [x] No invented axis — no colour, size, `legend` prop, or box defaults (§1, §2, §3c).
+- [x] JSDoc states: keep children flat (§3c), the box is caller-supplied (§3c), and `disabled`/`form` come free (§3a).
+- [x] One story per doc-page example, plus `Disabled` and `WrappedPair`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01). `astro check`: 201 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Passthrough → <fieldset class="fieldset mine w-xs bg-base-200 border border-base-300 p-4 rounded-box"
+                id="fieldset-1" data-test="yes" style="letter-spacing:1px" form="some-form">
+                <legend class="fieldset-legend legend-marker" id="legend-1" data-test="legend">Passthrough</legend>
+                <input type="text" class="input" placeholder="My awesome page" /></fieldset>
+WrappedPair → …<legend class="fieldset-legend">Wrapped — gap lost</legend>
+                <div><label class="label">Title</label><input …/></div>
+                <div><label class="label">Slug</label><input …/></div></fieldset>
+                 ↑ two grid rows instead of four — deliberate, and the point of the story
+```
+
+Counts across the 9 stories:
+
+```
+fieldset roots 10  → <legend> is the first child, with no wrapper between  10 of 10
+disabled fieldsets 1 (Disabled) | Label components 14 | Join 1
+.fieldset and .fieldset-legend have rules in the built stylesheet
+.fieldset-label does NOT — see §3e
+```
+
+What this settles:
+
+- **§3d.2**: the legend is the first child every time. HTML requires it and browsers quietly reparent a misplaced one, so this is the check that would otherwise be made by eye and passed by accident.
+- **§3d.1 and §3c**: every other child is a direct grid child too. `WrappedPair` is the deliberate counter-example, rendering two rows where the flat version renders four — the collapse is in the markup, and Step 5 says whether it is visible.
+- **§3a's free behaviours are real**: `form="some-form"` and `disabled` reach the element through the spread with no props, and the disabled story passes nothing to the controls inside it.
+- **The labels are the real `Label`** — 14 of them across the stories, including the helper text rendered as a `<p>`, which is what `Label`'s polymorphism is for (`plans/components/label.md` §3a).
+- **§3b holds in the strongest form available**: `fieldset-label` is not exposed, not used, and after §3e not even present in the built CSS.
+
+Not settled here: the gaps themselves, and whether the wrapped pair looks as wrong as it is. Both Step 5.

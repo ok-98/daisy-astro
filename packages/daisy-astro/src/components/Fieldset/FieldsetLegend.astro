@@ -1,0 +1,19 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The group's heading. **Must be the first child of its `Fieldset`** — HTML
+ * requires it, and browsers reparent or ignore a misplaced one (plan §3d.2).
+ *
+ * It carries a negative bottom margin, so it deliberately pulls the first field
+ * up towards it, and `margin-inline-end: auto`, so it shrinks to its content
+ * rather than filling the row.
+ */
+interface Props extends HTMLAttributes<'legend'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<legend class:list={['fieldset-legend', className]} {...rest}>
+  <slot />
+</legend>

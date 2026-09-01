@@ -40,6 +40,26 @@ So every variant axis gets a `Record<Union, string>` map of full literal class n
 
 Booleans are already safe when written as object keys — `{ 'btn-active': active }` is a literal in source, so it is detected.
 
+**The scanner reads comments too.** "Source text" means the whole file, with no
+parsing: a daisyUI class name written in a JSDoc block or a `//` comment emits
+its full CSS, even though nothing renders it. Measured on 2026-09-01 while
+implementing Fieldset, whose JSDoc mentioned the undocumented `fieldset-label`
+class in prose:
+
+```
+Fieldset.astro JSDoc names the class, nothing uses it
+  → .fieldset-label rules in output CSS: yes (3 blocks)
+same file, class name reworded out of the comment
+  → .fieldset-label rules in output CSS: NO
+```
+
+Two consequences. **Dead CSS ships from documentation prose**, so a comment
+explaining why a class is *not* used costs the bytes of using it — word it
+around the literal name (`plans/components/fieldset.md` §3e). And the mechanism
+cuts the other way: if a class you expect is missing, naming it once anywhere
+in the file is enough to bring it back, which makes this a debugging tool as
+well as a footgun.
+
 ### 1c. Consumers must point Tailwind at this package
 
 Tailwind 4 auto-detects sources but ignores `node_modules`, so an app that installs this library gets **no** daisyUI CSS for it by default. Verified: a consumer's own `p-4` is picked up, the library's `btn-primary` is not, until the app's CSS adds
@@ -386,7 +406,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 |---|---|---|
 | Calendar | `calendar` | Planned — [`plans/components/calendar.md`](components/calendar.md) (daisyUI Calendar is theme CSS for 3rd-party calendars, not a component; plan scopes to Cally only) |
 | Checkbox | `checkbox` | Planned — [`plans/components/checkbox.md`](components/checkbox.md) (scaffold is missing `type="checkbox"` — renders a text input) |
-| Fieldset | `fieldset` | Planned — [`plans/components/fieldset.md`](components/fieldset.md) (`Fieldset`+`FieldsetLegend`; children are grid rows, keep them flat) |
+| Fieldset | `fieldset` | **Implemented** — [`plans/components/fieldset.md`](components/fieldset.md) (`Fieldset`+`FieldsetLegend`, 9 stories; keep children flat; `disabled` cascades natively; visual pass open) |
 | File Input | `file-input` | Planned — [`plans/components/file-input.md`](components/file-input.md) (scaffold missing `type="file"`, same bug as Checkbox) |
 | Filter | `filter` | **Implemented** — [`plans/components/filter.md`](components/filter.md) (7 stories; options are `Button as="input"`; label comes from `aria-label`; visual pass open) |
 | Label | `label` | **Implemented** — [`plans/components/label.md`](components/label.md) (`Label`+`FloatingLabel`, 14 stories; neither is a plain form label; `Label` is polymorphic, default `span`; visual pass open) |
