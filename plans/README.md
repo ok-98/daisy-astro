@@ -404,7 +404,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Component | Slug | Status |
 |---|---|---|
 | Divider | `divider` | **Implemented** — [`plans/components/divider.md`](components/divider.md) (11 stories; empty divider verified to have zero child nodes; visual pass open) |
-| Drawer sidebar | `drawer` | Planned — [`plans/components/drawer.md`](components/drawer.md) (`Drawer`+`DrawerButton`; sibling-order-dependent skeleton, required `toggleId`) |
+| Drawer sidebar | `drawer` | **Implemented** — [`plans/components/drawer.md`](components/drawer.md) (`Drawer`+`DrawerButton`, 10 stories; fixed sibling order; `toggleId` repeats; `drawer-button` carries the focus ring; visual pass open) |
 | Footer | `footer` | Planned — [`plans/components/footer.md`](components/footer.md) (`Footer`+`FooterTitle`; grid of grids, center changes the flow axis) |
 | Hero | `hero` | Planned — [`plans/components/hero.md`](components/hero.md) (`Hero`+`HeroContent`+`HeroOverlay`; one-cell grid) |
 | Indicator | `indicator` | Planned — [`plans/components/indicator.md`](components/indicator.md) (`Indicator`+`IndicatorItem`; placement is two axes, on the item) |

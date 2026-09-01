@@ -62,6 +62,8 @@ import Mask from './components/Mask/Mask.astro';
 import PhoneMockup from './components/PhoneMockup/PhoneMockup.astro';
 import PhoneMockupCamera from './components/PhoneMockup/PhoneMockupCamera.astro';
 import PhoneMockupDisplay from './components/PhoneMockup/PhoneMockupDisplay.astro';
+import Drawer from './components/Drawer/Drawer.astro';
+import DrawerButton from './components/Drawer/DrawerButton.astro';
 import Stack from './components/Stack/Stack.astro';
 import Toast from './components/Toast/Toast.astro';
 import Accordion from './components/Accordion/Accordion.astro';
@@ -259,3 +261,8 @@ import Steps from './components/Steps/Steps.astro';
 <Stack direction="end" class="size-28" id="stk" data-test="y" title="t">
   <div>A</div><div>B</div><div>C</div>
 </Stack>
+<Drawer toggleId="d1" end open overlayLabel="close" contentClass="flex flex-col" sideClass="z-1002"
+        toggleClass="inline" class="lg:drawer-open h-56" id="dr" data-test="y" title="t">
+  <Fragment slot="content"><DrawerButton toggleId="d1" class="btn" id="db" data-test="y">Open</DrawerButton></Fragment>
+  <Fragment slot="side">sidebar</Fragment>
+</Drawer>

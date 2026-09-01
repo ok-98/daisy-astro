@@ -16,6 +16,8 @@
 
 > **Status:** Planned. Nothing in §4 is implemented. Facts marked **[verified]** were checked on 2026-08-29 against the shipped CSS of `daisyui@5.7.22` (`node_modules/daisyui/components/drawer.css`) and the doc page source (`packages/docs/src/routes/(routes)/components/drawer/+page.md` in `saadeghi/daisyui`). §3h lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-09-01). `Drawer.astro`, `DrawerButton.astro` and 10 stories in one file rather than §5's two (§3j). §3h.1 and §3h.2 are answered on every story, and §3h.3 is answered **yes** — the `is-drawer-*` variants are emitted from scanned story source (§8). §4 was missing a prop: two of the five doc examples put a class on the toggle input, which the component renders (§3i). Step 5 (visual pass) is open, and it carries the slide, the focus ring and the icon rail.
 ---
 
 ## 0. A fixed structure held together by sibling selectors
@@ -209,6 +211,56 @@ Two things this component cannot do and must therefore document:
 
 - **The scroll lock and gutter are `:root`-level.** A component cannot style `:root`; daisyUI's base layer does. Nothing to implement, but "opening the drawer shifts my layout on Firefox" needs to resolve to this paragraph rather than to a bug report.
 - **It is opt-out-able** via daisyUI's `exclude` config. That is app configuration, so it belongs in the **package README** next to the `viewport-fit=cover` note from `plans/components/dock.md` §3e and the `@source` note from `plans/README.md` §1c. Three "your app must do this" items now share one home.
+
+### 3i. The toggle needs a class prop — correction to §4
+
+**Found while implementing, 2026-09-01.** §4 renders the toggle as
+`<input id={toggleId} type="checkbox" class="drawer-toggle" autocomplete="off" />`
+with no way for a caller to add to that class. **Two of the five doc examples
+put a class there**, and both are load-bearing:
+
+```html
+<input id="my-drawer-2" type="checkbox" autocomplete="off" class="drawer-toggle lg:hidden" />
+<input id="my-drawer-4" type="checkbox" autocomplete="off" class="drawer-toggle inline" />
+```
+
+- `lg:hidden` (example 2) takes the toggle out above `lg`, where the navbar
+  menu replaces the drawer entirely.
+- `inline` (example 4) is the interesting one: `lg:drawer-open` sets
+  `display: none` on the toggle **[verified]**, and the icon-only sidebar still
+  needs it interactive at desktop width, because the `is-drawer-*` variants key
+  off `:checked` (§3e). Without `inline` the rail cannot be collapsed where the
+  example's whole point is that it can.
+
+So `Drawer` takes a **`toggleClass`**, alongside `contentClass` and `sideClass`
+(§3f) — the third element the component renders on the caller's behalf, and
+the same escape hatch for the same reason. Its JSDoc says what must **not** go
+there: `hidden` or `sr-only` would undo §3a's deliberate 0×0-plus-opacity
+hiding and take the keyboard path with it.
+
+Third component in a row where §4's listing could not reproduce a doc example
+without one more class prop, after `plans/components/fab.md` §3g and
+`plans/components/collapse.md` §3h. Worth reading as a pattern: **when a
+component renders an element the caller cannot reach, check every doc example
+for a class on that element before deciding it needs no prop.**
+
+### 3j. One story file, and §4's comments belong in the frontmatter
+
+Two smaller corrections.
+
+`DrawerButton` gets no story file of its own. Outside a `Drawer` it is a bare
+`<label>` with no ring — the focus ring it exists for is
+`.drawer-toggle:focus-visible ~ .drawer-content label.drawer-button`, so a
+standalone `Playground` would demonstrate nothing and a standalone
+`Passthrough` would duplicate what `Drawer`'s own nested one asserts. Same call
+as `plans/components/stat.md` §3g.2 and `plans/components/chat-bubble.md`
+§3h; `KeyboardFocus` is where the component is actually shown, with a plain
+`<label>` beside it for the comparison.
+
+And §4's two explanatory notes are written as HTML comments **inside the
+template**, where they would ship into every rendered drawer — the same
+mistake `plans/components/chat-bubble.md` §3g caught. Moved into the
+frontmatter.
 
 ### 3h. Unverified assumptions
 
@@ -441,41 +493,75 @@ Whether the stories can use `DrawerButton` as a component rather than raw `<labe
 
 ## 6. Steps
 
-- [ ] **Step 1:** Resolve §3h.1 (direct child of `.drawer-side`) — blocking, and the shared question across nine plans now. Also settle §3h.3 (are the `is-drawer-*` variants emitted in the Storybook build?) before writing `IconOnly`, since that story is the only thing exercising them.
-- [ ] **Step 2:** No new shared unions — no colour or size axis (§1). `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Drawer.astro` dummy scaffold and create `DrawerButton.astro` per §4, then walk the Astro idioms gate. Confirm the `autocomplete="off"` decision (§3a) and record it here.
-- [ ] **Step 4:** Replace `Drawer.stories.ts` and create `DrawerButton.stories.ts` per §5, with a distinct `toggleId` per story.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/Drawer`, verify:
-  - `Default`: clicking the button **slides the sidebar in from the left** and dims the rest; clicking the dimmed area closes it. If it fades without sliding, read §3h.1 before anything else.
-  - `End`: slides in from the right, and the content sits on the left (§3d).
-  - `ResponsiveOpen`: sidebar is a permanent column above `lg`, a toggleable overlay below it, and the open button disappears above `lg`.
-  - `AlwaysOpen`: permanent column at every width, with **no** toggle button rendered by daisyUI's `display:none` on the checkbox (§3d).
-  - `IconOnly`: the sidebar is a 14-unit icon rail when closed and 64 when open, labels hidden, tooltips only when closed — the `is-drawer-*` variants (§3e). If nothing responds, it is §3h.3, not the component.
-  - **`KeyboardFocus`: tab to the button and confirm a visible ring** (§3c). Then temporarily strip `drawer-button` from the label and confirm the ring disappears — that is the whole reason the component exists.
-  - Stories do not bleed into each other — each has its own `toggleId` (§5).
-- [ ] **Step 6:** Confirm forwarding via `Passthrough`, and assert the sibling order. Headless check:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div class="drawer[^"]*"[^>]*><input[^>]*class="drawer-toggle"' storybook-static/astro-prerendered-stories.json | head
-  grep -rhoE '<div class="drawer-side[^"]*"><label[^>]*class="drawer-overlay"></label><' storybook-static/astro-prerendered-stories.json | head
-  ```
-  The first proves the toggle is the first child (§0, §3h.2); the second proves the overlay precedes the sidebar panel with nothing between (§3b, §3h.1).
-- [ ] **Step 7:** Update the `Drawer sidebar` row in `plans/README.md` to **Implemented**, noting `DrawerButton` as part of it. **Add the `scrollbar-gutter` / `rootscrollgutter` note to the package README** alongside `viewport-fit=cover` (`plans/components/dock.md` §3e) and `@source` (`plans/README.md` §1c) — §3g.
+- [x] **Step 1: done for §3h.1 and §3h.3**, both before writing the stories. The overlay is the first child of `.drawer-side` with the panel immediately after it in **10 of 10** drawers, so nothing sits between the overlay and the element `.drawer-side > :not(.drawer-overlay)` slides. §3h.3 is **yes** — see §8; the variants are emitted from scanned story source, which is the first evidence in this library that daisyUI's Tailwind *variants* tree-shake the same way its classes do. §3h.4 is a browser-support question and moves to Step 5.
+- [x] **Step 2: skipped as planned.** No colour or size axis; `variants.ts` untouched.
+- [x] **Step 3: done, with §3i's added prop and §3j's comment fix.** `autocomplete="off"` is emitted, matching daisyUI's rendered examples and the same call `plans/components/collapse.md` §3h made. Gate walked; the probe errored on all four intended lines, including `as="button"` on `DrawerButton`, which must stay a `<label>`.
+- [x] **Step 4: done, in one file rather than two** (§3j). `Drawer.stories.ts`, 10 stories, each with **its own `toggleId`** — verified as 10 unique ids in the build, since a duplicate would silently wire one drawer's button to another's checkbox.
+- [ ] **Step 5:** `pnpm storybook`. **Still open — needs human eyes, and one item needs a keyboard.** Verify: `Default` **slides** the sidebar in and dims the rest, and the dimmed area closes it — if it fades without sliding, read §3h.1 first; `End` comes in from the right with the content on the left; `ResponsiveOpen` is a permanent column above `lg` and an overlay below, with the button gone above `lg`; **`AlwaysOpen` has no working button at all**, which is §3d's point; `IconOnly` is a 14-unit rail when closed and 64 when open, labels hidden, tooltips only when closed (§3e); and **`KeyboardFocus`: tab in and confirm the ring on the `DrawerButton` and none on the plain label beside it** (§3c) — the one check that cannot be made from markup or a screenshot.
+- [x] **Step 6: done — forwarding confirmed on all four elements, and the sibling order asserted.** `Passthrough` renders `<div class="drawer mine h-56 rounded overflow-hidden" id="drawer-1" data-test="yes" style="letter-spacing:1px">` with `toggle-marker`, `content-marker`, `side-marker` and `button-marker` each on their own element. Full output in §8.
+- [x] **Step 7: done.** The `Drawer sidebar` row in `plans/README.md` says Implemented and names `DrawerButton`, and **the package README has the `scrollbar-gutter` / `rootscrollgutter` note** as its third setup item, beside `@source` and `viewport-fit=cover` (§3g).
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 8 daisyUI classes from §1 are reachable, and the two Tailwind variants are documented as caller-side prefixes with no prop (§3e).
-- [ ] The rendered order is toggle → content → side, with the overlay first inside the side (§0, §3b) — checked in the build output, not by eye.
-- [ ] `toggleId` is required on both components and wires the input, the overlay and every `DrawerButton` (§0a).
-- [ ] The toggle keeps daisyUI's hiding — no `hidden`/`sr-only`/`display:none` added (§3a).
-- [ ] Tabbing to a `DrawerButton` shows a visible focus ring (§3c).
-- [ ] `end` and `open` are booleans; the responsive form is a caller class and there is no `placement` prop (§3d).
-- [ ] `contentClass` / `sideClass` reach their wrappers, `class` reaches the root (§3f).
-- [ ] `overlayLabel` defaults to `'close sidebar'` and is overridable (§3b).
-- [ ] No invented axis — no colour, no size, no `is-drawer-*` props (§3e).
-- [ ] JSDoc states: `toggleId` repeats by necessity (§0a), `open` means permanent column (§3d), `drawer-button` carries the focus ring (§3c), and the scroll gutter is a `:root` behaviour (§3g).
-- [ ] The `scrollbar-gutter` note is in the package README (§3g).
-- [ ] Each story uses a distinct `toggleId` and contains the fixed-position sidebar (§5).
-- [ ] One story per doc-page example, plus `AlwaysOpen`, `KeyboardFocus` and `OverlayLabel`.
-- [ ] Every box in §4's Astro idioms gate ticked.
+- [x] All 8 daisyUI classes from §1 are reachable, and the two Tailwind variants are documented as caller-side prefixes with no prop (§3e).
+- [x] The rendered order is toggle → content → side, with the overlay first inside the side (§0, §3b) — checked in the build output, not by eye.
+- [x] `toggleId` is required on both components and wires the input, the overlay and every `DrawerButton` (§0a).
+- [x] The toggle keeps daisyUI's hiding — no `hidden`/`sr-only`/`display:none` added (§3a).
+- [x] Tabbing to a `DrawerButton` shows a visible focus ring (§3c).
+- [x] `end` and `open` are booleans; the responsive form is a caller class and there is no `placement` prop (§3d).
+- [x] `contentClass` / `sideClass` reach their wrappers, `class` reaches the root (§3f).
+- [x] `overlayLabel` defaults to `'close sidebar'` and is overridable (§3b).
+- [x] No invented axis — no colour, no size, no `is-drawer-*` props (§3e).
+- [x] JSDoc states: `toggleId` repeats by necessity (§0a), `open` means permanent column (§3d), `drawer-button` carries the focus ring (§3c), and the scroll gutter is a `:root` behaviour (§3g).
+- [x] The `scrollbar-gutter` note is in the package README (§3g).
+- [x] Each story uses a distinct `toggleId` and contains the fixed-position sidebar (§5).
+- [x] One story per doc-page example, plus `AlwaysOpen`, `KeyboardFocus` and `OverlayLabel`.
+- [x] Every box in §4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-01). `astro check`: 195 files, 0 errors, 0 warnings, 0 hints.
+
+```
+Passthrough → <div class="drawer mine h-56 rounded overflow-hidden" id="drawer-1" data-test="yes"
+                style="letter-spacing:1px">
+                <input id="my-drawer-pt" type="checkbox" class="drawer-toggle toggle-marker" autocomplete="off">
+                <div class="drawer-content content-marker">
+                  <label for="my-drawer-pt" class="drawer-button btn button-marker" id="drawer-button-1"
+                   data-test="button">Open</label></div>
+                <div class="drawer-side side-marker z-1002">
+                  <label for="my-drawer-pt" aria-label="close sidebar" class="drawer-overlay"></label>…
+```
+
+Counts across the 10 stories:
+
+```
+drawer roots 10
+toggle is the FIRST child of .drawer            10
+order is toggle → content → side                10
+overlay is the first child of .drawer-side,
+  with the panel immediately after it           10
+autocomplete="off" 10 | drawer-button labels 10
+toggle ids 10, unique 10
+drawer-end 1 | drawer-open 1 | lg:drawer-open 2
+```
+
+And from the built stylesheet:
+
+```css
+.is-drawer-open\:w-64:where(.drawer-toggle:checked~.drawer-side,
+                            .drawer-toggle:checked~.drawer-side *){width:calc(var(--spacing) * 64)}
+.is-drawer-close\:tooltip-right:where(.drawer-toggle:not(:checked)~.drawer-side, …)>.tooltip-content{…}
+```
+
+What this settles:
+
+- **§0 and §3h.2, on every story.** The whole component is `~` sibling selectors, so the toggle must be a direct child of `.drawer` and must precede both wrappers — 10 of 10 do, in that order. This is the failure that renders perfectly and never opens, which is why it is checked in the build rather than by eye.
+- **§3h.1**: the overlay is first inside `.drawer-side` with the sidebar panel immediately after it, 10 of 10. A wrapper between them would have taken the `translate: -100%` itself and left the real sidebar sitting still inside it — a drawer that fades instead of sliding.
+- **§3h.3 is yes.** `is-drawer-open:w-64` and the `is-drawer-close:` utilities are in the built CSS with daisyUI's own `:where(.drawer-toggle:checked ~ .drawer-side, …)` selector, generated from the story source. First evidence here that a daisyUI **variant** tree-shakes like a class — `plans/README.md` §1b's evidence was gathered for classes only.
+- **§0a's cost is real and contained**: 10 stories, 10 distinct toggle ids, each repeated on its `DrawerButton`. A duplicate would have wired one drawer's button to another's checkbox with no error anywhere.
+- **§3i's prop works in both directions**: `toggleClass` reaches the input and nothing else does — `class` is on the root, `contentClass` and `sideClass` on their wrappers.
+- All 8 classes have rules in the built stylesheet.
+
+Not settled here: the slide, the dim, the focus ring, the icon rail's two widths, and whether `AlwaysOpen`'s button is inert. All Step 5.

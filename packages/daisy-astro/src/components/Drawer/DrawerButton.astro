@@ -1,0 +1,33 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * Opens and closes a `Drawer`. A `<label>`, because that is the half of the
+ * checkbox hack the caller clicks.
+ *
+ * **`drawer-button` is not styling.** The toggle it drives is invisible but
+ * focusable, so daisyUI transfers its focus ring onto this label:
+ * `.drawer-toggle:focus-visible ~ .drawer-content label.drawer-button`. A plain
+ * `<label for>` leaves the drawer with **no visible keyboard focus at all** —
+ * which is the whole reason this component exists rather than a documented
+ * pattern (plan §3c).
+ *
+ * That selector is scoped to `.drawer-content`, so a close button placed inside
+ * the sidebar gets no ring and can be an ordinary `<label for>`.
+ *
+ * Combine with Button's classes as daisyUI's examples do: `class="btn"`, or
+ * `class="btn btn-square btn-ghost"` around a hamburger icon.
+ *
+ * Not polymorphic: it has to be a `<label>`.
+ */
+interface Props extends HTMLAttributes<'label'> {
+  /** Must match the `Drawer`'s `toggleId` (plan §0a). */
+  toggleId: string;
+}
+
+const { toggleId, class: className, ...rest } = Astro.props;
+---
+
+<label for={toggleId} class:list={['drawer-button', className]} {...rest}>
+  <slot />
+</label>

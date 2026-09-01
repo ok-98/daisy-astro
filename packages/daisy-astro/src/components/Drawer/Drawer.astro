@@ -1,14 +1,119 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/drawer/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+/**
+ * A grid layout with a show/hide sidebar, driven by a hidden checkbox and no
+ * JavaScript at all.
+ *
+ * The skeleton — toggle, content wrapper, side wrapper, overlay — is rendered
+ * here rather than left to the caller, because **every state rule is a `~`
+ * sibling selector**: the checkbox has to be a direct child of `.drawer` and
+ * has to precede both wrappers. Get that order wrong and the drawer renders
+ * perfectly and never opens (plan §0).
+ *
+ * `toggleId` is required and repeats on every `DrawerButton`. Astro has no
+ * context API, so the id cannot be pushed into slotted markup — the same cost
+ * `Accordion` pays for its shared radio `name` (plan §0a):
+ *
+ *     <Drawer toggleId="main-drawer">
+ *       <Fragment slot="content">
+ *         <DrawerButton toggleId="main-drawer" class="btn">Open drawer</DrawerButton>
+ *       </Fragment>
+ *       <Fragment slot="side">
+ *         <Menu class="bg-base-200 min-h-full w-80 p-4">…</Menu>
+ *       </Fragment>
+ *     </Drawer>
+ *
+ * Ids are document-global, so give each drawer on a page its own.
+ *
+ * For the usual "permanent on desktop, overlay on mobile" layout use the
+ * responsive class rather than the `open` prop: `class="lg:drawer-open"`
+ * (plan §3d). `is-drawer-open:` and `is-drawer-close:` are Tailwind variants
+ * you write on your own utilities inside the sidebar — there is no prop for
+ * them (plan §3e).
+ *
+ * **Opening a drawer changes the document root**, not just this element:
+ * daisyUI locks page scroll through `:root:has(.drawer-toggle:checked)` and
+ * adds a scrollbar gutter. On Firefox the gutter needs a `scrollbar-gutter`
+ * rule of your own; daisyUI's `exclude: ["rootscrollgutter"]` turns the whole
+ * feature off. See the package README (plan §3g).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * `id` of the hidden checkbox. **Required**, and must match every
+   * `DrawerButton` that opens this drawer (plan §0a).
+   */
+  toggleId: string;
+  /** Puts the sidebar on the trailing edge, and flips the slide direction. */
+  end?: boolean;
+  /**
+   * Makes the sidebar a **permanent column** — it does not open a drawer that
+   * then closes. daisyUI hides the toggle, makes the overlay inert and turns
+   * the sidebar from a fixed overlay into a sticky grid column. The useful
+   * form of this is responsive, and that is a caller class (plan §3d).
+   */
+  open?: boolean;
+  /**
+   * Accessible name for the overlay, which is an empty `<label>` and so has no
+   * other name available. Defaults to daisyUI's own wording (plan §3b).
+   */
+  overlayLabel?: string;
+  /** Classes for `.drawer-content` — the doc page's `flex flex-col` (plan §3f). */
+  contentClass?: string;
+  /** Classes for `.drawer-side` — the doc page's `z-1002`, `max-lg:top-16` (plan §3f). */
+  sideClass?: string;
+  /**
+   * Classes for the toggle `<input>` itself. Two doc examples need it —
+   * `lg:hidden` to stop the drawer opening where a navbar menu takes over, and
+   * `inline` to keep the toggle interactive under `lg:drawer-open`, which
+   * otherwise sets `display: none` on it (plan §3i).
+   *
+   * Do **not** pass `hidden` or `sr-only`: daisyUI already hides the toggle
+   * with `opacity: 0` at 0×0 precisely so it stays focusable, and a
+   * `display: none` checkbox takes the drawer's whole keyboard path with it
+   * (plan §3a).
+   */
+  toggleClass?: string;
+}
 
-const { class: className, ...rest } = Astro.props;
+const {
+  toggleId,
+  end = false,
+  open = false,
+  overlayLabel = 'close sidebar',
+  contentClass,
+  sideClass,
+  toggleClass,
+  class: className,
+  ...rest
+} = Astro.props;
+
+// Full literal class names — the two modifiers are object keys, which are
+// literals in source, so §1b is satisfied without a Record map.
+//
+// Order below is load-bearing and not stylistic (plan §0):
+//   input  — must precede both wrappers; every state rule is `~`. Hidden by
+//            daisyUI's own 0×0 + opacity:0, never display:none, so it stays
+//            focusable (plan §3a). `autocomplete="off"` matches what daisyUI's
+//            rendered examples ship and stops the browser restoring the open
+//            state on reload (plan §3a).
+//   label  — the overlay, empty on purpose: a full-bleed click target. Must
+//            come first inside `.drawer-side`, since
+//            `.drawer-side > :not(.drawer-overlay)` is what slides the panel
+//            (plan §3b).
+// Kept as frontmatter comments: HTML comments in the template would ship into
+// every rendered drawer.
 ---
 
-<div class:list={['drawer', className]} {...rest}>
-  <slot />
+<div class:list={['drawer', { 'drawer-end': end, 'drawer-open': open }, className]} {...rest}>
+  <input id={toggleId} type="checkbox" class:list={['drawer-toggle', toggleClass]} autocomplete="off" />
+
+  <div class:list={['drawer-content', contentClass]}>
+    <slot name="content" />
+  </div>
+
+  <div class:list={['drawer-side', sideClass]}>
+    <label for={toggleId} aria-label={overlayLabel} class="drawer-overlay"></label>
+    <slot name="side" />
+  </div>
 </div>
