@@ -267,6 +267,21 @@ For Stage 4 (and any future cycle):
 Pass 2 is where the integration checks actually happen. Skipping it leaves ten
 components whose stories never render each other.
 
+**Stage 4 is done, both passes (2026-09-01).** Pass 1 built all ten; pass 2
+backfilled `Fieldset`, `Join`, `Label` and `FloatingLabel` in one commit each.
+`grep -rn 'TODO(daisy-astro)' packages/daisy-astro/src` now returns **two**
+hits, both for `Indicator`, which is Stage 5 — no in-cluster debt remains.
+
+Two things the pass was worth doing for, neither of which pass 1 could have
+shown:
+
+- **`Label`'s affix stories are now `TextInput as="label"`.** Label's affix
+  rules require it to be a direct child of `.input`, and that class is
+  TextInput's to own — so the two components only actually meet in pass 2.
+- **`FloatingLabel`'s sizes are passed as props.** Its resting position is
+  computed from the size class *on the field*, so a hand-written `input-xs`
+  proved nothing about the component putting it there.
+
 ### 5.4 — Cross-plan amendments ship with the component that triggers them
 
 Several plans require edits **elsewhere** when they land. These are not
