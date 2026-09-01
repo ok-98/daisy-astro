@@ -1,14 +1,61 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/join/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'div'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type JoinDirection = 'horizontal' | 'vertical';
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * Groups items into one control with shared outer corners and single-width
+ * borders between them.
+ *
+ * **There is no `JoinItem`.** `join-item` is a class you add to a component you
+ * already have — `<Button class="join-item">`, `<Collapse class="join-item">` —
+ * because a wrapper component would have to re-expose every prop of whatever it
+ * wraps (plan §2).
+ *
+ * **Items do not have to be direct children.** daisyUI sets the four corner
+ * radii on `.join`'s direct children and `.join-item` reads them as *inherited*
+ * custom properties, so an item nested two wrappers deep still gets the right
+ * corners — daisyUI has a doc example for exactly that. This is the one
+ * component in the library where wrapping slot content is explicitly supported
+ * rather than merely survivable (plan §3a).
+ *
+ *     <Join>
+ *       <TextInput class="join-item" placeholder="Email" />
+ *       <Button class="join-item">Subscribe</Button>
+ *     </Join>
+ *
+ * Per-item corner overrides need no escape hatch: the radii come from
+ * low-specificity `:where()` rules, so a plain `rounded-e-full` on one item
+ * wins with no `!important` (plan §3d).
+ *
+ * For the usual responsive group use the class rather than the prop:
+ * `class="join-vertical lg:join-horizontal"` (plan §3c).
+ *
+ * **Square corners mean no `@scope`.** `.join` uses `@scope(&)`, the newest CSS
+ * anything here depends on. Without it the radius variables stay `0` and the
+ * group renders square but still correctly collapsed — degraded, not broken
+ * (plan §3b).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * Unconditional direction. `horizontal` is daisyUI's default. It flips two
+   * variables that do double duty: which corners round, and which axis the
+   * negative border-collapsing margin runs along (plan §3c).
+   */
+  direction?: JoinDirection;
+}
+
+// Full literal class names. NEVER `join-${direction}` — an interpolated class
+// gets no CSS from daisyUI (plans/README.md §1b).
+const DIRECTION: Record<JoinDirection, string> = {
+  horizontal: 'join-horizontal',
+  vertical: 'join-vertical',
+};
+
+const { direction, class: className, ...rest } = Astro.props;
 ---
 
-<div class:list={['join', className]} {...rest}>
+<div class:list={['join', direction && DIRECTION[direction], className]} {...rest}>
   <slot />
 </div>
