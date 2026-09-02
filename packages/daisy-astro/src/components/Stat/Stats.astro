@@ -1,5 +1,5 @@
 ---
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
 
 // Props first — a `const` above this breaks inference (plans/README.md §5c).
 type StatsDirection = 'horizontal' | 'vertical';
@@ -18,14 +18,23 @@ type StatsDirection = 'horizontal' | 'vertical';
  * responsive class rather than the prop:
  * `class="stats-vertical lg:stats-horizontal"` (plan §3d).
  */
-interface Props extends HTMLAttributes<'div'> {
+type Props<Tag extends HTMLTag = 'div'> = Polymorphic<{
+  /**
+   * Defaults to `div`. `as="dl"` makes the group a description list, with
+   * `StatTitle as="dt"` and `StatValue as="dd"` — the markup a screen reader
+   * can pair label with number in, which a stack of `div`s is not. A `dl` may
+   * wrap each `dt`/`dd` group in a plain `div`, so the default `Stat` root is
+   * exactly what the grouping needs, and no daisyUI selector names a tag
+   * **[verified]** (plan §3h).
+   */
+  as: Tag;
   /**
    * Also decides which edge the dashed divider between blocks is drawn on —
    * trailing when horizontal, bottom when vertical. Horizontal is the default
    * and still emittable (plan §3c).
    */
   direction?: StatsDirection;
-}
+}>;
 
 // Full literal class names. NEVER `stats-${direction}` — an interpolated class
 // gets no CSS from daisyUI (plans/README.md §1b).
@@ -34,9 +43,15 @@ const DIRECTION: Record<StatsDirection, string> = {
   vertical: 'stats-vertical',
 };
 
-const { direction, class: className, ...rest } = Astro.props;
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const {
+  as: Tag = 'div',
+  direction,
+  class: className,
+  ...rest
+} = Astro.props as Props<HTMLTag>;
 ---
 
-<div class:list={['stats', direction && DIRECTION[direction], className]} {...rest}>
+<Tag class:list={['stats', direction && DIRECTION[direction], className]} {...rest}>
   <slot />
-</div>
+</Tag>

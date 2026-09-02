@@ -269,6 +269,16 @@ import Steps from './components/Steps/Steps.astro';
   </Stat>
 </Stats>
 <Stats direction="vertical" class="lg:stats-horizontal">ok</Stats>
+<Stats as="dl" direction="vertical">
+  <Stat>
+    <StatFigure as="figure">icon</StatFigure>
+    <StatTitle as="dt">Downloads</StatTitle>
+    <StatValue as="dd">31K</StatValue>
+    <StatDesc as="dd">Jan 1st - Feb 1st</StatDesc>
+    <StatActions as="footer">buttons</StatActions>
+  </Stat>
+  <Stat as="a" href="/downloads">ok</Stat>
+</Stats>
 
 <Chat placement="start" id="msg" data-test="y" title="t">
   <ChatHeader class="mine">Obi-Wan Kenobi</ChatHeader>

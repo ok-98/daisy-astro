@@ -2,7 +2,7 @@
 
 **daisyUI category:** Data Display
 **daisyUI doc page:** https://daisyui.com/components/stat/
-**Root element:** `div` (all components)
+**Root element:** `div` by default in all seven, polymorphic via `as` — see §3h
 **Target files:** `packages/daisy-astro/src/components/Stat/Stats.astro`, `Stat.astro`, `StatTitle.astro`, `StatValue.astro`, `StatDesc.astro`, `StatFigure.astro`, `StatActions.astro` (only `Stat.astro` exists, as a dummy scaffold) — see §0a
 **Story files:** `Stats.stories.ts` (+ short files per sub-component)
 
@@ -148,6 +148,52 @@ title is cut off" and "my dashboard scrolls sideways" are the same fact.
    the only file that exists), and for the same reason. `Passthrough` here
    forwards through the container, the block and all five parts at once (§8).
 
+### 3h. All seven are polymorphic, added 2026-09-02
+
+This plan first read *"None is polymorphic — daisyUI documents all seven on a
+`div`"*. The rule is right for a component whose CSS names a tag. This one's
+does not: every selector in `daisyui@5.7.22`'s `stat.css` is a class, and the
+only combinator in the file is the descendant in `.stats-horizontal .stat`
+**[verified — the file has no tag selector and no child combinator]**. So the
+tag was never load-bearing, and holding all seven to `div` cost the one thing
+the markup is actually for.
+
+**A stats block is a description list.** `stat-title` is a label and
+`stat-value` is the value it labels, which is `dt` and `dd` — the only markup
+that pairs them for a screen reader. Under `div`s the pairing exists in the
+visual grid and nowhere else. So:
+
+```astro
+<Stats as="dl">
+  <Stat>
+    <StatTitle as="dt">Downloads</StatTitle>
+    <StatValue as="dd">31K</StatValue>
+    <StatDesc as="dd">Jan 1st - Feb 1st</StatDesc>
+  </Stat>
+</Stats>
+```
+
+Three notes that had to be checked rather than assumed:
+
+1. **`dl` may wrap each group in a `div`** — HTML has allowed it since the
+   living standard's 2017 grouping change — so `Stat`'s existing `div` default
+   is exactly what the `dl` needs, and no divider selector changes: it is still
+   `.stat:not(:last-child)` between siblings (§3c).
+2. **`dd`'s UA `margin-inline-start: 40px` is zeroed by Tailwind's preflight**,
+   which this package requires anyway, so the value stays in grid column 1
+   (§3a). Without preflight it would indent.
+3. **`StatDesc as="dd"` gives a `dt` two `dd`s**, which is legal and is what a
+   caption under a value is.
+
+Everything else follows the same one-line rule: `Stat as="a"` for a block that
+navigates to the detail view it summarises, `Stat as="li"` in a list,
+`StatFigure as="figure"` for a real image, `StatActions as="footer"`. Defaults
+stay `div` throughout — still the only tag daisyUI documents (§0).
+
+Unlike Join (`plans/components/join.md` §3g), no JSDoc here contained an angle
+bracket, so the §5c generic-inference trap did not fire on any of the seven.
+Checked before editing, not after.
+
 ### 3e. Unverified assumptions
 
 1. **Do `Stat`s land as direct children of `.stats`?** Blocking. `.stat:not(:last-child)` draws the divider and `grid-auto-flow: column` places the blocks **[verified]** — a wrapper becomes the single grid item and every divider disappears. Likewise inside a `Stat`, the parts' `grid-column-start` values need them to be direct children. Twenty-sixth plan touching the shared question in `plans/components/aura.md` §3e.1 — blocking at **both** levels here.
@@ -221,16 +267,16 @@ const { class: className, ...rest } = Astro.props;
 
 ### The five part components
 
-Identical one-class wrappers over `stat-title`, `stat-value`, `stat-desc`, `stat-figure` and `stat-actions`, each with a `div` root, a plain default slot and `HTMLAttributes<'div'>`. `StatFigure`'s JSDoc notes it lands in column 2 wherever it is written (§3a); `StatValue`'s notes that colour is a caller class (`class="text-primary"`).
+Identical one-class wrappers over `stat-title`, `stat-value`, `stat-desc`, `stat-figure` and `stat-actions`, each with a plain default slot and `Polymorphic<{ as: Tag }>` defaulting to `'div'` (§3h). `StatFigure`'s JSDoc notes it lands in column 2 wherever it is written (§3a); `StatValue`'s notes that colour is a caller class (`class="text-primary"`).
 
-No `<script>` anywhere: pure CSS. None is polymorphic — daisyUI documents all seven on a `div`.
+No `<script>` anywhere: pure CSS. All seven are polymorphic, with `div` as every default — see §3h.
 
 ### Astro idioms gate
 
 - [ ] Content arrives via plain default slots in all seven — no `items`/`title`/`value` props (§2).
 - [ ] `<slot />` has no wrapper in `Stats` or `Stat` — both levels are grids (§3e.1).
 - [ ] No `Astro.slots.has()` gating anywhere.
-- [ ] Roots are `div` in all seven; no `as` prop.
+- [ ] Roots default to `div` in all seven via `Polymorphic<{ as: Tag }>` **with the `= 'div'` default type parameter** (`plans/README.md` §5c), and no frontmatter contains an angle bracket (§3h).
 - [ ] No `<script>` added.
 - [ ] `...rest` spread onto the root in all seven.
 - [ ] No invented axis — no colour, no size (§1, §3c).

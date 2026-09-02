@@ -1,5 +1,5 @@
 ---
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
 
 /**
  * One block inside a `Stats`. A two-column grid: `StatFigure` is pinned to
@@ -13,11 +13,20 @@ import type { HTMLAttributes } from 'astro/types';
  * `class="place-items-center"` centres the whole block, as the doc page's
  * centered-items example does.
  */
-interface Props extends HTMLAttributes<'div'> {}
+type Props<Tag extends HTMLTag = 'div'> = Polymorphic<{
+  /**
+   * Defaults to `div`. `.stat` is class-only CSS with no tag selector
+   * anywhere **[verified against `daisyui@5.7.22`'s `stat.css`]**, so the tag
+   * is the caller's: `as="li"` inside a `Stats` list, `as="a"` for a block
+   * that navigates to the detail view it summarises (plan §3h).
+   */
+  as: Tag;
+}>;
 
-const { class: className, ...rest } = Astro.props;
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const { as: Tag = 'div', class: className, ...rest } = Astro.props as Props<HTMLTag>;
 ---
 
-<div class:list={['stat', className]} {...rest}>
+<Tag class:list={['stat', className]} {...rest}>
   <slot />
-</div>
+</Tag>

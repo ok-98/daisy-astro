@@ -1,16 +1,20 @@
 ---
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
 
 /**
  * A row of controls under the value, for the doc page's account-balance
  * example. Column 1 like the text parts, and `white-space: nowrap`, so several
  * buttons stay on one line and widen the block rather than wrapping (plan §3f).
  */
-interface Props extends HTMLAttributes<'div'> {}
+type Props<Tag extends HTMLTag = 'div'> = Polymorphic<{
+  /** Defaults to `div` (plan §3h). */
+  as: Tag;
+}>;
 
-const { class: className, ...rest } = Astro.props;
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const { as: Tag = 'div', class: className, ...rest } = Astro.props as Props<HTMLTag>;
 ---
 
-<div class:list={['stat-actions', className]} {...rest}>
+<Tag class:list={['stat-actions', className]} {...rest}>
   <slot />
-</div>
+</Tag>

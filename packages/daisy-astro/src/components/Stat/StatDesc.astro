@@ -1,5 +1,5 @@
 ---
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
 
 /**
  * The small dimmed line under the value. Same styling as `StatTitle`; which of
@@ -7,11 +7,19 @@ import type { HTMLAttributes } from 'astro/types';
  *
  * `white-space: nowrap` (plan §3f).
  */
-interface Props extends HTMLAttributes<'div'> {}
+type Props<Tag extends HTMLTag = 'div'> = Polymorphic<{
+  /**
+   * Defaults to `div`. In a description-list `Stats` this is a second `dd`
+   * under the same `dt` — legal, and the caption reading is still positional
+   * (plan §3b, §3h).
+   */
+  as: Tag;
+}>;
 
-const { class: className, ...rest } = Astro.props;
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const { as: Tag = 'div', class: className, ...rest } = Astro.props as Props<HTMLTag>;
 ---
 
-<div class:list={['stat-desc', className]} {...rest}>
+<Tag class:list={['stat-desc', className]} {...rest}>
   <slot />
-</div>
+</Tag>

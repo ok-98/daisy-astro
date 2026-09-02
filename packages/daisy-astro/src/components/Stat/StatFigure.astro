@@ -1,5 +1,5 @@
 ---
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
 
 /**
  * An icon or image beside the numbers. **Position is fixed regardless of where
@@ -13,11 +13,18 @@ import type { HTMLAttributes } from 'astro/types';
  * A `Stat` declares only one grid column, so adding a figure is what creates
  * the second one and widens the block (plan §3a).
  */
-interface Props extends HTMLAttributes<'div'> {}
+type Props<Tag extends HTMLTag = 'div'> = Polymorphic<{
+  /**
+   * Defaults to `div`. `as="figure"` is the semantic fit when the figure is a
+   * real image rather than a decorative icon (plan §3h).
+   */
+  as: Tag;
+}>;
 
-const { class: className, ...rest } = Astro.props;
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const { as: Tag = 'div', class: className, ...rest } = Astro.props as Props<HTMLTag>;
 ---
 
-<div class:list={['stat-figure', className]} {...rest}>
+<Tag class:list={['stat-figure', className]} {...rest}>
   <slot />
-</div>
+</Tag>
