@@ -2,3 +2,5 @@ node_modules/
 dist/
 .astro/
 storybook-static/
+packages/daisy-astro/README.md
+packages/daisy-astro/LICENSE
