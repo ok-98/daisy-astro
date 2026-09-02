@@ -1,9 +1,9 @@
 ---
-import type { HTMLAttributes } from 'astro/types';
-import type { DaisySize } from '../../lib/variants';
+import { auraClass, type AuraProps } from './aura';
 
 // Props first — a `const` above this breaks inference (plans/README.md §5c).
-type AuraVariant = 'dual' | 'rainbow' | 'holo' | 'gold' | 'silver' | 'glow';
+// The props themselves and the class map live in `./aura.ts`, so the same
+// mapping is usable without rendering this component.
 
 /**
  * A rotating conic-gradient light drawn behind whatever you put inside it.
@@ -29,46 +29,11 @@ type AuraVariant = 'dual' | 'rainbow' | 'holo' | 'gold' | 'silver' | 'glow';
  * fourfold rather than stopping it. That is its call, not this wrapper's — for
  * full stillness pass `class="motion-reduce:animate-none"` (plan §3d).
  */
-interface Props extends HTMLAttributes<'div'> {
-  /**
-   * Named `variant`, never `style` — `style` is a native attribute
-   * (plans/components/button.md §3a).
-   *
-   * **Only some of these follow `currentColor`.** The default, `dual` and
-   * `glow` draw from it, so a `text-*` class tints them. `rainbow`, `holo`,
-   * `gold` and `silver` use fixed palettes and ignore `text-*` entirely — so
-   * `<Aura variant="gold" class="text-primary">` looks like it should work and
-   * does nothing (plan §3a).
-   */
-  variant?: AuraVariant;
-  /**
-   * Thickness of the light ring only. It does **not** resize the wrapped
-   * element — the sizes set a padding variable and nothing else.
-   */
-  size?: DaisySize;
-}
-
-// Full literal class names. NEVER `aura-${variant}` (plans/README.md §1b).
-const VARIANT: Record<AuraVariant, string> = {
-  dual: 'aura-dual',
-  rainbow: 'aura-rainbow',
-  holo: 'aura-holo',
-  gold: 'aura-gold',
-  silver: 'aura-silver',
-  glow: 'aura-glow',
-};
-
-const SIZE: Record<DaisySize, string> = {
-  xs: 'aura-xs',
-  sm: 'aura-sm',
-  md: 'aura-md',
-  lg: 'aura-lg',
-  xl: 'aura-xl',
-};
+type Props = AuraProps;
 
 const { variant, size, class: className, ...rest } = Astro.props;
 ---
 
-<div class:list={['aura', variant && VARIANT[variant], size && SIZE[size], className]} {...rest}>
+<div class:list={[...auraClass({ variant, size }), className]} {...rest}>
   <slot />
 </div>

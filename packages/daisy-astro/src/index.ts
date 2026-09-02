@@ -119,6 +119,11 @@ export { default as Tooltip } from './components/Tooltip/Tooltip.astro';
 export { default as ValidatorHint } from './components/Validator/ValidatorHint.astro';
 export { default as WindowMockup } from './components/WindowMockup/WindowMockup.astro';
 
+// Props and class generation extracted from a component, usable without
+// rendering it (see ./components/Aura/aura.ts).
+export { auraClass, AURA_VARIANT, AURA_SIZE } from './components/Aura/aura';
+export type { AuraProps, AuraVariant } from './components/Aura/aura';
+
 // The shared variant unions, so a consumer can type their own wrappers over
 // these components without redeclaring the axes.
 export type { DaisyColor, DaisySize } from './lib/variants';
