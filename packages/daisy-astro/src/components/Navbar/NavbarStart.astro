@@ -1,0 +1,25 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The leading region of a `Navbar`, and **exactly 50% of its width** — not a
+ * region that grows to fit. Pair it with `NavbarEnd` for the common two-region
+ * bar, where the two halves fill the row exactly.
+ *
+ * Long content here does not shrink the centre, it **pushes it off-centre**:
+ * `NavbarCenter` is `flex-shrink: 0`, so it wins and the halves overflow. That
+ * is why daisyUI's centre-logo example pairs the centre with icon-only sides
+ * (plan §3a).
+ *
+ * For a growing region rather than a fixed half, use a bare
+ * `<div class="flex-1">` instead — daisyUI does, in four of its nine examples
+ * (plan §3b).
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['navbar-start', className]} {...rest}>
+  <slot />
+</div>

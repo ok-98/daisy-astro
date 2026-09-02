@@ -1,0 +1,17 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The trailing region of a `Navbar` — the other **exactly 50%**, with its content
+ * pushed to the right. See `NavbarStart` for what happens when a half outgrows
+ * its width, and for when to use a bare `<div class="flex-none">` instead
+ * (plan §3a, §3b).
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['navbar-end', className]} {...rest}>
+  <slot />
+</div>

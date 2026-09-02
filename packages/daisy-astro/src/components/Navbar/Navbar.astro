@@ -1,10 +1,44 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/navbar/
 import type { HTMLAttributes } from 'astro/types';
 
+/**
+ * A 4rem-tall flex row for page navigation. The whole component is nine CSS
+ * declarations: a full-width flex row with `min-height: 4rem` and `.5rem` of
+ * padding, plus three optional part classes. Everything on daisyUI's doc page
+ * that looks like part of a navbar — the dropdowns, menus, avatars, indicators,
+ * search fields — is a different component composed inside it.
+ *
+ * **It has no background of its own.** A bare `<Navbar>` is an invisible 4rem
+ * flex row, which is correct rather than broken; every doc example adds one,
+ * usually `class="bg-base-100 shadow-sm"`. That is also why there is no `color`
+ * prop: `bg-neutral text-neutral-content` is plain Tailwind (plan §3d).
+ *
+ * **Two layouts, both idiomatic, and picking the wrong one is the likely
+ * mistake** (plan §3b):
+ *
+ * - `NavbarStart` / `NavbarCenter` / `NavbarEnd` — the halves are **exactly
+ *   50%** each and the centre is whatever sits between them. Reach for these
+ *   when you want two equal halves or a true centre region.
+ * - bare `<div class="flex-1">` and `<div class="flex-none">` — a growing
+ *   region plus fixed items. This is what **four of daisyUI's nine examples**
+ *   use, and it is the right tool whenever the split is not 50/50.
+ *
+ * A logo dropped into `NavbarStart` because the name sounds right, when the
+ * layout wanted `flex-1`, ends up pinned to the left half with a gap after it.
+ *
+ * `position: relative` is set at zero specificity through `:where()`, so
+ * dropdowns inside can anchor to the bar while a caller's `sticky` or `fixed`
+ * still wins with no `!important`. There is **no `z-index`** anywhere in the
+ * component and no modifier for pinning it, so a bar that floats over content
+ * is `class="sticky top-0 z-30"` (plan §3c).
+ *
+ * A shorter bar is `class="min-h-0"` — `min-height: 4rem` is the only size
+ * daisyUI ships and there is no size axis.
+ */
 interface Props extends HTMLAttributes<'div'> {}
+
+// No variant class map: daisyUI defines one component class and three part
+// classes here, and no modifiers at all (plan §1).
 
 const { class: className, ...rest } = Astro.props;
 ---

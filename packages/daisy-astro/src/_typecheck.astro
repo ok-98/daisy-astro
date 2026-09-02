@@ -114,6 +114,10 @@ import Tabs from './components/Tab/Tabs.astro';
 import TextRotate from './components/TextRotate/TextRotate.astro';
 import Tooltip from './components/Tooltip/Tooltip.astro';
 import Timeline from './components/Timeline/Timeline.astro';
+import Navbar from './components/Navbar/Navbar.astro';
+import NavbarStart from './components/Navbar/NavbarStart.astro';
+import NavbarCenter from './components/Navbar/NavbarCenter.astro';
+import NavbarEnd from './components/Navbar/NavbarEnd.astro';
 import TimelineEnd from './components/Timeline/TimelineEnd.astro';
 import TimelineItem from './components/Timeline/TimelineItem.astro';
 import TimelineMiddle from './components/Timeline/TimelineMiddle.astro';
@@ -343,3 +347,8 @@ import Steps from './components/Steps/Steps.astro';
 </Hero>
 <ThemeController theme="synthwave" class="toggle" autocomplete="off" id="tc" data-test="y" title="t" />
 <ThemeController theme="retro" type="radio" name="th" checked aria-label="Retro" class="btn join-item" />
+<Navbar class="bg-base-100 shadow-sm" id="nv" data-test="y" title="t">
+  <NavbarStart id="ns" data-test="y" class="mine">Logo</NavbarStart>
+  <NavbarCenter id="nc" data-test="y">Middle</NavbarCenter>
+  <NavbarEnd id="ne" data-test="y">Login</NavbarEnd>
+</Navbar>

@@ -1,0 +1,19 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The middle region of a `Navbar`. It has **no width and does not shrink**, so it
+ * is not centred by distributing space — it is squeezed between two 50% halves
+ * and stays visually centred only while their content stays inside them
+ * (plan §3a).
+ *
+ * Optional, like the other two: most doc examples have no centre at all.
+ */
+interface Props extends HTMLAttributes<'div'> {}
+
+const { class: className, ...rest } = Astro.props;
+---
+
+<div class:list={['navbar-center', className]} {...rest}>
+  <slot />
+</div>
