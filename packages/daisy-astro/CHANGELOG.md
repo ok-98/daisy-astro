@@ -1,5 +1,12 @@
 # daisy-astro
 
+## 0.2.0
+
+### Minor Changes
+
+- c685b2a: feat(join): make the root polymorphic with `as`, defaulting to `div`
+- 9a610c7: feat(stat): make all seven Stat components polymorphic with `as`, defaulting to `div`
+
 ## 0.1.0
 
 ### Minor Changes

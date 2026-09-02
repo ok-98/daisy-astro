@@ -1,6 +1,6 @@
 {
   "name": "daisy-astro",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Astro components for every daisyUI 5 component, where each daisyUI variant is a typed prop and every native HTML attribute is forwarded.",
   "keywords": [
     "astro-component",
