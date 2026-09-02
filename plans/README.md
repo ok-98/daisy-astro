@@ -169,6 +169,55 @@ Two consequences:
 
 `title` in a story stays flat (`'Components/Button'`); the directory is a filesystem concern and does not dictate the sidebar hierarchy.
 
+### 3c. `src/index.ts` is the package's entire public surface
+
+`package.json`'s `exports` field points at `src/index.ts` and nothing else, so
+**a component missing from that file cannot be imported by a consumer at all**.
+It was `export {};` until 2026-09-02, with 112 components behind it — the
+library was complete and unusable at the same time, and nothing in the repo
+said so: `astro check` passes on an empty barrel, because nothing in `src`
+imports it.
+
+It now re-exports every `.astro` file under `src/components` under its own file
+name, sub-components included, plus `DaisyColor` and `DaisySize` as types.
+
+```astro
+---
+import { Button, Card, CardBody } from 'daisy-astro';
+---
+```
+
+Two things worth knowing about it:
+
+- **The barrel does not widen prop types.** Verified with a probe:
+  `<Button color="banana">` and a `<ThemeController />` with no `theme` are both
+  errors when imported through `index.ts`, exactly as they are through a deep
+  path. Polymorphic components keep their default type parameter too.
+- **Nothing enforces that the file stays complete.** A new component is
+  invisible to consumers until a line is added here, and every check in this
+  repo still passes. Adding the line is part of adding a component.
+
+Deep imports (`daisy-astro/src/components/Button/Button.astro`) still resolve;
+the barrel is the documented surface, not a wall.
+
+### 3d. Stories must import the `.astro` file, never the barrel
+
+Found while verifying §3c on 2026-09-02, and it fails **silently**: a story file
+whose `component` comes from `index.ts` is indexed by Storybook, appears in the
+sidebar, and **is never prerendered** — no error anywhere. The story simply has
+no rendered output.
+
+The framework filters the index by `componentPath?.endsWith(".astro")`
+(`preset.js:1183` and `:1498`), so a `component` that resolves to a `.ts` module
+drops out of the prerender pass while staying in the index.
+
+`component:` must therefore be the direct `.astro` import. Components used
+*inside* a story's slot tree may come from anywhere — verified by rendering
+`Card`, `CardBody` and `Badge` through the barrel in a throwaway story, which
+produced `<div class="card"><div class="card-body">…<span class="badge
+badge-primary">badge</span></div></div>`. That is also the proof that the
+barrel resolves and renders at all, rather than merely type-checking.
+
 ### 4. Storybook runs on `@storybook-astro/framework`
 
 The community Astro framework for Storybook (`storybook-astro.org`, MIT, ~24k downloads/week, Astro 5–7 + Storybook 10). Stories import the `.astro` file directly and pass slot content through `args.slots`:

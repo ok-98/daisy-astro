@@ -2,6 +2,35 @@
 
 Astro components wrapping daisyUI. WIP.
 
+## Install
+
+```bash
+pnpm add daisy-astro daisyui tailwindcss
+```
+
+`astro`, `daisyui` and `tailwindcss` are peer dependencies — this package ships
+`.astro` source and no CSS of its own, so your app's Tailwind build is what
+turns the class names into styles.
+
+```astro
+---
+import { Button, Card, CardBody } from 'daisy-astro';
+---
+
+<Card class="bg-base-100 w-96 shadow-sm">
+  <CardBody>
+    <Button color="primary">Buy now</Button>
+  </CardBody>
+</Card>
+```
+
+Everything is exported by its own name from the package root, sub-components
+included (`CardBody`, `NavbarStart`, `MegamenuItem`, …). The shared variant
+unions `DaisyColor` and `DaisySize` are exported as types, for wrapping these
+components in your own.
+
+Then do the four things below — the first one is not optional.
+
 ## Setup
 
 Things your app needs that the components cannot add for themselves. They all
