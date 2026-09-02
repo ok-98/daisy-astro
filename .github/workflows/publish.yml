@@ -1,0 +1,46 @@
+name: Publish
+
+# Publishes packages/daisy-astro to npm when a GitHub release is published.
+# Auth is npm trusted publishing (OIDC) — no NPM_TOKEN secret, and npm attaches
+# a provenance attestation automatically.
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # required for the OIDC token npm exchanges for publish rights
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24 # ships npm >= 11.5.1, the minimum for trusted publishing
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+
+      # The release tag is typed by hand in the GitHub UI, so it can disagree with
+      # what `changeset version` wrote. An npm publish is effectively permanent —
+      # refuse rather than ship the wrong version number.
+      - name: Check the release tag matches the package version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          tag="${tag#daisy-astro@}"
+          version=$(node -p "require('./packages/daisy-astro/package.json').version")
+          if [ "$tag" != "$version" ]; then
+            echo "::error::release tag $GITHUB_REF_NAME does not match package version $version"
+            exit 1
+          fi
+
+      # The only automated gate this repo has (CLAUDE.md: no test runner, no linter).
+      - run: pnpm --filter daisy-astro exec astro check
+
+      - run: npm publish
+        working-directory: packages/daisy-astro
