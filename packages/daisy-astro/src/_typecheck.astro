@@ -304,6 +304,9 @@ import Steps from './components/Steps/Steps.astro';
 <Join direction="vertical" class="lg:join-horizontal" id="jn" data-test="y" title="t">
   <button class="btn join-item">A</button><button class="btn join-item">B</button>
 </Join>
+<Join as="nav" aria-label="Pagination">
+  <button class="btn join-item">1</button><button class="btn join-item">2</button>
+</Join>
 <Label class="mine" id="lb" data-test="y" title="t">https://</Label>
 <Label as="label" for="email">Email</Label>
 <FloatingLabel class="w-full max-w-xs" id="fl" data-test="y" title="t">

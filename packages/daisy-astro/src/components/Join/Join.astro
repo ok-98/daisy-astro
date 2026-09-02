@@ -1,5 +1,5 @@
 ---
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
 
 // Props first — a `const` above this breaks inference (plans/README.md §5c).
 type JoinDirection = 'horizontal' | 'vertical';
@@ -9,9 +9,9 @@ type JoinDirection = 'horizontal' | 'vertical';
  * borders between them.
  *
  * **There is no `JoinItem`.** `join-item` is a class you add to a component you
- * already have — `<Button class="join-item">`, `<Collapse class="join-item">` —
- * because a wrapper component would have to re-expose every prop of whatever it
- * wraps (plan §2).
+ * already have — a `Button` or a `Collapse` with `class="join-item"` — because
+ * a wrapper component would have to re-expose every prop of whatever it wraps
+ * (plan §2).
  *
  * **Items do not have to be direct children.** daisyUI sets the four corner
  * radii on `.join`'s direct children and `.join-item` reads them as *inherited*
@@ -19,11 +19,11 @@ type JoinDirection = 'horizontal' | 'vertical';
  * corners — daisyUI has a doc example for exactly that. This is the one
  * component in the library where wrapping slot content is explicitly supported
  * rather than merely survivable (plan §3a).
- *
- *     <Join>
- *       <TextInput class="join-item" placeholder="Email" />
- *       <Button class="join-item">Subscribe</Button>
- *     </Join>
+ * The usual shape is a `TextInput` and a `Button`, each with
+ * `class="join-item"`, inside one `Join`. Markup examples live in
+ * `Join.stories.ts`: this component's `Props` is generic, so an angle bracket
+ * anywhere in this frontmatter — comments included — silently kills prop
+ * inference (`plans/README.md` §5c).
  *
  * Per-item corner overrides need no escape hatch: the radii come from
  * low-specificity `:where()` rules, so a plain `rounded-e-full` on one item
@@ -37,14 +37,23 @@ type JoinDirection = 'horizontal' | 'vertical';
  * group renders square but still correctly collapsed — degraded, not broken
  * (plan §3b).
  */
-interface Props extends HTMLAttributes<'div'> {
+type Props<Tag extends HTMLTag = 'div'> = Polymorphic<{
+  /**
+   * Defaults to `div`, which is the only tag daisyUI documents. `.join` is pure
+   * layout CSS with no semantics of its own, so the tag is the caller's to
+   * choose: `as="nav"` is the accessible root for a pager built out of Join and
+   * Button, which is all daisyUI's Pagination page is
+   * (`plans/components/pagination.md` §0) — otherwise callers wrap the group in
+   * a `nav` they did not need (plan §3g).
+   */
+  as: Tag;
   /**
    * Unconditional direction. `horizontal` is daisyUI's default. It flips two
    * variables that do double duty: which corners round, and which axis the
    * negative border-collapsing margin runs along (plan §3c).
    */
   direction?: JoinDirection;
-}
+}>;
 
 // Full literal class names. NEVER `join-${direction}` — an interpolated class
 // gets no CSS from daisyUI (plans/README.md §1b).
@@ -53,9 +62,15 @@ const DIRECTION: Record<JoinDirection, string> = {
   vertical: 'join-vertical',
 };
 
-const { direction, class: className, ...rest } = Astro.props;
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const {
+  as: Tag = 'div',
+  direction,
+  class: className,
+  ...rest
+} = Astro.props as Props<HTMLTag>;
 ---
 
-<div class:list={['join', direction && DIRECTION[direction], className]} {...rest}>
+<Tag class:list={['join', direction && DIRECTION[direction], className]} {...rest}>
   <slot />
-</div>
+</Tag>

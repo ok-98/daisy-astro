@@ -2,11 +2,11 @@
 
 **daisyUI category:** Layout
 **daisyUI doc page:** https://daisyui.com/components/join/
-**Root element:** `div`
+**Root element:** `div` by default, polymorphic via `as` — see §3g
 **Target file:** `packages/daisy-astro/src/components/Join/Join.astro` (currently a dummy scaffold)
 **Story file:** `packages/daisy-astro/src/components/Join/Join.stories.ts`
 
-**Global Constraints** (from `plans/README.md`, apply as-is): props extend `HTMLAttributes<'div'>`; `class:list` for merging; variant classes are literals in a `Record` map (§1b); **no shared unions** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
+**Global Constraints** (from `plans/README.md`, apply as-is): props are `Polymorphic<{ as: Tag }>` with `Tag` defaulting to `'div'` (§3g); `class:list` for merging; variant classes are literals in a `Record` map (§1b); **no shared unions** (§1); stories on `@storybook-astro/framework`; `astro check` is the gate (§5b).
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22` and the doc page source. §3e lists what is **unverified**.
 
@@ -115,6 +115,36 @@ Nothing left to do here. `plans/IMPLEMENTATION-ORDER.md` §5.4's Join row is
 already struck through. Recorded because a Step 7 that quietly turns out to be
 a no-op is worth one line either way.
 
+### 3g. Polymorphic after all: `as`, added 2026-09-02
+
+This plan originally read *"Not polymorphic — daisyUI documents `join` on a
+wrapper `div`"*, which is the same one-line rule every non-polymorphic component
+here uses. It is the wrong rule for this component, for one reason the doc page
+itself supplies: **`plans/components/pagination.md` §0 resolves Pagination into
+Join plus Button** — daisyUI has no `pagination.css` — and a pager's accessible
+root is `nav` with an `aria-label`. Under the old rule every caller building the
+library's own documented pagination recipe had to wrap the group in a `nav` the
+component could have been. `Breadcrumbs` is polymorphic for exactly this reason
+and defaults to `nav` (`plans/components/breadcrumbs.md` §3b).
+
+`.join` is pure layout CSS — `@scope(&)` corner variables and a collapsing
+margin — with no semantics of its own and no selector that names a tag
+**[verified: `join.css` matches `.join`, `.join-item` and `:where()` children
+only]**, so nothing breaks on a different root. Default stays `div`, which is
+still the only tag daisyUI documents.
+
+**The angle-bracket trap fired on the way in**, and it is worth recording
+because the symptom was not the documented one. `plans/README.md` §5c says a
+`<` or `>` anywhere in a *generic* component's frontmatter silently kills
+`Props` inference. Join's JSDoc carried a four-line `astro` example and two
+inline tags — legal while `Props` was a non-generic `interface`, per §5c's
+2026-08-31 narrowing. Adding the type parameter did not silently break
+inference: it **crashed the compiler**, `astro check` exiting 2 with
+`Cannot read properties of undefined (reading 'map')` out of
+`@astrojs/compiler@2.13.1`'s `convertToTSX`, plus `Go program has already
+exited`. A third failure shape for §5c's list, and the only loud one. The
+examples moved to `Join.stories.ts`, where they are executable anyway.
+
 ### 3e. Unverified assumptions
 
 1. **`@scope` support in the Storybook browser** (§3b). One check; the failure is graceful.
@@ -125,7 +155,7 @@ a no-op is worth one line either way.
 
 ```astro
 ---
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLTag, Polymorphic } from 'astro/types';
 
 // Props first — a `const` above this breaks inference (plans/README.md §5c).
 type JoinDirection = 'horizontal' | 'vertical';
@@ -138,20 +168,19 @@ type JoinDirection = 'horizontal' | 'vertical';
  * **does not need to be a direct child**: daisyUI passes the corner radii down
  * as inherited custom properties (plan §3a).
  *
- * ```astro
- * <Join>
- *   <TextInput class="join-item" placeholder="Email" />
- *   <Button class="join-item">Subscribe</Button>
- * </Join>
- * ```
+ * Markup examples live in the stories, not here: `Props` is generic, so an
+ * angle bracket anywhere in this frontmatter kills inference
+ * (`plans/README.md` §5c, plan §3g).
  *
  * For the usual responsive group use the class rather than the prop:
  * `class="join-vertical lg:join-horizontal"` (plan §3c).
  */
-interface Props extends HTMLAttributes<'div'> {
+type Props<Tag extends HTMLTag = 'div'> = Polymorphic<{
+  /** Defaults to `div`; `as="nav"` is the accessible pager root (plan §3g). */
+  as: Tag;
   /** Unconditional direction. `horizontal` is daisyUI's default. */
   direction?: JoinDirection;
-}
+}>;
 
 // Full literal class names. NEVER `join-${direction}` (plans/README.md §1b).
 const DIRECTION: Record<JoinDirection, string> = {
@@ -159,22 +188,28 @@ const DIRECTION: Record<JoinDirection, string> = {
   vertical: 'join-vertical',
 };
 
-const { direction, class: className, ...rest } = Astro.props;
+// `Astro.props` is untyped inside a generic component (plans/README.md §5c).
+const {
+  as: Tag = 'div',
+  direction,
+  class: className,
+  ...rest
+} = Astro.props as Props<HTMLTag>;
 ---
 
-<div class:list={['join', direction && DIRECTION[direction], className]} {...rest}>
+<Tag class:list={['join', direction && DIRECTION[direction], className]} {...rest}>
   <slot />
-</div>
+</Tag>
 ```
 
-No `<script>`: pure CSS. Not polymorphic — daisyUI documents `join` on a wrapper `div`.
+No `<script>`: pure CSS. Polymorphic, with `div` as the default tag — see §3g.
 
 ### Astro idioms gate
 
 - [ ] Content arrives via a plain default slot — no `items` prop (§2).
 - [ ] **No `JoinItem` component** — `join-item` is a caller class (§2).
 - [ ] No `Astro.slots.has()` gating, and **no defensive direct-child requirement** — wrapping is supported (§3a).
-- [ ] Root is `div`; no `as` prop.
+- [ ] Root defaults to `div` via `Polymorphic<{ as: Tag }>` **with the `= 'div'` default type parameter** (`plans/README.md` §5c), and the frontmatter contains no angle brackets (§3g).
 - [ ] No `<script>` added.
 - [ ] `...rest` spread onto the root.
 - [ ] Every variant class is a literal in a `Record` map — no `` `join-${direction}` ``.

@@ -361,6 +361,15 @@ const { as: Tag = 'button', color, ...rest } = Astro.props as Props<HTMLTag>;
 
    It is **not** about JSDoc vs `//` — both forms break with an angle bracket and both work without one. So: **no angle brackets in the frontmatter of a generic component, in either direction.** Write "a native `kbd` element", not `` `<kbd>` ``, and "child elements of the item" rather than `` `li > *` ``; put markup examples in the stories, where they are executable anyway.
 
+   **A third shape, loud, found 2026-09-02 on Join:** making an *existing*
+   non-generic component generic while its JSDoc still holds a markup example
+   does not break inference quietly — it crashes the compiler. `astro check`
+   exits 2 from `@astrojs/compiler@2.13.1`'s `convertToTSX` with
+   `Cannot read properties of undefined (reading 'map')` and
+   `Go program has already exited`, naming the file but not the cause. So when
+   adding `as` to a component that shipped non-generic, strip the angle
+   brackets first (`plans/components/join.md` §3g).
+
    Two failure shapes, and the quiet ones are worse than the loud one: every call site erroring is easy to spot, a component that silently accepts *every* prop is not, and a single call site failing on `as` looks like a bug in that one usage rather than in the component. `src/_typecheck.astro` catches all three.
 
 2. **A polymorphic `Props` needs a default type parameter, or the default tag's own attributes are rejected.** `type Props<Tag extends HTMLTag> = Polymorphic<{ as: Tag; … }>` only resolves `Tag` when the caller passes `as`. Omit `as` and `Tag` stays unresolved, so `<Button type="submit">`, `<Badge title="t">` and `<Mask src="/a.webp">` are all type errors — ordinary calls, on the component's *own* default element. Declare the default the component actually renders:
