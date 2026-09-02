@@ -49,6 +49,25 @@ CSS:
 
 Without it the library appears completely unstyled. See `plans/README.md` §1c.
 
+**That line makes Tailwind scan the whole library, so you get all of daisyUI's
+component CSS whether you use it or not.** Measured on a page using eight
+components (2026-09-02):
+
+| `@source` | CSS |
+|---|---|
+| the whole package — the line above | 287 KB |
+| only the component directories actually imported | 48 KB |
+
+If that matters, name them:
+
+```css
+@source "../../node_modules/daisy-astro/src/components/{Button,Card,Navbar,ThemeController}";
+```
+
+The cost of the narrow form is that it is a list to keep current — a component
+you import but forget to add here renders **unstyled**, with no error. Start with
+the whole package and narrow it if the CSS budget calls for it.
+
 ### 2. Add `viewport-fit=cover` for the Dock
 
 ```html

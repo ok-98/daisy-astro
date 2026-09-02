@@ -70,6 +70,42 @@ Tailwind 4 auto-detects sources but ignores `node_modules`, so an app that insta
 
 This belongs in the published README's install steps — without it the library appears completely unstyled, which is the first thing a new user will hit.
 
+**Verified end to end on 2026-09-02**, with a real consumer rather than by
+reasoning: `npm pack`, a scratch Astro 7 app installing the tarball, `astro
+build`. The import through the package root resolves, the `.astro` files compile
+out of `node_modules`, and the page renders `<button class="btn btn-primary
+btn-lg">`. That is also the first proof that `exports` → `src/index.ts` works
+for a consumer at all (§3c).
+
+**What it also showed: `@source` scans the library's source, not the components
+you import**, so a page using eight components ships every daisyUI class the
+whole package names. Three builds of the same page:
+
+```
+package with .stories.ts,  @source <whole package>                327,371 bytes
+package without,           @source <whole package>                286,600
+package without,           @source <4 component dirs actually used> 48,063
+```
+
+Two conclusions, both acted on:
+
+1. **Stories are no longer published.** They were 463 KB of the 714 KB `src`
+   tree — two thirds of the package — and they cost consumers 41 KB of CSS for
+   class names no consumer renders. `files` in `package.json` now lists
+   `src/components/**/*.astro`, `src/index.ts`, `src/lib` and `src/env.d.ts`:
+   116 files and 75 KB packed, down from 200 files and 201 KB.
+2. **A narrow `@source` is worth 6×**, and the published README offers it as an
+   opt-in with its maintenance cost stated — a component imported but missing
+   from the list renders unstyled with no error.
+
+And a trap worth recording, since it cost a wrong measurement here: **an
+`@source` glob does not reliably exclude files inside the directories it names.**
+The same `.../{Button,Card,Navbar,ThemeController}/*.astro` pattern produced
+93,293 bytes against a package whose component directories still held
+`.stories.ts`, and 48,063 after those files were gone from the package — so the
+`*.astro` part did not keep the story files out of the scan. Remove files from
+the package rather than trying to pattern around them.
+
 ### 2. Class merging: `class:list`, never manual string concatenation
 
 Astro does **not** auto-merge a caller-supplied `class` with a class you hardcode on the root element — `class` must be destructured (renamed, since `class` is a reserved word) and merged explicitly. Astro's `class:list` directive is powered by `clsx` (bundled with Astro, no new dependency) and handles this:

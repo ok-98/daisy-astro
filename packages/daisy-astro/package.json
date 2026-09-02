@@ -6,7 +6,10 @@
     ".": "./src/index.ts"
   },
   "files": [
-    "src"
+    "src/components/**/*.astro",
+    "src/index.ts",
+    "src/lib",
+    "src/env.d.ts"
   ],
   "scripts": {
     "storybook": "storybook dev -p 6006",
