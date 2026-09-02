@@ -1,12 +1,75 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/theme-controller/
 import type { HTMLAttributes } from 'astro/types';
 
-interface Props extends HTMLAttributes<'input'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A checkbox or radio that switches the page theme while it is checked, with
+ * no JavaScript.
+ *
+ * **It has no appearance of its own.** daisyUI ships no rule whose subject is
+ * `.theme-controller`; the class exists only as a hook inside every theme's
+ * own `:root:has(input.theme-controller[value=x]:checked)` selector (plan §0a).
+ * So the visible control is always another component's class, passed through
+ * `class` — Toggle's, Checkbox's, Radio's or Button's — or nothing at all when
+ * the input is the hidden one inside a Swap.
+ *
+ * That makes two spellings equivalent, and neither is wrong:
+ *
+ *     <ThemeController theme="synthwave" class="toggle" />
+ *     <Toggle class="theme-controller" value="synthwave" />
+ *
+ * Same element, same classes, same behaviour. Prefer the first when theming is
+ * the point, the second when an existing control is gaining the behaviour.
+ *
+ * **`theme` must name a theme the consumer actually built.** daisyUI 5 emits a
+ * theme's CSS only when it is listed in `@plugin "daisyui" { themes: … }`, and
+ * a controller naming an unbuilt theme matches no selector and **silently does
+ * nothing** — the input still ticks, the page just never changes.
+ *
+ * **`theme="default"` is a designed idiom, not a placeholder.** No theme is
+ * named that, so nothing matches and the page falls back to its default. It is
+ * how daisyUI's radio groups offer a reset; only a radio gets it, since
+ * unchecking is what a radio group does.
+ *
+ * **Needs `:has()`** — Chrome 105, Firefox 121 (December 2023), Safari 15.4,
+ * a higher floor than the rest of this library. Below it the input renders and
+ * ticks and the theme never changes, which is the same silent failure again.
+ *
+ * **Persistence is your job.** daisyUI switches the theme in CSS only; saving
+ * the choice to `localStorage` or the server is application code, so this
+ * component ships no `<script>`. Related: browsers restore checkbox and radio
+ * state across reloads, which fights persisted-theme logic — daisyUI's own
+ * rendered demos all set `autocomplete="off"` for that reason, though its
+ * copyable markup omits it. It reaches the element through the spread.
+ */
+interface Props extends HTMLAttributes<'input'> {
+  /**
+   * Theme name to activate while this input is checked, rendered as `value`.
+   * Required: without it there is no selector to match and the component is
+   * decorative. Use `"default"` to match nothing and reset (see above).
+   */
+  theme: string;
+  /**
+   * Only these two can ever be `:checked`, which is what the theme selector
+   * matches — every other input type is inert here, so the union is narrowed
+   * rather than inherited. Defaults to `"checkbox"`.
+   */
+  type?: 'checkbox' | 'radio';
+}
+
+const { theme, type = 'checkbox', class: className, ...rest } = Astro.props;
+
+// Same guard as TextInput and HeroOverlay, for the same reason: `<input>` is a
+// void element, so children are dropped by the parser with no signal anywhere,
+// and `children` is not part of `Props` so TypeScript cannot catch it either
+// (plan §2). Text and icons belong in the wrapper — Swap, Toggle, Label.
+if (Astro.slots.has('default')) {
+  throw new Error('<ThemeController> takes no children — <input> is a void element. Put icons or text in the wrapper (Swap, Toggle, Label).');
+}
+
+// No `Record` map: there are no variant classes to map. `theme-controller` is
+// the only literal class this component owns.
 ---
 
-<input class:list={['theme-controller', className]} {...rest} />
+<input type={type} value={theme} class:list={['theme-controller', className]} {...rest} />

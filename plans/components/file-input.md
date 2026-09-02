@@ -48,7 +48,7 @@ Full log:
 | Range | `range.md` | bug; closed the original list — **fixed in code 2026-08-30**, asserted: 29/29 rendered sliders carry `type` |
 | OTP | `otp.md` §0 | different defect — wrong root element (`div` → `label`); **fixed in code 2026-08-30**, asserted: 23 label roots, 0 div roots |
 | Text Input | `text-input.md` §0i | **clean** — `type="text"` is the spec default |
-| Theme Controller | `theme-controller.md` §0b | bug — reopened the audit, corrected the criterion |
+| Theme Controller | `theme-controller.md` §0b | bug — reopened the audit, corrected the criterion; **fixed in code 2026-09-02**, asserted: 28/28 rendered controllers carry both `type` and `value` |
 | Toggle | `toggle.md` §0a | bug — found *by* the corrected criterion; **fixed in code 2026-09-01**, asserted: 21/21 rendered toggles carry `type` |
 
 Under the corrected criterion the list is now complete: no other component's CSS matches on `:checked`, `:indeterminate` or `[type=…]`. Any new component that does must be checked before its plan is written.

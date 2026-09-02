@@ -74,6 +74,7 @@ import IndicatorItem from './components/Indicator/IndicatorItem.astro';
 import ValidatorHint from './components/Validator/ValidatorHint.astro';
 import FileInput from './components/FileInput/FileInput.astro';
 import Toggle from './components/Toggle/Toggle.astro';
+import ThemeController from './components/ThemeController/ThemeController.astro';
 import Checkbox from './components/Checkbox/Checkbox.astro';
 import Select from './components/Select/Select.astro';
 import Textarea from './components/Textarea/Textarea.astro';
@@ -340,3 +341,5 @@ import Steps from './components/Steps/Steps.astro';
   <HeroOverlay class="rounded" id="ho" data-test="y" />
   <HeroContent class="text-center" id="hc">Hello</HeroContent>
 </Hero>
+<ThemeController theme="synthwave" class="toggle" autocomplete="off" id="tc" data-test="y" title="t" />
+<ThemeController theme="retro" type="radio" name="th" checked aria-label="Retro" class="btn join-item" />

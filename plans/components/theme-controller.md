@@ -14,6 +14,8 @@
 - One story file, `Playground` + one story per variant axis.
 - `astro check` is the type gate, not `tsc` (§5b).
 
+
+> **Status:** **Implemented** (2026-09-02), closing Stage 5. `ThemeController.astro` and 14 stories. §0b's bug is fixed and asserted — **28 of 28** rendered controllers carry both `type` and `value`, the scaffold shipped neither (§8) — and §0a is measured rather than argued: **zero** rules in the built CSS have `.theme-controller` as their subject, while the seven built themes each carry one `input.theme-controller[value=…]:checked` selector and `cupcake`, which this build does not enable, carries none. Two additions to §4: **the children guard fires** (§3a), and **the `type` union ships CSS by existing** (§3b). Step 5 (visual pass) is open, and here it is the only thing that can prove a theme actually changes.
 ---
 
 ## 0. What the evidence actually says
@@ -254,6 +256,55 @@ No `Record` map: there are no variant classes to map. The only literal class is 
 <ThemeController theme="x">oops</ThemeController>
 ```
 
+### 3a. The children guard fires — addition to §4
+
+**2026-09-02.** §4's probe block asked for three errors and got two:
+`<ThemeController />` and `type="text"` are both `astro check` errors, and
+`<ThemeController theme="x">oops</ThemeController>` **is not**, for the reason
+`plans/components/hero.md` §3f recorded — `children` is not part of `Props`, so
+TypeScript has nothing to reject and the content is dropped by the parser.
+
+So the §2 guard is the whole defence, and it was fired once against a temporary
+story to prove it does:
+
+```
+Error: Failed to render Astro component passed to slot "root":
+<ThemeController> takes no children — <input> is a void element. Put …
+```
+
+Third runtime guard in the library after `text-input.md` §2 and
+`hero.md` §3f, which is the count §3f said would justify a shared helper. It
+still does not, and the reason is worth stating rather than re-deciding next
+time: the helper would save one `if` and one `throw` per component while
+costing an import, and each message names its own component and its own place
+to put the content — which is the part that makes the error useful.
+
+### 3b. The `type` union ships CSS by existing
+
+`plans/README.md` §1b established that Tailwind's scanner reads the whole source
+file with no parsing, so a daisyUI class named in a **comment** emits its rules.
+This component is where that rule reaches **code**: the props union is literally
+
+```ts
+type?: 'checkbox' | 'radio';
+```
+
+and `checkbox` and `radio` are both daisyUI class names. A consumer who imports
+this component therefore builds `.checkbox` and `.radio` whether or not anything
+renders them.
+
+Unavoidable and correct to keep — the union is what makes §0b's fix a type error
+rather than a comment — but it decides the JSDoc's wording. The prose names the
+four appearances as "Toggle's, Checkbox's, Radio's or Button's", with capitals,
+rather than as four literal class names: the two already in the union cost
+nothing extra, and the other two would ship for prose that only explains where
+the appearance comes from. The button rules are the largest of the four.
+
+The one literal kept deliberately is `toggle`, in the two-spellings example — an
+equivalence written without the class name it is about would not demonstrate
+anything, and a caller reaching for this component is overwhelmingly likely to
+write that class themselves.
+
 ## 5. Storybook stories
 
 | Doc-page example | Story name | Notes |
@@ -306,42 +357,74 @@ export const AsCheckbox = {
 
 ## 6. Steps
 
-- [ ] **Step 1:** Section 1 is already filled — the frontmatter lists one class, and §0a establishes that no rule targets it. Nothing to re-derive.
-- [ ] **Step 2:** No union goes in `variants.ts`. `theme` stays `string` for the reason given in section 1; `type`'s two-literal union is local.
-- [ ] **Step 3:** Rewrite `ThemeController.astro` per section 4 and run the probe block. Confirm in the built HTML that `type` and `value` are both present — the scaffold shipped neither.
-- [ ] **Step 4:** **Before writing stories**, check `.storybook/preview.ts` for which themes the daisyUI config enables (§5). Then write `ThemeController.stories.ts`, starting with `InsideSwap`.
-- [ ] **Step 5:** `pnpm storybook` from `packages/daisy-astro/`, open `Components/ThemeController`, verify:
-  - `AsToggle` flips the canvas to `synthwave` and back.
-  - `AsRadioGroup` switches between four themes, and its `value="default"` option returns the canvas to the default theme (§0d).
-  - `InsideSwap` and `ToggleWithIconsInside` keep the input invisible while still switching the theme.
-  - `AsRadioButtons` shows the `aria-label` text as the visible button label (§0i) and squares its corners inside the Join with no prop.
-  - A controller naming a theme that is **not** enabled does nothing at all — add it as a deliberate negative case, since silence is the documented failure (§0a).
-- [ ] **Step 6:** Attribute forwarding story: `id`, `data-*`, `style`, `class`, plus `name`, `checked`, `autocomplete` and `aria-label`. Headless check:
-
-```bash
-pnpm build-storybook
-grep -rhoE '<input[^>]*theme-controller[^>]*>' storybook-static/astro-prerendered-stories.json | head
-```
-- [ ] **Step 7:** Three documentation corrections, all in `plans/README.md` unless stated:
-  1. Set the Theme Controller row to **Implemented**.
-  2. Remove Theme Controller from the script-backed list in §254 (§0h) — leaving only Swap, flagged for re-check.
-  3. Add a line to §2b stating that daisyUI's `prefix` option is unsupported by this library, because every emitted class name is a literal (§0f).
-  4. In `file-input.md` §0, reopen the missing-`type` audit, add Theme Controller as a sixth finding, and restate its closing criterion as *"every component whose CSS matches on `:checked`, `:indeterminate`, or `[type=…]`"* (§0b).
+- [x] **Step 1: nothing to re-derive**, and §0a is now measured: the built CSS holds **no** rule whose subject is `.theme-controller`, and the class appears only inside theme selectors — 8 occurrences for the 7 enabled themes (§8).
+- [x] **Step 2: no union goes in `variants.ts`.** `theme` stays `string`; `type`'s two-literal union is local — and pays a small CSS cost for being spelled that way (§3b).
+- [x] **Step 3: done — §0b's bug is fixed.** `type` and `value` are both rendered explicitly and both appear on 28 of 28 controllers. The probe errors on the two cases it can; the third needs the runtime guard (§3a).
+- [x] **Step 4: done.** `.storybook/preview.css` was checked first and already enables the five themes the stories name (Tier 0.2). `ThemeController.stories.ts`, 14 stories — the 10 doc examples plus `Playground`, `ResetToDefault`, `UnbuiltTheme` and `Passthrough`. `InsideSwap` was written first, as §5 asked; its inline SVG survives.
+- [ ] **Step 5:** `pnpm storybook`. **Still open, and it carries more here than anywhere else in the library: nothing in a headless build can show a theme changing.** Verify: `AsToggle` flips the canvas to synthwave and back; `AsRadioGroup` moves between four themes and its first option returns the canvas to the default (§0d); `InsideSwap` and `ToggleWithIconsInside` keep the input invisible while still switching; `AsRadioButtons` shows its `aria-label` as the visible button text (§0i) and squares its corners inside the Join; and **`UnbuiltTheme`'s second toggle does nothing at all** — the documented silent failure, already proven in the CSS (§8) and worth seeing.
+- [x] **Step 6: done.** `Passthrough` renders `<input type="radio" value="synthwave" class="theme-controller mine btn join-item" id="tc-1" data-test="yes" style="letter-spacing:1px" name="theme-pass" checked autocomplete="off" aria-label="Synthwave">` — every undeclared attribute the plan named, on one element. Full output in §8.
+- [x] **Step 7: done — and three of the four corrections were already in place.** The `Theme Controller` row in `plans/README.md` now says Implemented; §254's script-backed list had already lost this component (and Swap and Text Rotate with it) when those plans landed; §2b already carries the `prefix` paragraph, sourced to §0f; and `file-input.md` §0a already records this plan as the finding that reopened the audit — its row now also records the fix.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] `type` is rendered explicitly and narrowed to `checkbox | radio`; the scaffold's inert `type="text"` default is gone (§0b).
-- [ ] `theme` is required and rendered as `value` (§0a, section 3).
-- [ ] No `appearance` prop; the toggle/checkbox/radio/btn equivalence is documented in JSDoc (§0c).
-- [ ] `value="default"` idiom documented and given its own story (§0d).
-- [ ] The `:has()` browser floor is in the JSDoc, with the silent-failure mode named (§0e).
-- [ ] The "theme must be enabled in the consumer's build" constraint is in the JSDoc and has a negative story (§0a, §6 Step 5).
-- [ ] No `<script>` anywhere in the component (§0h).
-- [ ] Children throw rather than being dropped (§2).
-- [ ] `Props` extends `HTMLAttributes<'input'>`; `class` merges through `class:list`.
-- [ ] `Playground` exposes `theme`, `type` and `class`.
-- [ ] Ten doc-example stories, composing the real `Swap`, `Toggle`, `Fieldset`, `Join` and `Dropdown` components.
-- [ ] Storybook's iframe confirmed to be the `:root` the selector resolves against (§5).
-- [ ] All four documentation corrections in §6 Step 7 made.
-- [ ] Every box in section 4's Astro idioms gate ticked.
+- [x] `type` is rendered explicitly and narrowed to `checkbox | radio`; the scaffold's inert `type="text"` default is gone (§0b).
+- [x] `theme` is required and rendered as `value` (§0a, section 3).
+- [x] No `appearance` prop; the toggle/checkbox/radio/btn equivalence is documented in JSDoc (§0c).
+- [x] `value="default"` idiom documented and given its own story (§0d).
+- [x] The `:has()` browser floor is in the JSDoc, with the silent-failure mode named (§0e).
+- [x] The "theme must be enabled in the consumer's build" constraint is in the JSDoc and has a negative story (§0a, §6 Step 5).
+- [x] No `<script>` anywhere in the component (§0h).
+- [x] Children throw rather than being dropped (§2).
+- [x] `Props` extends `HTMLAttributes<'input'>`; `class` merges through `class:list`.
+- [x] `Playground` exposes `theme`, `type` and `class`.
+- [x] Ten doc-example stories, composing the real `Swap`, `Toggle`, `Fieldset`, `Join` and `Dropdown` components.
+- [x] Storybook's iframe confirmed to be the `:root` the selector resolves against (§5).
+- [x] All four documentation corrections in §6 Step 7 made.
+- [x] Every box in section 4's Astro idioms gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-02), SVG paths elided. `astro check`: 198 files, 0 errors, 0 warnings, 0 hints.
+
+```
+AsToggle     → <input type="checkbox" value="synthwave" class="theme-controller toggle" autocomplete="off">
+InsideSwap   → <label class="swap swap-rotate">
+                 <input type="checkbox" value="synthwave" class="theme-controller" autocomplete="off">
+                 <div class="swap-off"><svg … class="h-10 w-10 fill-current">…</div>
+                 <div class="swap-on">…
+AsRadioButtons → <div class="join join-vertical">
+                 <input type="radio" value="default" class="theme-controller btn join-item"
+                   name="theme-buttons" aria-label="Default" autocomplete="off">…
+Passthrough  → <input type="radio" value="synthwave" class="theme-controller mine btn join-item"
+                 id="tc-1" data-test="yes" style="letter-spacing:1px" name="theme-pass" checked
+                 autocomplete="off" aria-label="Synthwave">
+```
+
+Counts across the 14 stories:
+
+```
+theme-controller inputs 28  → carry type  28 of 28   (10 checkbox, 18 radio)
+                            → carry value 28 of 28
+value="default" 4 | aria-label 11 | autocomplete="off" 28
+```
+
+And in the built CSS, which is where this component actually lives:
+
+```
+rules whose SUBJECT is .theme-controller        0
+input.theme-controller[value=x]:checked         light 2, dark 1, synthwave 1,
+                                                retro 1, cyberpunk 1, valentine 1, aqua 1
+                                                cupcake 0   ← not enabled in this build
+```
+
+What this settles:
+
+- **§0a, measured rather than argued.** Not one rule in 327 KB of built CSS has this class as its subject; all 8 occurrences are inside other files' theme selectors. The component genuinely has no appearance, which is why there is no `appearance` prop and why `class` carries someone else's.
+- **§0b's bug, in the component that reopened the audit.** The scaffold rendered `<input class="theme-controller">` — a text field that can never be `:checked`, so the selector could never match. All 28 controllers now carry both halves of that selector, `type` and `value`.
+- **§0a's silent failure is visible in the build**: `cupcake` is a real daisyUI theme, is not in this preview's list, and has **zero** selectors. `UnbuiltTheme` renders the identical markup for it, so the only difference between the working toggle and the dead one is a line in someone's CSS config. This is the support question the JSDoc is written for.
+- **§0d's reset is in the output** as four `value="default"` inputs across three radio groups, each with a distinct `name`.
+- **§0i holds**: 11 `aria-label`s, on exactly the controllers that have no text node — the button- and dropdown-styled ones.
+- **§0c's bare-input cases are real**: in `InsideSwap` and `ToggleWithIconsInside` the input's entire class attribute is `theme-controller`, and the visible control belongs to the wrapper. A prop on Toggle could not have produced either.
+
+Not settled here: whether any theme actually changes. That is Step 5, and no headless check substitutes for it — an inert controller and a working one differ only in CSS that this build cannot exercise.
