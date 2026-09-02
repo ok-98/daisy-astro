@@ -1,0 +1,46 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * One item of a `Megamenu`: a trigger button and the panel it opens, rendered
+ * as **two bare siblings** with nothing around them.
+ *
+ * That is not a style choice. The indicator's anchor name comes from the
+ * trigger's `:nth-of-type` position among its siblings, so a wrapper around the
+ * pair makes every trigger `:first-of-type` inside its own wrapper and every
+ * item's indicator lands on the first one (plan §3b). Astro components may
+ * render more than one root element, which is what makes the pair expressible
+ * as a component at all.
+ *
+ * `itemId` wires the two halves together and **must be unique in the
+ * document** — it is the button's `popovertarget` and the panel's `id`. One
+ * prop instead of a matching pair, the same trade
+ * `plans/components/drawer.md` §0a made, and for the same reason: Astro has no
+ * context API, so the id cannot be generated here and shared.
+ *
+ * `class` and every other attribute go to the **panel**; the trigger takes
+ * `triggerClass`. Remove the chevron with `triggerClass="after:content-none"`,
+ * which is what daisyUI's own no-arrows example does — it is a Tailwind
+ * arbitrary variant rather than a daisyUI modifier, so there is no prop for it
+ * (plan §3d).
+ *
+ * The panel needs no anchor wiring: an open popover's implicit anchor is the
+ * button that opened it, and the `wide` / `full` forms are anchored by
+ * daisyUI's own CSS (plan §3e).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /** Unique in the document. The trigger's `popovertarget` and the panel's `id`. */
+  itemId: string;
+  /** Classes for the trigger `<button>` — `class` goes to the panel instead. */
+  triggerClass?: string;
+}
+
+const { itemId, triggerClass, class: className, ...rest } = Astro.props;
+---
+
+<button popovertarget={itemId} class:list={[triggerClass]}>
+  <slot name="trigger" />
+</button>
+<div id={itemId} popover class:list={[className]} {...rest}>
+  <slot />
+</div>

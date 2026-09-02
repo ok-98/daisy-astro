@@ -10,6 +10,8 @@
 
 > **Status:** Planned. Facts marked **[verified]** were checked on 2026-08-29 against `daisyui@5.7.22`'s `components/megamenu.css` and the doc page source. §3f lists what is **unverified**.
 
+
+> **Status:** **Implemented** (2026-09-02), the last scaffold in the library. `Megamenu.astro`, `MegamenuItem.astro` and 11 stories. **§3e is settled from daisyUI's own CSS** — no `panelAnchor` prop is needed, and the doc page's arbitrary-variant anchor pair is a redundant second copy of wiring daisyUI already ships (§3g). **§3f.2 is answered**: 13 of 13 bars render the empty indicator followed directly by a bare trigger, with the only wrapper in the library being the deliberate one in `WrappedItem`. §3f.4 is discharged — `Menu`, `MenuTitle`, `Navbar` and `Button` are all real here. One library-wide finding in §3h: **a hardcoded attribute plus `...rest` emits the attribute twice**. **§3f.1 is not settled and cannot be** without a browser — it is the whole of Step 5.
 ---
 
 ## 0. Popover API plus CSS anchor positioning, with `:nth-of-type` wiring
@@ -136,6 +138,79 @@ That is the same rendered-vs-published discrepancy `plans/components/collapse.md
 2. **Do `MegamenuItem`s emit bare sibling pairs?** Blocking, per §3b. Confirm in the rendered HTML that `<button>`s are direct siblings inside `.megamenu` with no wrapper — this is the shared question from `plans/components/aura.md` §3e.1 in its most consequential form yet, since the failure is a silently mispositioned indicator.
 3. **Multiple popovers on one Storybook docs page.** Ids are document-global and every story needs its own set — the same hazard as `plans/components/drawer.md` §5's `toggleId`, multiplied by ten per story.
 4. **Cross-component composition** — every panel uses `menu`, `menu-horizontal`, `menu-title`, and the last example needs `navbar`. Raw markup in the stories until those plans land.
+
+### 3g. §3e resolved: the panels are already anchored
+
+**Read out of `daisyui@5.7.22/components/megamenu.css` on 2026-09-02**, which
+settles the question §6 Step 1 called blocking.
+
+```css
+.megamenu [popover]   { position-area: block-end span-inline-end }   /* no position-anchor */
+.megamenu-wide        { anchor-name: --megamenu }
+.megamenu-wide [popover] { position-area: block-end; position-anchor: --megamenu;
+                           width: anchor-size(inline) }
+.megamenu-full        { anchor-name: --megamenu }
+.megamenu-full [popover] { position-area: block-end; position-anchor: --megamenu; width: 100% }
+```
+
+Two mechanisms, and **neither needs anything from the caller**:
+
+1. **Default panels have no `position-anchor` because they do not need one.** A
+   popover opened through `popovertarget` gets its invoker as its *implicit
+   anchor*, so `position-area: block-end span-inline-end` already places the
+   panel under the button that opened it.
+2. **`wide` and `full` are anchored to the bar by daisyUI itself**, through an
+   `anchor-name` / `position-anchor` pair named `--megamenu`.
+
+So the `[anchor-name:--megamenu-c]` and `[position-anchor:--megamenu-c]` classes
+in the doc page's *rendered* examples are a **second copy of mechanism 2 under a
+different name**, on the two examples that already have it. daisyUI's published
+markup omits them, and this library follows the published markup: **no
+`panelAnchor` prop, and no arbitrary variants in the stories.**
+
+Worth keeping the shape of the mistake, because §3e was right to flag it: the
+rendered-versus-published divergence is real (as `plans/components/collapse.md`
+§3g.4 found for `autocomplete`), and the way to settle it was to read the CSS
+rather than to copy either version.
+
+### 3h. A hardcoded attribute plus `...rest` emits it twice
+
+**Measured 2026-09-02**, with a throwaway story, because this component is the
+first to hardcode an attribute that callers might reasonably want to set:
+
+```
+<Megamenu id="x" popover={false} />    → <div id="x" popover class="megamenu">
+<Megamenu id="x" popover="manual" />   → <div id="x" popover class="megamenu" popover="manual">
+                                                        ↑ twice, and the FIRST one wins
+```
+
+`false` is dropped, as Astro drops false booleans. **A string value is not**: it
+arrives through `...rest` and is written a second time, and an HTML parser keeps
+the first occurrence and ignores the duplicate. So the component's own value
+wins and the caller's is silently discarded.
+
+Library-wide, not local — every component that writes a literal attribute *and*
+spreads `...rest` behaves this way. `Toggle`'s `type="checkbox"` is the other
+live instance: `<Toggle type="radio">` renders `type="checkbox" … type="radio"`
+and stays a checkbox.
+
+**Deliberately not fixed.** In both cases the component's value is the correct
+one — a megamenu that is not a popover does not work, and a Toggle that is not a
+checkbox is not a Toggle — so the outcome is right and only the duplicate
+attribute is untidy. Stripping the key out of `...rest` would cost an unused
+binding in every such component to change nothing a user can see. Recorded in
+`plans/README.md` §5e so the next component that hardcodes an attribute knows
+what it is choosing.
+
+### 3i. No `MegamenuItem.stories.ts`, against §5
+
+The item is only meaningful inside a `.megamenu`: outside one its trigger is an
+unstyled `<button>` and its panel is a closed popover, so a standalone story
+would render a single bare button and nothing else — actively misleading rather
+than merely thin. `Megamenu`'s `Passthrough` exercises both props instead, and
+the output shows the split: `triggerClass` on the trigger, everything else on
+the panel (§8). Same call as `plans/components/stat.md` §3g.2, `hero.md` and
+`navbar.md` §3f.2.
 
 ## 4. Component implementation
 
@@ -274,28 +349,71 @@ Two beyond the doc page:
 
 ## 6. Steps
 
-- [ ] **Step 1:** Settle §3e (which anchor form the panels need) and §3f.1 (Popover API + anchor positioning support). Both gate whether the component works at all; resolve before writing stories.
-- [ ] **Step 2:** No new shared unions — `DaisySize` reused unchanged. `variants.ts` untouched. Skip.
-- [ ] **Step 3:** Replace the `Megamenu.astro` scaffold and create `MegamenuItem.astro` per §4, then walk the gate. Resolve §3f.2 here.
-- [ ] **Step 4:** Replace `Megamenu.stories.ts` and create `MegamenuItem.stories.ts` per §5, with per-story id prefixes.
-- [ ] **Step 5:** `pnpm storybook`, verify: hovering each trigger **slides the indicator** to it; clicking opens a panel positioned under the bar (§3e); `WidePopovers` matches the container width and `megamenu-full` the page; `Sizes` changes bar height and font; `WithoutArrows` has no chevrons; below `sm` the bar hides and the mobile button opens it vertically (§3c); `ElevenItems` mispositions the eleventh's indicator (§3b).
-- [ ] **Step 6:** `Passthrough` forwarding, plus:
-  ```bash
-  pnpm build-storybook
-  grep -rhoE '<div id="[^"]*" popover class="megamenu[^"]*"[^>]*><span class="megamenu-active"></span><button' storybook-static/astro-prerendered-stories.json | head
-  ```
-  Confirms the indicator is first and the triggers are bare siblings (§3b, §3f.2).
-- [ ] **Step 7:** Update the `Megamenu` row in `plans/README.md` to **Implemented**, noting `MegamenuItem` as part of it and the ten-item cap.
+- [x] **Step 1: §3e is settled** — from daisyUI's CSS rather than from either version of the doc page (§3g). **§3f.1 is not**, and cannot be here: whether this browser supports the Popover API and anchor positioning is a Step 5 question. What the build does prove is that all ten classes plus the `max-sm:` variant reach the CSS, `anchor-name` and `position-anchor` included (§8).
+- [x] **Step 2: skipped as planned.** `DaisySize` reused unchanged; `MegamenuWidth` is local. `variants.ts` untouched.
+- [x] **Step 3: done, and §3f.2 is answered.** The scaffold is replaced and `MegamenuItem.astro` created. The probe errors on all four required lines — both missing ids and both bad unions — and the `color` line the plan asked for was dropped, since `plans/README.md` §5d records that it can never error.
+- [x] **Step 4: done.** `Megamenu.stories.ts`, 11 stories — the 6 doc examples plus `Playground`, `Passthrough`, `ElevenItems` and `WrappedItem`. No `MegamenuItem.stories.ts` (§3i). Ids are prefixed per story and all 46 trigger/panel pairs are unique across the document (§8).
+- [ ] **Step 5:** `pnpm storybook`. **Still open, and it carries more than any other component's**: nothing in a headless build shows a popover opening or an indicator moving, and §3f.1's support question is only answerable in a browser. Verify: hovering each trigger **slides the indicator** to it; a click opens the panel **under its own trigger** (§3g mechanism 1); `WidePopovers` matches the bar's width and `InNavbar`'s panels the page's (mechanism 2); `Sizes` changes bar height and font together; `WithoutArrows` has no chevrons; below `sm` the bar disappears and the Menu button opens it vertically (§3c); **`ElevenItems`' eleventh indicator lands on the first item** (§3b); and **`WrappedItem`'s second item does the same**, which is the failure `MegamenuItem` exists to prevent.
+- [x] **Step 6: done — forwarding confirmed at both levels and across the split.** `Passthrough` renders `<div id="mm-pass" popover class="megamenu megamenu-wide megamenu-lg mine …" data-test="yes" style="letter-spacing:1px">` with `<button popovertarget="pass1" class="trigger-marker after:content-none">` and `<div id="pass1" popover class="panel-marker p-2" data-test="panel" …>`. Full output in §8.
+- [x] **Step 7: done — the `Megamenu` row in `plans/README.md` says Implemented**, names `MegamenuItem` and records the ten-item cap. `plans/README.md` also gained §5e from §3h.
 - [ ] **Step 8:** Commit.
 
 ## 7. Acceptance checklist
 
-- [ ] All 10 daisyUI classes reachable; `megamenu-active` is component-rendered (§0a).
-- [ ] `MegamenuItem` emits a bare sibling pair — confirmed in the build output (§3b, §3f.2).
-- [ ] `id` and `itemId` are required, and the mobile trigger is documented as caller markup (§3a).
-- [ ] The ten-item cap is in the JSDoc (§3b).
-- [ ] §3e resolved and the panel anchoring documented or propped.
-- [ ] No invented axis — no colour, no `arrow` prop (§3d), no `items` array (§2).
-- [ ] Stories use globally unique ids (§3f.3).
-- [ ] One story per doc-page example, plus `ElevenItems` and `WrappedItem`.
-- [ ] Every box in §4's gate ticked.
+- [x] All 10 daisyUI classes reachable; `megamenu-active` is component-rendered (§0a).
+- [x] `MegamenuItem` emits a bare sibling pair — confirmed in the build output (§3b, §3f.2).
+- [x] `id` and `itemId` are required, and the mobile trigger is documented as caller markup (§3a).
+- [x] The ten-item cap is in the JSDoc (§3b).
+- [x] §3e resolved and the panel anchoring documented or propped.
+- [x] No invented axis — no colour, no `arrow` prop (§3d), no `items` array (§2).
+- [x] Stories use globally unique ids (§3f.3).
+- [x] One story per doc-page example, plus `ElevenItems` and `WrappedItem`.
+- [x] Every box in §4's gate ticked.
+
+## 8. Recorded output
+
+From `storybook-static/astro-prerendered-stories.json` after `pnpm build-storybook` (2026-09-02). `astro check`: 202 files, 0 errors, 0 warnings, 0 hints.
+
+```
+WithoutArrows → <div id="mm-e" popover class="megamenu w-full p-2 border border-base-300">
+                  <span class="megamenu-active"></span>
+                  <button popovertarget="e1" class="after:content-none">One</button>
+                  <div id="e1" popover><div class="p-4">Content for the first item</div></div>
+                  <button popovertarget="e2" …
+Passthrough   → <div id="mm-pass" popover class="megamenu megamenu-wide megamenu-lg mine w-full
+                  p-2 border border-base-300" data-test="yes" style="letter-spacing:1px">
+                  <span class="megamenu-active"></span>
+                  <button popovertarget="pass1" class="trigger-marker after:content-none">One</button>
+                  <div id="pass1" popover class="panel-marker p-2" data-test="panel"
+                    style="letter-spacing:1px">…
+WrappedItem   → …<button popovertarget="w1">One — unwrapped</button><div id="w1" popover>…</div>
+                  <div><button popovertarget="w2">Two — wrapped</button>…</div>
+                       ↑ the only wrapper anywhere, and it is the point of the story
+```
+
+Counts across the 11 stories:
+
+```
+.megamenu bars 13  → empty indicator span first, then a bare <button popovertarget>  13 of 13
+triggers 46 | panels 46 | duplicate ids 0 | popovertargets with no panel 0
+wrapped pairs 1  — WrappedItem, written as raw markup on purpose
+```
+
+And in the built CSS:
+
+```
+all 10 classes present, plus the .max-sm\:megamenu-vertical variant (7 rules of its own)
+:nth-of-type(10) is the last anchor rule — there is no rule for an eleventh
+anchor-name 7 | position-anchor 6
+```
+
+What this settles:
+
+- **§3f.2, the most consequential instance of the shared slot-wrapping question in the library.** Everywhere else a wrapper degrades a rule; here it silently re-points every indicator at the first item, because `:nth-of-type` counts within a parent. 13 of 13 bars are clean, and the one wrapper in the output is the story that exists to show the failure.
+- **§0a's pair-in-one-component idea works**: 46 triggers and 46 panels, every `popovertarget` matched by an id, no duplicates across a document holding eleven stories — which is §3f.3's hazard, avoided by prefixing rather than by hoping.
+- **§3b's cap is a fact about the CSS**, not a guess: the last anchor rule is `:nth-of-type(10)`, so the eleventh trigger keeps the base `--mm-anchor: --mm1`.
+- **§3d's decision is visible**: `after:content-none` is a caller class on the trigger, reached through `triggerClass`, and it ships in the CSS as a Tailwind utility — nothing daisyUI would have given a modifier for.
+- **§3e is answered by §3g** and the build agrees: `anchor-name` and `position-anchor` are in the output from daisyUI's own `megamenu-wide` / `megamenu-full` rules, and no story writes either.
+- **§3f.4 is discharged**: `Menu`, `MenuTitle`, `Navbar`, `NavbarStart`/`Center`/`End` and `Button` are the real components. The nested submenu `<ul>`s stay raw because a submenu is a plain list inside an `<li>` — there is no component for it and daisyUI does not define one.
+
+Not settled here, and unusually little of it is: **nothing in this output shows the component working.** Whether a panel opens, where it opens, whether the indicator slides, and whether this browser supports `anchor()` at all — all Step 5, all §3f.1.

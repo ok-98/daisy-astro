@@ -115,6 +115,8 @@ import TextRotate from './components/TextRotate/TextRotate.astro';
 import Tooltip from './components/Tooltip/Tooltip.astro';
 import Timeline from './components/Timeline/Timeline.astro';
 import Navbar from './components/Navbar/Navbar.astro';
+import Megamenu from './components/Megamenu/Megamenu.astro';
+import MegamenuItem from './components/Megamenu/MegamenuItem.astro';
 import NavbarStart from './components/Navbar/NavbarStart.astro';
 import NavbarCenter from './components/Navbar/NavbarCenter.astro';
 import NavbarEnd from './components/Navbar/NavbarEnd.astro';
@@ -352,3 +354,9 @@ import Steps from './components/Steps/Steps.astro';
   <NavbarCenter id="nc" data-test="y">Middle</NavbarCenter>
   <NavbarEnd id="ne" data-test="y">Login</NavbarEnd>
 </Navbar>
+<Megamenu id="mm" width="wide" size="lg" class="mine" data-test="y" title="t">
+  <MegamenuItem itemId="mm-1" triggerClass="after:content-none" class="p-2" data-test="y" title="t">
+    <Fragment slot="trigger">Services</Fragment>
+    Panel
+  </MegamenuItem>
+</Megamenu>

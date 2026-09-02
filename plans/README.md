@@ -337,6 +337,29 @@ mere *presence* enables it, a `false` prop must produce no attribute at all.
 
 The general rule, which is `plans/components/button.md` §3a one level up: check a variant prop name against base `HTMLAttributes`, not only against the element's own attributes. `color`, `style`, `title`, `role` and `translate` are all on the base interface.
 
+### 5e. A hardcoded attribute plus `...rest` emits it twice
+
+Measured 2026-09-02 while implementing Megamenu, which hardcodes `popover` on
+its root and spreads the rest:
+
+```
+<Megamenu id="x" popover={false} />    → <div id="x" popover class="megamenu">
+<Megamenu id="x" popover="manual" />   → <div id="x" popover class="megamenu" popover="manual">
+```
+
+A `false` boolean is dropped, as Astro drops all false booleans. **A string is
+not** — it is written a second time, and an HTML parser keeps the **first**
+occurrence. So the component's own value wins and the caller's is silently
+ignored.
+
+That is the right outcome in both live cases — `Megamenu`'s `popover` and
+`Toggle`'s `type="checkbox"`, where the hardcoded value is what makes the
+component the thing it is — and neither is being changed. What to take from it:
+**a hardcoded attribute is not a private one.** It stays reachable through
+`...rest`, the duplicate is invisible unless you read the HTML, and if a
+caller's value ever *should* win, the attribute has to become a prop rather than
+a literal.
+
 ### 6. Other Astro idioms this library depends on
 
 - **Polymorphic `as`.** Where daisyUI documents a class on several elements (Button on `button`/`a`/`input`/`div`, Link on `a`/`button`), use `Polymorphic<{ as: Tag }>` from `astro/types` rather than a hand-rolled generic, so the accepted attribute set follows the tag — `href` type-checks on `as="a"` and is rejected on `as="button"`. Worked example in `plans/components/button.md` §4.
@@ -414,7 +437,7 @@ Copy the example markup from the doc page into the story rather than inventing d
 | Breadcrumbs | `breadcrumbs` | **Implemented** — [`plans/components/breadcrumbs.md`](components/breadcrumbs.md) (8 stories; `nav` root by default; visual pass open) |
 | Dock | `dock` | **Implemented** — [`plans/components/dock.md`](components/dock.md) (`Dock`/`DockItem`/`DockLabel`, one row for all three; 16 stories; `position: fixed` is built in; visual pass open) |
 | Link | `link` | **Implemented** — [`plans/components/link.md`](components/link.md) (15 stories; `hover` removes the underline; visual pass open) |
-| Megamenu | `megamenu` | Planned — [`plans/components/megamenu.md`](components/megamenu.md) (Popover API + anchor positioning; max 10 items) |
+| Megamenu | `megamenu` | **Implemented** — [`plans/components/megamenu.md`](components/megamenu.md) (`Megamenu`+`MegamenuItem`, 11 stories; Popover API + anchor positioning, `id` required, item pairs must stay unwrapped, **max 10 items**) |
 | Menu | `menu` | **Implemented** — [`plans/components/menu.md`](components/menu.md) (`Menu`+`MenuTitle`, one row for both; 20 stories; items are bare `<li>` with no class; visual pass open) |
 | Navbar | `navbar` | **Implemented** — [`plans/components/navbar.md`](components/navbar.md) (`Navbar`+`NavbarStart`/`Center`/`End`, 14 stories; halves are exactly 50% and the centre does not shrink, so bare `flex-1`/`flex-none` is the other idiom; no background of its own) |
 | Pagination | `pagination` | **Served by Join** — [`plans/components/pagination.md`](components/pagination.md) (no component and no `.pagination` class exists; 7 stories composing `Join`+`Button`) |

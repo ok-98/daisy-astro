@@ -1,14 +1,105 @@
 ---
-// Dummy scaffold. Variant props (color/size/style axes), slots and any
-// wrapper markup are still TODO — fill in from the doc page per the workflow
-// in plans/README.md: https://daisyui.com/components/megamenu/
 import type { HTMLAttributes } from 'astro/types';
+import type { DaisySize } from '../../lib/variants';
 
-interface Props extends HTMLAttributes<'div'> {}
+// Props first — a `const` above this breaks inference (plans/README.md §5c).
+type MegamenuWidth = 'wide' | 'full';
 
-const { class: className, ...rest } = Astro.props;
+/**
+ * A horizontal bar where each item opens a popover panel, built on the Popover
+ * API and CSS anchor positioning with no JavaScript at all.
+ *
+ * **`id` is required, because the element is itself a popover.** On small
+ * screens the bar is hidden and a button outside this component opens it — that
+ * button is caller markup, and it needs the id (plan §3a):
+ *
+ * ```astro
+ * <button class="btn sm:hidden" popovertarget="main-menu">Menu</button>
+ * <Megamenu id="main-menu" class="max-sm:megamenu-vertical w-full p-2 border border-base-300">
+ *   <MegamenuItem itemId="services">
+ *     <Fragment slot="trigger">Services</Fragment>
+ *     <Menu>…</Menu>
+ *   </MegamenuItem>
+ * </Megamenu>
+ * ```
+ *
+ * **At most ten items.** The indicator's anchor comes from each trigger's
+ * `:nth-of-type` position and daisyUI writes rules for 1–10 only, so an
+ * eleventh trigger falls back to the first item's anchor and the indicator
+ * jumps to the start of the bar — a wrong position rather than none (plan §3b).
+ *
+ * **Nothing may wrap an item.** `MegamenuItem` renders its button and its panel
+ * as bare siblings for that reason; wrapping a pair makes every trigger
+ * `:first-of-type` inside its own wrapper and collapses all ten anchors onto
+ * the first (plan §3b).
+ *
+ * The `vertical` prop exists for completeness, but the form callers actually
+ * want is the responsive class `class="max-sm:megamenu-vertical"` — daisyUI's
+ * own description is *"hides horizontal megamenu so we can open a vertical
+ * megamenu in small screens"*, and every doc example writes it that way
+ * (plan §3c).
+ *
+ * **Panels need no anchor wiring.** In the default form a panel's implicit
+ * anchor is the button that opened it, and `wide`/`full` are anchored by
+ * daisyUI's own CSS — `.megamenu-wide` sets `anchor-name: --megamenu` on this
+ * element and `position-anchor: --megamenu` on its panels. The
+ * `[anchor-name:…]` / `[position-anchor:…]` pair in daisyUI's *rendered* demos
+ * is a second, differently-named copy of that and is absent from its published
+ * markup (plan §3e).
+ *
+ * **Newest CSS in the library.** `popover`, `anchor-name`, `anchor()`,
+ * `position-area` and `:has()` together. Where anchor positioning is missing
+ * the bar still renders and the panels still open, but the indicator and the
+ * panels lose their placement (plan §3f.1).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /**
+   * Required, and referenced by the caller's own mobile trigger button. Not
+   * generated: an id nothing outside can see would be useless (plan §3a).
+   */
+  id: string;
+  /** How wide the panels open: `wide` matches this bar, `full` the page. */
+  width?: MegamenuWidth;
+  /** Prefer the responsive class `max-sm:megamenu-vertical` (plan §3c). */
+  vertical?: boolean;
+  /** Bar height and font size, via `--size` and `--fontsize`. */
+  size?: DaisySize;
+}
+
+// Full literal class names. NEVER `megamenu-${size}` — an interpolated class
+// gets no CSS from daisyUI (plans/README.md §1b).
+const WIDTH: Record<MegamenuWidth, string> = {
+  wide: 'megamenu-wide',
+  full: 'megamenu-full',
+};
+
+const SIZE: Record<DaisySize, string> = {
+  xs: 'megamenu-xs',
+  sm: 'megamenu-sm',
+  md: 'megamenu-md',
+  lg: 'megamenu-lg',
+  xl: 'megamenu-xl',
+};
+
+const { id, width, vertical = false, size, class: className, ...rest } = Astro.props;
+
+// The indicator is rendered here rather than left to the caller: it is always
+// present, always first and always empty, and omitting it removes the sliding
+// highlight while everything else keeps working (plan §0a).
 ---
 
-<div class:list={['megamenu', className]} {...rest}>
+<div
+  id={id}
+  popover
+  class:list={[
+    'megamenu',
+    width && WIDTH[width],
+    { 'megamenu-vertical': vertical },
+    size && SIZE[size],
+    className,
+  ]}
+  {...rest}
+>
+  <span class="megamenu-active"></span>
   <slot />
 </div>
