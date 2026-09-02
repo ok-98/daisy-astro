@@ -1,8 +1,8 @@
 ---
-import type { HTMLAttributes } from 'astro/types';
+import type { HTMLAttributes } from "astro/types";
 
 // Props first — a `const` above this breaks inference (plans/README.md §5c).
-type TextRotateAlign = 'start' | 'center' | 'end';
+type TextRotateAlign = "start" | "center" | "end";
 
 /**
  * A vertically rotating list of phrases, animated in pure CSS.
@@ -13,6 +13,9 @@ type TextRotateAlign = 'start' | 'center' | 'end';
  * (plan §0b). Dropping items straight into a single-level wrapper would make
  * each of them its own full-height grid and nothing would animate at all.
  *
+ * A plain-text slot is split on newlines and each line wrapped for you, so
+ * `<TextRotate>ONE{"\n"}TWO</TextRotate>` works without writing the spans.
+ *
  * **Six items is a hard ceiling and the seventh breaks it silently.** daisyUI's
  * rules stop at a sixth child, so a seventh leaves the track sized for six
  * while holding seven rows: items are clipped and the loop skips. daisyUI's own
@@ -22,7 +25,7 @@ type TextRotateAlign = 'start' | 'center' | 'end';
  * Speed, font size and line height are **caller classes on this element**:
  * `class="duration-6000 text-7xl leading-[2]"` (plan §0e).
  */
-interface Props extends HTMLAttributes<'span'> {
+interface Props extends HTMLAttributes<"span"> {
   /**
    * Horizontal alignment of the rotating items. It is applied to the
    * **generated track**, which a caller's `class` cannot reach — which is the
@@ -35,12 +38,30 @@ interface Props extends HTMLAttributes<'span'> {
 // Full literal class names. NEVER `justify-items-${align}` — Tailwind scans
 // source text and finds nothing in an interpolated name (plans/README.md §1b).
 const ALIGN: Record<TextRotateAlign, string> = {
-  start: 'justify-items-start',
-  center: 'justify-items-center',
-  end: 'justify-items-end',
+  start: "justify-items-start",
+  center: "justify-items-center",
+  end: "justify-items-end",
 };
 
-const { align = 'start', class: className, ...rest } = Astro.props;
+const { align = "start", class: className, ...rest } = Astro.props;
+
+// Already-escaped HTML: Astro escapes slot text on the way out, so a literal
+// `<` here can only be an element the caller wrote. A caller who typed `<` as
+// text is sitting in the string as `&#60;` and stays on the text path.
+const renderedSlots = await Astro.slots.render("default");
+const isTextOnly = !renderedSlots.includes("<");
+
+// Emitted with `set:html` below, so the text branch must stay escaped rather
+// than being re-escaped — passing these lines back through `{line}` would turn
+// a caller's `&` into `&#38;#38;`.
+const trackHtml = isTextOnly
+  ? renderedSlots
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => `<span>${line}</span>`)
+      .join("")
+  : renderedSlots;
 
 // The inner span below is the animated track. It is not optional and has no
 // classes of its own beyond the alignment, so it is rendered here rather than
@@ -48,6 +69,6 @@ const { align = 'start', class: className, ...rest } = Astro.props;
 // (plan §0b).
 ---
 
-<span class:list={['text-rotate', className]} {...rest}>
-  <span class:list={[ALIGN[align]]}><slot /></span>
+<span class:list={["text-rotate", className]} {...rest}>
+  <span class:list={[ALIGN[align]]} set:html={trackHtml} />
 </span>
