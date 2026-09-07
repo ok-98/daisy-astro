@@ -32,10 +32,18 @@
 .content-body ol {
   list-style: decimal;
 }
-.content-body code {
+/* Inline code only — `pre code` (fenced blocks) is reset below so Shiki's
+   own dark background isn't painted over by this light inline-code style. */
+.content-body :not(pre) > code {
   background: var(--color-base-200);
   border-radius: 0.25em;
   padding: 0.15em 0.4em;
+  font-size: 0.9em;
+}
+.content-body pre {
+  margin: 1.5em 0;
+  padding: 1em;
+  border-radius: var(--radius-box, 0.5rem);
   font-size: 0.9em;
 }
 .content-body table {
