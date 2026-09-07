@@ -1,5 +1,5 @@
 ---
-import { componentsByCategory } from '../lib/registry';
+import { componentsByCategory, componentHref } from '../lib/registry';
 
 interface Props {
   currentSlug?: string;
@@ -16,7 +16,6 @@ const rows: Row[] = componentsByCategory().flatMap(({ category, items }) => [
   ...items.map((item) => ({ kind: 'item', slug: item.slug, title: item.title }) as const),
 ]);
 
-const base = import.meta.env.BASE_URL;
 ---
 
 <ul class="menu w-full">
@@ -25,7 +24,7 @@ const base = import.meta.env.BASE_URL;
       <li class="menu-title">{row.label}</li>
     ) : (
       <li>
-        <a href={`${base}components/${row.slug}/`} class:list={{ 'menu-active': currentSlug === row.slug }}>
+        <a href={componentHref(row.slug)} class:list={{ 'menu-active': currentSlug === row.slug }}>
           {row.title}
         </a>
       </li>

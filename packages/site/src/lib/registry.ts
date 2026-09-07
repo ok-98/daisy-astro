@@ -125,3 +125,18 @@ export function componentsByCategory(): Array<{ category: Category; items: Compo
     items: COMPONENTS.filter((c) => c.category === category),
   }));
 }
+
+// `import.meta.env.BASE_URL` is the raw `base` config value, with no
+// guaranteed trailing slash (our config has none), so a naive
+// `${base}components/...` template drops the "/" between them.
+function siteBase(): string {
+  return import.meta.env.BASE_URL.replace(/\/$/, '');
+}
+
+export function homeHref(): string {
+  return `${siteBase()}/`;
+}
+
+export function componentHref(slug: string): string {
+  return `${siteBase()}/components/${slug}/`;
+}

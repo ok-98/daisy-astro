@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import Sidebar from '../components/Sidebar.astro';
 import { ThemeController } from 'daisy-astro';
+import { homeHref } from '../lib/registry';
 
 interface Props {
   title: string;
@@ -41,7 +42,7 @@ const { title, description, currentSlug } = Astro.props;
         <label for="sidebar-toggle" aria-label="Close navigation" class="drawer-overlay"></label>
         <div class="min-h-full w-72 border-r border-base-300 bg-base-100 p-4">
           <div class="mb-4 flex items-center justify-between px-2">
-            <a href={`${import.meta.env.BASE_URL}`} class="text-lg font-bold">daisy-astro</a>
+            <a href={homeHref()} class="text-lg font-bold">daisy-astro</a>
             <label class="swap swap-rotate btn btn-ghost btn-sm btn-circle" aria-label="Toggle dark mode">
               <ThemeController type="checkbox" theme="dark" />
               <svg class="swap-off h-5 w-5 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.64 17l-.71.71a1 1 0 101.41 1.41l.71-.71A1 1 0 005.64 17zM5 12a1 1 0 00-1-1H3a1 1 0 000 2h1a1 1 0 001-1zm7-7a1 1 0 001-1V3a1 1 0 00-2 0v1a1 1 0 001 1zm10 6h-1a1 1 0 000 2h1a1 1 0 000-2zm-1.64-5.64a1 1 0 000-1.41 1 1 0 00-1.41 0l-.71.71a1 1 0 101.41 1.41zM12 6a6 6 0 106 6 6 6 0 00-6-6zm6.36 12.36a1 1 0 001.41-1.41l-.71-.71a1 1 0 10-1.41 1.41zM12 18a1 1 0 00-1 1v1a1 1 0 002 0v-1a1 1 0 00-1-1z"/></svg>

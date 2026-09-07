@@ -6,7 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 // GitHub Pages > base).
 export default defineConfig({
   site: "https://ok-98.github.io",
-  base: "/daisy-astro/",
+  base: "/daisy-astro",
   output: "static",
   vite: {
     plugins: [tailwindcss()],
