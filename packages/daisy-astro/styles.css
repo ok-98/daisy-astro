@@ -1,0 +1,16 @@
+/*
+ * Registers this package as a Tailwind source, so a consumer does not have to
+ * write a relative path into `node_modules` that depends on where their own CSS
+ * file happens to sit. `@source` resolves relative to the stylesheet that holds
+ * it — this one — so the path below is correct from any consumer at any depth
+ * (`plans/README.md` §1c).
+ *
+ * Import it after `@import "tailwindcss"` and `@plugin "daisyui"`:
+ *
+ *     @import "daisy-astro/styles.css";
+ *
+ * This scans the whole library, so it emits every daisyUI class the package
+ * names, not the ones you import. To narrow it, skip this file and write the
+ * component directories out by hand — see the README's Setup §1.
+ */
+@source "./src";

@@ -24,9 +24,11 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./styles.css": "./styles.css",
     "./package.json": "./package.json"
   },
   "files": [
+    "styles.css",
     "src/components/**/*.astro",
     "src/components/**/*.ts",
     "!src/components/**/*.stories.ts",

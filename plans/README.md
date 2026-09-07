@@ -62,13 +62,15 @@ well as a footgun.
 
 ### 1c. Consumers must point Tailwind at this package
 
-Tailwind 4 auto-detects sources but ignores `node_modules`, so an app that installs this library gets **no** daisyUI CSS for it by default. Verified: a consumer's own `p-4` is picked up, the library's `btn-primary` is not, until the app's CSS adds
-
-```css
-@source "../node_modules/daisy-astro/src";
-```
+Tailwind 4 auto-detects sources but ignores `node_modules`, so an app that installs this library gets **no** daisyUI CSS for it by default. Verified: a consumer's own `p-4` is picked up, the library's `btn-primary` is not, until the app's CSS registers this package as a source.
 
 This belongs in the published README's install steps — without it the library appears completely unstyled, which is the first thing a new user will hit.
+
+**The package owns the path, added 2026-09-03.** The instruction was originally a raw `@source "../node_modules/daisy-astro/src"` in the consumer's own CSS, which makes every consumer write a relative path whose depth depends on where their stylesheet sits — this README demonstrated the trap by printing it at two different depths in the same section. Tailwind resolves `@source` **relative to the stylesheet that contains it** [verified against the Tailwind 4 docs: *"register paths to external libraries relative to the stylesheet"*], so the package ships `styles.css` holding the one line, exported as `daisy-astro/styles.css`, and the consumer writes an import with no path in it at all.
+
+**Verified by build, not by reading**, on 2026-09-03: a `styles.css` in the package root containing `@source "./src/components/Stat"`, imported from a consumer stylesheet (`@import "tailwindcss" source(none); @plugin "daisyui"; @import <that file>`), built with vite + `@tailwindcss/vite` 4.3.3. Output: 29 KB containing `stat-title`, `stat-value` and `stats-vertical`, with no `.btn` — so the `@source` resolved against the package's file and narrowing still works through an import.
+
+The trade-off is unchanged and stays documented in the README: the shipped file scans the whole `src` tree. A consumer who wants the 48 KB build skips the import and writes the component directories by hand — the only remaining case where a `node_modules` path is typed, and then it is relative to their own CSS, where a wrong depth is a missing-file error rather than a silent miss.
 
 **Verified end to end on 2026-09-02**, with a real consumer rather than by
 reasoning: `npm pack`, a scratch Astro 7 app installing the tarball, `astro

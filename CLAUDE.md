@@ -39,9 +39,11 @@ JSDoc prose, a `//` comment — emits its full CSS. So an interpolated class nam
 produces markup no CSS backs, and a comment explaining why a class is *unused* ships that class's bytes.
 This one fact drives most of the library's conventions (`plans/README.md` §1b).
 
-**The package ships `.astro` source and no CSS.** `astro`, `daisyui` and `tailwindcss` are peers;
-`cally` is an optional peer for `Calendar`. Consumers must add `@source "…/node_modules/daisy-astro/src"`
-to their own CSS or everything renders unstyled with no error (README.md, `plans/README.md` §1c).
+**The package ships `.astro` source and one `@source` line.** `astro`, `daisyui` and `tailwindcss` are
+peers; `cally` is an optional peer for `Calendar`. Consumers must `@import "daisy-astro/styles.css"`
+— the package's own stylesheet, which registers `src` as a Tailwind source — or everything renders
+unstyled with no error (README.md, `plans/README.md` §1c). Adding a file consumers import means
+`package.json`'s `exports` **and** `files` both need an entry; missing either is silent.
 
 **`src/index.ts` is the entire public surface** and nothing enforces that it stays complete — a component
 missing from the barrel is unimportable while every check in the repo still passes.

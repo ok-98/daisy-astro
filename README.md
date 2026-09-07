@@ -40,33 +40,40 @@ fail quietly — the library renders, it just looks wrong.
 
 Tailwind 4 auto-detects sources but ignores `node_modules`, so an app that
 installs this library gets **no daisyUI CSS for it** by default: your own
-`p-4` is picked up, the library's `btn-primary` is not. Add this to your app's
-CSS:
+`p-4` is picked up, the library's `btn-primary` is not. Import this package's
+stylesheet from your app's CSS, after Tailwind and daisyUI:
 
 ```css
-@source "../node_modules/daisy-astro/src";
+@import "tailwindcss";
+@plugin "daisyui";
+@import "daisy-astro/styles.css";
 ```
 
 Without it the library appears completely unstyled. See `plans/README.md` §1c.
 
-**That line makes Tailwind scan the whole library, so you get all of daisyUI's
-component CSS whether you use it or not.** Measured on a page using eight
-components (2026-09-02):
+That file is one `@source` line pointing at this package. It lives *inside* the
+package, and `@source` resolves relative to the stylesheet holding it, so the
+path is right from any app at any directory depth — nothing to get wrong.
 
-| `@source` | CSS |
+**It scans the whole library, so you get all of daisyUI's component CSS whether
+you use it or not.** Measured on a page using eight components (2026-09-02):
+
+| source | CSS |
 |---|---|
-| the whole package — the line above | 287 KB |
+| the whole package — the import above | 287 KB |
 | only the component directories actually imported | 48 KB |
 
-If that matters, name them:
+If that matters, drop the import and name the directories yourself. This is the
+one case where you write the `node_modules` path, so it is relative to *your*
+CSS file:
 
 ```css
-@source "../../node_modules/daisy-astro/src/components/{Button,Card,Navbar,ThemeController}";
+@source "../node_modules/daisy-astro/src/components/{Button,Card,Navbar,ThemeController}";
 ```
 
 The cost of the narrow form is that it is a list to keep current — a component
 you import but forget to add here renders **unstyled**, with no error. Start with
-the whole package and narrow it if the CSS budget calls for it.
+the import and narrow it if the CSS budget calls for it.
 
 ### 2. Add `viewport-fit=cover` for the Dock
 
