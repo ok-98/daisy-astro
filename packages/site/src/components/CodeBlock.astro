@@ -8,6 +8,6 @@ interface Props {
 const { code } = Astro.props;
 ---
 
-<div class="my-4 overflow-x-auto rounded-box border border-base-300 p-4 text-sm [&_pre]:!bg-transparent">
+<div class="my-4 overflow-x-auto rounded-box border border-base-300 text-sm [&_pre]:!p-4">
   <Code code={code.trim()} lang="astro" theme="github-dark" />
 </div>
