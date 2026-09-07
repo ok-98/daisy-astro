@@ -1,0 +1,18 @@
+---
+import { Megamenu, MegamenuItem, Menu } from 'daisy-astro';
+---
+
+<button class="btn sm:hidden" popovertarget="main-menu">Menu</button>
+<Megamenu id="main-menu" class="max-sm:megamenu-vertical w-full border border-base-300 p-2">
+  <MegamenuItem itemId="services">
+    <Fragment slot="trigger">Services</Fragment>
+    <Menu>
+      <li><a>Consulting</a></li>
+      <li><a>Support</a></li>
+    </Menu>
+  </MegamenuItem>
+  <MegamenuItem itemId="about">
+    <Fragment slot="trigger">About</Fragment>
+    <div class="p-4">We build daisyUI components for Astro.</div>
+  </MegamenuItem>
+</Megamenu>

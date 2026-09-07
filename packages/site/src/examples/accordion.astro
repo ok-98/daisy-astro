@@ -1,0 +1,18 @@
+---
+import { Accordion, Collapse } from 'daisy-astro';
+---
+
+<Accordion join>
+  <Collapse trigger="radio" name="faq" class="bg-base-100 border border-base-300" open>
+    <Fragment slot="title">How do I create an account?</Fragment>
+    Click the "Sign Up" button in the top right corner and follow the registration process.
+  </Collapse>
+  <Collapse trigger="radio" name="faq" class="bg-base-100 border border-base-300">
+    <Fragment slot="title">I forgot my password. What should I do?</Fragment>
+    Click on "Forgot Password" on the login page and follow the instructions sent to your email.
+  </Collapse>
+  <Collapse trigger="radio" name="faq" class="bg-base-100 border border-base-300">
+    <Fragment slot="title">How do I update my profile information?</Fragment>
+    Go to "My Account" settings and select "Edit Profile" to make changes.
+  </Collapse>
+</Accordion>

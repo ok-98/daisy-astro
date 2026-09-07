@@ -1,0 +1,13 @@
+---
+import { Code } from 'astro:components';
+
+interface Props {
+  code: string;
+}
+
+const { code } = Astro.props;
+---
+
+<div class="my-4 overflow-x-auto rounded-box border border-base-300 p-4 text-sm [&_pre]:!bg-transparent">
+  <Code code={code.trim()} lang="astro" theme="github-dark" />
+</div>

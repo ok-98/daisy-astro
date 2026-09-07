@@ -1,0 +1,17 @@
+---
+import { Carousel, CarouselItem } from 'daisy-astro';
+
+const photos = [
+  'photo-1559703248-dcaaec9fab78',
+  'photo-1565098772267-60af42b81ef2',
+  'photo-1572635148818-ef6fd45eb394',
+].map((n) => `https://img.daisyui.com/images/stock/${n}.webp`);
+---
+
+<Carousel class="w-96 rounded-box">
+  {photos.map((src) => (
+    <CarouselItem>
+      <img src={src} alt="Carousel slide" />
+    </CarouselItem>
+  ))}
+</Carousel>

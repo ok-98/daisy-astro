@@ -12,7 +12,10 @@ Three directories matter, and each has its own `CLAUDE.md`:
 
 - `packages/daisy-astro/` — the library. Component authoring rules live there.
 - `plans/` — the spec. One plan per daisyUI component, plus the shared ruleset. Read before implementing.
-- `.changeset/` — one changeset per package-touching commit (see below).
+- `.changeset/` — one changeset per commit touching the **published** package (see below).
+
+`packages/site/` is the docs/marketing website (Astro, deployed to GitHub Pages via
+`.github/workflows/pages.yml`), `private: true` and never published to npm.
 
 ## Commands
 
@@ -53,8 +56,9 @@ missing from the barrel is unimportable while every check in the repo still pass
 Commits are Conventional Commits with a component scope: `feat(navbar): implement the bar and its
 three parts`. Subjects describe what was decided, not just what changed.
 
-**Every commit touching `packages/` ships a changeset in the same commit.** `feat` → `minor`,
-`fix`/`refactor` → `patch`. Body is the commit subject. Plan- and docs-only commits get none.
+**Every commit touching `packages/daisy-astro/` ships a changeset in the same commit.** `feat` → `minor`,
+`fix`/`refactor` → `patch`. Body is the commit subject. Plan-, docs-only, and `packages/site/`-only
+commits get none — `site` is private and never published.
 
 Code comments cite the plan section that justifies them (`plans/README.md §5c`,
 `plans/components/dock.md §3e`). Keep that up — the citations are how a rule's evidence is found again.

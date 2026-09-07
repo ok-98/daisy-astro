@@ -1,0 +1,12 @@
+---
+import { Fab, Button } from 'daisy-astro';
+---
+
+<div class="relative h-64 w-full">
+  <Fab class="absolute z-1" triggerClass="btn btn-lg btn-circle btn-primary">
+    <Fragment slot="trigger">F</Fragment>
+    <Button size="lg" shape="circle">A</Button>
+    <Button size="lg" shape="circle">B</Button>
+    <Button size="lg" shape="circle">C</Button>
+  </Fab>
+</div>

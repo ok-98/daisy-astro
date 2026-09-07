@@ -1,0 +1,15 @@
+---
+import { Navbar, NavbarStart, NavbarCenter, NavbarEnd, Button } from 'daisy-astro';
+---
+
+<Navbar class="bg-base-100 shadow-sm">
+  <NavbarStart>
+    <Button as="a" variant="ghost" class="text-xl">daisyUI</Button>
+  </NavbarStart>
+  <NavbarCenter>
+    <input type="text" placeholder="Search" class="input input-bordered w-24 md:w-auto" />
+  </NavbarCenter>
+  <NavbarEnd>
+    <Button>Login</Button>
+  </NavbarEnd>
+</Navbar>

@@ -1,0 +1,16 @@
+---
+import { HoverGallery } from 'daisy-astro';
+
+const photos = [
+  ['photo-1559703248-dcaaec9fab78', 'Sunset'],
+  ['photo-1565098772267-60af42b81ef2', 'Forest'],
+  ['photo-1572635148818-ef6fd45eb394', 'Portrait'],
+];
+---
+
+<HoverGallery class="h-64 w-96">
+  <img src={`https://img.daisyui.com/images/stock/${photos[0][0]}.webp`} alt={photos[0][1]} />
+  {photos.map(([file, alt]) => (
+    <img src={`https://img.daisyui.com/images/stock/${file}.webp`} alt={alt} />
+  ))}
+</HoverGallery>

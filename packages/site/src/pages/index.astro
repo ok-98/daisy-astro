@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { COMPONENTS } from '../lib/registry';
+
+const base = import.meta.env.BASE_URL;
+---
+
+<BaseLayout
+  title="daisy-astro"
+  description="Astro components for every daisyUI 5 component — typed variant props, full native attribute passthrough, zero runtime dependencies."
+>
+  <section class="hero mb-12 rounded-box bg-base-200 py-16">
+    <div class="hero-content text-center">
+      <div class="max-w-2xl">
+        <h1 class="text-5xl font-bold">daisy-astro</h1>
+        <p class="py-6 text-lg text-base-content/70">
+          Astro components wrapping every daisyUI 5 component — each daisyUI variant is a typed prop,
+          every native HTML attribute is forwarded, and there's no runtime dependency to ship.
+        </p>
+        <div class="flex flex-wrap items-center justify-center gap-3">
+          <a href={`${base}components/button/`} class="btn btn-primary">Browse components</a>
+          <a href="https://github.com/ok-98/daisy-astro" class="btn btn-outline" target="_blank" rel="noreferrer">
+            GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <h2 class="mb-4 text-2xl font-bold">All {COMPONENTS.length} components</h2>
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+    {COMPONENTS.map((component) => (
+      <a
+        href={`${base}components/${component.slug}/`}
+        class="rounded-box border border-base-300 p-4 text-center transition-colors hover:border-primary hover:bg-base-200"
+      >
+        {component.title}
+      </a>
+    ))}
+  </div>
+</BaseLayout>

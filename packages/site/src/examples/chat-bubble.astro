@@ -1,0 +1,17 @@
+---
+import { Chat, ChatBubble, ChatHeader, ChatFooter, Avatar } from 'daisy-astro';
+---
+
+<Chat placement="start">
+  <Avatar class="chat-image" innerClass="w-10 rounded-full">
+    <img
+      src="https://img.daisyui.com/images/profile/demo/kenobee@192.webp"
+      alt="Obi-Wan Kenobi"
+    />
+  </Avatar>
+  <ChatHeader>
+    Obi-Wan Kenobi <time class="text-xs opacity-50">12:45</time>
+  </ChatHeader>
+  <ChatBubble color="primary">You were the Chosen One!</ChatBubble>
+  <ChatFooter class="opacity-50">Delivered</ChatFooter>
+</Chat>

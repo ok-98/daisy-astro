@@ -1,0 +1,66 @@
+---
+import { getEntry, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { COMPONENTS } from '../../lib/registry';
+
+export function getStaticPaths() {
+  return COMPONENTS.map((component) => ({ params: { slug: component.slug }, props: { component } }));
+}
+
+const { component } = Astro.props;
+const entry = await getEntry('components', component.slug);
+if (!entry) {
+  throw new Error(
+    `Missing src/content/components/${component.slug}.md for registry entry "${component.slug}"`
+  );
+}
+const { Content } = await render(entry);
+
+// One file per component under src/examples/<slug>.astro, picked up here by
+// glob instead of a hand-maintained import per component. `eager: true`
+// because this all runs at build time anyway (static output, no client JS).
+const renderedExamples = import.meta.glob('../../examples/*.astro', { eager: true }) as Record<
+  string,
+  { default: unknown }
+>;
+const rawExamples = import.meta.glob('../../examples/*.astro', {
+  eager: true,
+  query: '?raw',
+  import: 'default',
+}) as Record<string, string>;
+
+const exampleKey = `../../examples/${component.slug}.astro`;
+const ExampleComponent = renderedExamples[exampleKey]?.default as any;
+const exampleSource = rawExamples[exampleKey];
+if (!ExampleComponent || !exampleSource) {
+  throw new Error(`Missing src/examples/${component.slug}.astro for registry entry "${component.slug}"`);
+}
+---
+
+<BaseLayout title={component.title} description={entry.data.description} currentSlug={component.slug}>
+  <p class="text-sm breadcrumbs">
+    <ul>
+      <li>{component.category}</li>
+      <li>{component.title}</li>
+    </ul>
+  </p>
+  <h1 class="mb-2 text-4xl font-bold">{component.title}</h1>
+  <p class="mb-6 text-lg text-base-content/70">{entry.data.description}</p>
+
+  <div class="mb-8 flex flex-wrap items-center justify-center gap-4 rounded-box border border-base-300 bg-base-200/50 p-10">
+    <ExampleComponent />
+  </div>
+
+  <CodeBlock code={exampleSource} />
+
+  <article class="content-body">
+    <Content />
+  </article>
+
+  <p class="mt-10 text-sm">
+    <a class="link" href={entry.data.referenceUrl} target="_blank" rel="noreferrer">
+      {entry.data.referenceLabel} →
+    </a>
+  </p>
+</BaseLayout>

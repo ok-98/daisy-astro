@@ -1,0 +1,20 @@
+---
+import { Drawer, DrawerButton } from 'daisy-astro';
+---
+
+<Drawer
+  toggleId="example-drawer"
+  class="h-56 overflow-hidden rounded-box border border-base-300"
+  contentClass="flex items-center justify-center"
+  sideClass="z-10"
+>
+  <Fragment slot="content">
+    <DrawerButton toggleId="example-drawer" class="btn btn-primary">Open drawer</DrawerButton>
+  </Fragment>
+  <Fragment slot="side">
+    <ul class="menu min-h-full w-60 bg-base-200 p-4">
+      <li><a>Sidebar Item 1</a></li>
+      <li><a>Sidebar Item 2</a></li>
+    </ul>
+  </Fragment>
+</Drawer>

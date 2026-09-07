@@ -1,0 +1,12 @@
+---
+import { Calendar } from 'daisy-astro';
+---
+
+<Calendar class="bg-base-100 border border-base-300 shadow-lg rounded-box" />
+
+<script>
+  // Registers cally's custom elements. Must run client-side only — cally
+  // touches `document` at module load, which crashes Astro's Node-side
+  // prerender if imported from the frontmatter instead of a <script> tag.
+  import 'cally';
+</script>

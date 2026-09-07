@@ -1,0 +1,16 @@
+---
+import { Modal, ModalBox, ModalAction } from 'daisy-astro';
+---
+
+<button class="btn" onclick="my_modal.showModal()">Open modal</button>
+<Modal id="my_modal">
+  <ModalBox>
+    <h3 class="text-lg font-bold">Hello!</h3>
+    <p class="py-4">Press ESC key or click the button below to close</p>
+    <ModalAction>
+      <form method="dialog">
+        <button class="btn">Close</button>
+      </form>
+    </ModalAction>
+  </ModalBox>
+</Modal>

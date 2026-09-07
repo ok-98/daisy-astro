@@ -1,0 +1,12 @@
+---
+import { Tabs, Tab, TabContent } from 'daisy-astro';
+---
+
+<Tabs variant="lift">
+  <Tab as="input" type="radio" name="tabs-demo" aria-label="Tab 1" checked />
+  <TabContent class="border-base-300 bg-base-100 p-6">Tab content 1</TabContent>
+  <Tab as="input" type="radio" name="tabs-demo" aria-label="Tab 2" />
+  <TabContent class="border-base-300 bg-base-100 p-6">Tab content 2</TabContent>
+  <Tab as="input" type="radio" name="tabs-demo" aria-label="Tab 3" />
+  <TabContent class="border-base-300 bg-base-100 p-6">Tab content 3</TabContent>
+</Tabs>
